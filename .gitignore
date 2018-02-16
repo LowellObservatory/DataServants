@@ -16,3 +16,6 @@ remote.password
 
 # Don't track the actual, real instrument configuration either
 instruments.conf
+
+# Ignore rando code dirs
+.vscode
