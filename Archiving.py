@@ -38,6 +38,15 @@ def lookForNewDirectories(ssh, basecmd, sdir, dirmask, age=2):
 
 
 if __name__ == "__main__":
+    rpwfile = './remote.password'
+    try:
+        with open(rpwfile, 'r') as f:
+            rpw = f.readline()
+        # Remove any whitespace chars (like \n)
+        rpw = rpw.strip()
+    except IOError:
+        rpw = None
+
     # idict: dictionary of parsed config file
     # runner: parsed options of wadsworth.py
     # pid: PID of wadsworth.py
@@ -62,7 +71,7 @@ if __name__ == "__main__":
     baseYcmd += ' '
 
     # temp hack
-    args.rangeNew = 5
+    args.rangeNew = 14
 
     # Infinite archiving loop
     while runner.halt is False:
@@ -77,7 +86,7 @@ if __name__ == "__main__":
                                             port=iobj.port,
                                             username=iobj.user,
                                             timeout=iobj.timeout,
-                                            password=None)
+                                            password=rpw)
             eSSH.openConnection()
             time.sleep(1)
             checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
