@@ -72,7 +72,7 @@ if __name__ == "__main__":
     baseYcmd += ' '
 
     # temp hack
-    args.rangeNew = 14
+    args.rangeNew = 2
 
     # Infinite archiving loop
     while runner.halt is False:

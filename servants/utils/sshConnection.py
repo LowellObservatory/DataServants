@@ -100,15 +100,14 @@ class SSHHandler():
     def closeConnection(self):
         self.ssh.close()
 
-    def sendCommand(self, command, env=None):
+    def sendCommand(self, command):
+        #
+        # Rework this whole thing
+        # because it is very bad
+        # and does not work well
+        #
         if(self.ssh):
-            if env is None:
-                stdin, stdout, stderr = self.ssh.exec_command(command,
-                                                              get_pty=True)
-            else:
-                stdin, stdout, stderr = self.ssh.exec_command(command,
-                                                              get_pty=True,
-                                                              environment=env)
+            stdin, stdout, stderr = self.ssh.exec_command(command, get_pty=True)
             while not stdout.channel.exit_status_ready():
                 # Print data when available
                 if stdout.channel.recv_ready():
@@ -132,24 +131,3 @@ class SSHHandler():
 class TimeoutError(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
-
-
-def nicerSSHCommand(host, port, username, cmdwargs,
-                    password=None, timeout=30):
-    """
-    """
-    # The class has 3 retries baked into it for the initial connection
-    eSSH = SSHHandler(host, username, password=password, port=port)
-    eSSH.ensureConnection()
-
-    print("running remote python command: '%s'" % (cmdwargs))
-
-    try:
-        eSSH.sendCommand(cmdwargs)
-    except socket.timeout as error:
-        print("Socket timeout:")
-        print("'%s' didn't return for %d seconds" % (cmdwargs, timeout))
-        print(str(error))
-
-    eSSH.closeConnection()
-    print("closed connection")
