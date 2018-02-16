@@ -48,7 +48,8 @@ if __name__ == "__main__":
         rpw = None
 
     # idict: dictionary of parsed config file
-    # runner: parsed options of wadsworth.py
+    # args: parsed options of wadsworth.py
+    # runner: class that contains logic to quit nicely
     # pid: PID of wadsworth.py
     # pidf: location of PID file containing PID of wadsworth.py
     idict, args, runner, pid, pidf = wadsworth.beginButtling()
