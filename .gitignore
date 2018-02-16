@@ -1,0 +1,18 @@
+# Compiled python modules.
+*.pyc
+
+# Setuptools distribution folder.
+/dist/
+
+# Specific docs directories to ignore
+#/docs/_build
+#/docs/source
+
+# Python egg metadata, regenerated from source files by setuptools.
+/*.egg-info
+
+# Don't track the actual, real password file
+remote.password
+
+# Don't track the actual, real instrument configuration either
+instruments.conf
