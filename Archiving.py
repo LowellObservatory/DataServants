@@ -13,6 +13,7 @@ from __future__ import division, print_function, absolute_import
 
 import sys
 import time
+import json
 
 from servants.butler import wadsworth
 from servants.utils import sshConnection
@@ -28,13 +29,23 @@ def checkFreeSpace(ssh, basecmd, sdir):
     return res
 
 
-def lookForNewDirectories(ssh, basecmd, sdir, dirmask, age=2):
+def lookForNewDirectories(ssh, basecmd, sdir, dirmask, age=2, debug=False):
     """
     """
     fcmd = "%s -l %s -r %s --rangeNew %d" % (basecmd,  sdir, dirmask, age)
-    res = ssh.sendCommand(fcmd)
+    res = ssh.sendCommand(fcmd, debug=debug)
 
     return res
+
+
+def decodeAnswer(ans, debug=False):
+    final = {}
+    if ans[0] == 0:
+        if ans[1] != '':
+            final = json.loads(ans[1])
+            if debug is True:
+                print(final)
+    return final
 
 
 if __name__ == "__main__":
@@ -65,6 +76,7 @@ if __name__ == "__main__":
     #   that disallows the setting of random environment variables
     #   at login, and I can't figure out the goddamn pty shell settings
     #   for Ubuntu (Vishnu) and OS X (xcam)
+    #
     # Also need to make sure to use the relative path (~/) since OS X
     #   puts stuff in /Users/<username> rather than /home/<username>
     baseYcmd = 'export PATH="~/miniconda3/bin:$PATH";'
@@ -90,10 +102,14 @@ if __name__ == "__main__":
                                             password=rpw)
             eSSH.openConnection()
             time.sleep(1)
-            checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
+            fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
+            fsa = decodeAnswer(fs, debug=args.debug)
+
             time.sleep(3)
-            lookForNewDirectories(eSSH, baseYcmd, iobj.srcdir, iobj.dirmask,
-                                  age=args.rangeNew)
+            nd = lookForNewDirectories(eSSH, baseYcmd,
+                                       iobj.srcdir, iobj.dirmask,
+                                       age=args.rangeNew)
+            nda = decodeAnswer(nd, debug=args.debug)
             time.sleep(3)
             eSSH.closeConnection()
 

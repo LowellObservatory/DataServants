@@ -100,32 +100,44 @@ class SSHHandler():
     def closeConnection(self):
         self.ssh.close()
 
-    def sendCommand(self, command):
-        #
-        # Rework this whole thing
-        # because it is very bad
-        # and does not work well
-        #
+    def sendCommand(self, command, debug=False):
+        """
+        """
         if(self.ssh):
-            stdin, stdout, stderr = self.ssh.exec_command(command, get_pty=True)
+            stdin, stdout, stderr = self.ssh.exec_command(command)
+            # No inputs allowed
+            stdin.close()
+
+            # Prepare the return buffers and define how many bytes at a time
+            #   we'll try to digest waiting for the buffers to reach EOF
+            stdout_data = []
+            stderr_data = []
+            nbytes = 1024.
+
             while not stdout.channel.exit_status_ready():
-                # Print data when available
-                if stdout.channel.recv_ready():
-                    rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
-                    if len(rl) > 0:
-                        # Print data from stdout
-                        print(stdout.channel.recv(1024),)
-#                if stdout.channel.recv_ready():
-#                    alldata = stdout.channel.recv(1024)
-#                    prevdata = b"1"
-#                    while prevdata:
-#                        prevdata = stdout.channel.recv(1024)
-#                        alldata += prevdata
-#                    print(str(alldata, "utf8"))
+                ans = stdout.channel.recv(nbytes)
+                stdout_data.append(str(ans, "utf8"))
+
+            # Get the exit status
+            ses = stdout.channel.exit_status
+            # Collapse into just a string
+            stdout_data = "".join(stdout_data)
+
+            while not stderr.channel.exit_status_ready():
+                err = stderr.channel.recv_stderr(nbytes)
+                stderr_data.append(str(err, "utf8"))
+            stderr_data = "".join(stderr_data)
+
+            if debug is True:
+                print("exit status:", ses)
+                print("stdout:")
+                print(stdout_data)
+                print("stderr:")
+                print(stderr_data)
         else:
             print("SSH connection not opened!")
 
-        return
+        return ses, stdout_data, stderr_data
 
 
 class TimeoutError(Exception):
