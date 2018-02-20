@@ -19,3 +19,7 @@ instruments.conf
 
 # Ignore rando code dirs
 .vscode
+
+# Some old stuff that doesn't need control but I want to keep locally
+/servants/old/
+/servants/unsorted/
