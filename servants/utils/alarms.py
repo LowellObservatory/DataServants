@@ -14,6 +14,38 @@ from __future__ import division, print_function, absolute_import
 import signal
 
 
+class alarming(object):
+    def raiseTimeout(self, signum, frame):
+        """
+        """
+        raise TimeoutException
+
+    def setAlarm(self, handler=None, timeout=10, debug=False):
+        """
+        Set alarm to go off after timeout sec and issue a TimeoutException
+
+        Timeout can be integer only!
+        """
+        if timeout < 1:
+            if debug is True:
+                print("Warning: Timeout must be an integer >= 1")
+            timeout = 1
+        if type(timeout) is float:
+            if debug is True:
+                print("Warning: Timeout %f set to %d" % (timeout,
+                                                         int(timeout)))
+            timeout = int(timeout)
+
+        if handler is not None:
+            signal.signal(signal.SIGALRM, handler)
+        else:
+            signal.signal(signal.SIGALRM, raiseTimeout)
+        signal.alarm(timeout)
+
+    def clearAlarm(self):
+        signal.alarm(0)
+
+
 def setAlarm(timeout=10, debug=False):
     """
     Given some arbitrary function, set an alarm to go off after timeout secs.

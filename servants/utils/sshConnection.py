@@ -12,11 +12,12 @@
 from __future__ import division, print_function, absolute_import
 
 import time
-import signal
 import socket
 
 import paramiko
 from paramiko import SSHException, AuthenticationException
+
+from . import alarms
 
 
 class Persistence(object):
@@ -31,17 +32,15 @@ class Persistence(object):
         self.errorMessage = errorMessage
 
     def act(self):
-        print("Setting alarm timer")
-        signal.signal(signal.SIGALRM, self.handleTimeout)
-        signal.alarm(self.seconds)
         try:
-            self.function()
+            # Set the alarm via a class to be able to specify our timeout
+            #   handler here rather than the default one in the util lib.
+            a = alarms.alarming(self.function(), self.handleTimeout)
         except AuthenticationException as error:
             self.tryAgain(AuthenticationException(error),
                           'Authentication exception')
         finally:
-            print("Removing alarm timer")
-            signal.alarm(0)
+            a.clearAlarm()
 
     def tryAgain(self, exception, message):
         if self.tries >= self.tryLimit:
@@ -54,7 +53,7 @@ class Persistence(object):
             print('Succeeded on try', self.tries)
 
     def handleTimeout(self, signum, frame):
-        self.tryAgain(TimeoutError(self.errorMessage), 'Timed out')
+        self.tryAgain(alarms.TimeoutException(self.errorMessage), 'Timed out')
 
 
 class SSHHandler():
@@ -82,7 +81,7 @@ class SSHHandler():
         except EOFError as errtext:
             self.warning('Server has terminated with EOFError:',
                          errtext, purpose)
-        except TimeoutError as errtext:
+        except alarms.TimeoutException as errtext:
             self.warning('Timeout error connecting:',
                          errtext)
         return False
@@ -136,8 +135,3 @@ class SSHHandler():
             print("SSH connection not opened!")
 
         return ses, stdout_data, stderr_data
-
-
-class TimeoutError(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
