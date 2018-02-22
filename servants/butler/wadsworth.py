@@ -196,6 +196,10 @@ def setup_arguments():
                         help='Number of previous logs to keep after rotation',
                         default=30, nargs=1)
 
+    parser.add_argument('--debug', action='store_true',
+                        help='Print extra debugging messages while running',
+                        default=False)
+
     args = parser.parse_args()
 
     return args

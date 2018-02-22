@@ -17,6 +17,7 @@ import json
 
 from servants.butler import wadsworth
 from servants.utils import sshConnection
+from servants.utils import pingaling as pingy
 #from servants.maid import yvette
 
 
@@ -65,6 +66,8 @@ if __name__ == "__main__":
     # pidf: location of PID file containing PID of wadsworth.py
     idict, args, runner, pid, pidf = wadsworth.beginButtling()
 
+    print(args)
+
     # Preamble/contextual messages before we really start
     print("Beginning to archive the following instruments:")
     print("%s\n" % (' '.join(idict.keys())))
@@ -91,6 +94,10 @@ if __name__ == "__main__":
         for inst in idict:
             iobj = idict[inst]
             print("Instrument: %s" % (inst))
+
+            pings, drops = pingy.ping(iobj.host, port=iobj.port)
+            pret = {inst: [pingy.calcMedian(pings), drops]}
+            print(pret)
 
             # Open the SSH connection; SSHHandler creates a Persistence class
             #   (in sshConnection.py) which has some retries and timeout
