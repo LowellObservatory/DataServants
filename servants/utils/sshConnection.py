@@ -14,8 +14,6 @@ from __future__ import division, print_function, absolute_import
 import time
 import signal
 import socket
-import select
-import datetime as dt
 
 import paramiko
 from paramiko import SSHException, AuthenticationException
