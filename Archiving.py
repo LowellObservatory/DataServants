@@ -96,7 +96,9 @@ if __name__ == "__main__":
             print("\n%s" % ("="*11))
             print("Instrument: %s" % (inst))
 
-            pings, drops = pingy.ping(iobj.host, port=iobj.port)
+            # Timeouts and stuff are handled elsewhere in here
+            #   BUT! timeout must be an int >= 1 (second)
+            pings, drops = pingy.ping(iobj.host, port=iobj.port, timeout=3)
             pra = {"PingResults": [pingy.calcMedian(pings), drops]}
             print(pra)
 
