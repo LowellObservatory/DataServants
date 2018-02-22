@@ -93,11 +93,12 @@ if __name__ == "__main__":
     while runner.halt is False:
         for inst in idict:
             iobj = idict[inst]
+            print("\n%s" % ("="*11))
             print("Instrument: %s" % (inst))
 
             pings, drops = pingy.ping(iobj.host, port=iobj.port)
-            pret = {inst: [pingy.calcMedian(pings), drops]}
-            print(pret)
+            pra = {"PingResults": [pingy.calcMedian(pings), drops]}
+            print(pra)
 
             # Open the SSH connection; SSHHandler creates a Persistence class
             #   (in sshConnection.py) which has some retries and timeout
@@ -111,12 +112,14 @@ if __name__ == "__main__":
             time.sleep(1)
             fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
             fsa = decodeAnswer(fs, debug=args.debug)
+            print(fsa)
 
             time.sleep(3)
             nd = lookForNewDirectories(eSSH, baseYcmd,
                                        iobj.srcdir, iobj.dirmask,
                                        age=args.rangeNew)
             nda = decodeAnswer(nd, debug=args.debug)
+            print(nda)
             time.sleep(3)
             eSSH.closeConnection()
 

@@ -48,7 +48,8 @@ def ping(host, port=22, repeats=7, waittime=0.5, timeout=1, debug=False):
             if debug is True:
                 print(res)
         except alarms.TimeoutException as err:
-            print("Timed out: %s" % (str(err)))
+            if debug is True:
+                print("Timed out: %s" % (str(err)))
             dropped += 1
             pres.append(np.nan)
         except serviceping.network.ScanFailed as err:
