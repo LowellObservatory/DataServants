@@ -17,7 +17,23 @@ def openDB(dbname, host='localhost', port=8086, user='root', pw='root'):
     return client
     
 
-if __name__ == "__main__":
+def writeToDB(dbclient, dbname, vals):
+    """
+    Given an opened InfluxDBClient, write stuff to the given dbname
+    """
+    # Actually try to write some points, it'll barf if the database
+    #   doesn't actually exist yet so create it if needed
+    try:
+        dbclient.write_points(vals)
+    except InfluxDBClientError:
+        dbclient.create_database(dbname)
+        dbclient.write_points(vals)
+
+
+def example():
+    """
+    """
+    dbname = 'beeeeees'
     json_body = [
                  {
                   "measurement": "cpu_load_short",
@@ -32,16 +48,8 @@ if __name__ == "__main__":
                  }
                 ]
 
-    dbname = 'beeeeees'
     client = openDB(dbname)
-
-    # Actually try to write some points, it'll barf if the database
-    #   doesn't actually exist yet so create it if needed
-    try:
-        client.write_points(json_body)
-    except InfluxDBClientError:
-        client.create_database(dbname)
-        client.write_points(json_body)
+    writeToDB(client, dbname, json_body)
 
     result = client.query('select value from cpu_load_short;')
     print("Result: {0}".format(result))
