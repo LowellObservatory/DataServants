@@ -30,6 +30,27 @@ def writeToDB(dbclient, dbname, vals):
         dbclient.write_points(vals)
 
 
+def closeDB(dbclient):
+    """
+    """
+    try:
+        dbclient.close()
+    except Exception as err:
+        print(str(err))
+    
+    
+def dropDB(dbclient, dbname, imsure=False):
+    """
+    """
+    if imsure is False:
+        print("You're not sure! Doing nothing.")
+    else:
+        try:
+            dbclient.drop_database(dbname)
+        except Exception as err:
+            print(str(err))
+
+
 def example():
     """
     """
@@ -54,4 +75,4 @@ def example():
     result = client.query('select value from cpu_load_short;')
     print("Result: {0}".format(result))
 
-    client.close()
+    closeDB(client)
