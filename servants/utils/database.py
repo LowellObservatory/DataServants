@@ -11,6 +11,7 @@
 
 from __future__ import division, print_function, absolute_import
 
+import sys
 import numpy as np
 import datetime as dt
 
@@ -18,50 +19,72 @@ from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 
 
-def openDB(dbname, host='localhost', port=8086, user='root', pw='root'):
+class influxobj():
     """
-    """
-    try:
-        client = InfluxDBClient(host, port, username=user,
-                                password=pw, database=dbname)
-    except Exception as err:
-        print(str(err))
-
-    return client
+    Creates an InfluxDB database access object, specific to a database name.
     
-
-def writeToDB(dbclient, dbname, vals):
     """
-    Given an opened InfluxDBClient, write stuff to the given dbname
-    """
-    # Actually try to write some points, it'll barf if the database
-    #   doesn't actually exist yet so create it if needed
-    try:
-        dbclient.write_points(vals)
-    except InfluxDBClientError:
-        dbclient.create_database(dbname)
-        dbclient.write_points(vals)
-
-
-def closeDB(dbclient):
-    """
-    """
-    try:
-        dbclient.close()
-    except Exception as err:
-        print(str(err))
-    
-    
-def dropDB(dbclient, dbname, imsure=False):
-    """
-    """
-    if imsure is False:
-        print("You're not sure! Doing nothing.")
-    else:
+    def __init__(self, dbase, connect=True, 
+                 host='localhost', port=8086, 
+                 user='root', pw='root'):
+        self.host = host
+        self.port = port
+        self.username = user
+        self.password = pw
+        self.dbase = dbase
+        if connect is True:
+            self.openDB()
+        else:
+            self.client = None    
+                
+    def openDB(self):
+        """
+        """
         try:
-            dbclient.drop_database(dbname)
+            client = InfluxDBClient(self.host, self.port, 
+                                    username=self.username,
+                                    password=self.password)
+        except Exception as err:
+            client = None
+            print(str(err))
+    
+        self.client = client
+
+    def writeToDB(self, vals):
+        """
+        Given an opened InfluxDBClient, write stuff to the given dbname
+        """
+        # Make sure we're actually connected first
+        if self.client is not None:
+            # Actually try to write some points, it'll barf if the database
+            #   doesn't actually exist yet so create it if needed
+            try:
+                self.client.write_points(vals)
+            except InfluxDBClientError:
+                self.client.create_database(self.dbase)
+                self.client.write_points(vals)
+        else:
+            print("Error: InfluxDBClient not connected!")
+            sys.exit(-1)
+        
+    def closeDB(self):
+        """
+        """
+        try:
+            self.client.close()
         except Exception as err:
             print(str(err))
+        
+    def dropDB(self, imsure=False):
+        """
+        """
+        if imsure is False:
+            print("You're not sure! Doing nothing.")
+        else:
+            try:
+                self.client.drop_database(self.dbase)
+            except Exception as err:
+                print(str(err))
 
 
 def example():
@@ -82,10 +105,12 @@ def example():
                  }
                 ]
 
-    client = openDB(dbname)
-    writeToDB(client, dbname, json_body)
+    # Calling with connect=True establishes the connection, which
+    #   populates influxobj.client with the right stuff
+    ifo = influxobj(dbname, connect=True)
+    ifo.writeToDB(json_body)
 
-    result = client.query('select value from cpu_load_short;')
+    result = ifo.query('select value from cpu_load_short;')
     print("Result: {0}".format(result))
 
-    closeDB(client)
+    ifo.closeDB()
