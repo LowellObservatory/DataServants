@@ -18,7 +18,7 @@ import datetime as dt
 from requests.exceptions import ConnectionError
 
 from influxdb import InfluxDBClient
-import influxdb.exceptions.InfluxDBClientError as InfluxDBClientError
+from influxdb.exceptions import InfluxDBClientError
 
 
 class influxobj():
