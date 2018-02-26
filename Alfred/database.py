@@ -46,6 +46,10 @@ class influxobj():
             self.client = InfluxDBClient(self.host, self.port,
                                          username=self.username,
                                          password=self.password)
+            # Create the database if it doesn't exist; underneath the hood
+            #   InfluxDB is basically doing
+            #   CREATE DATABASE IF NOT EXISTS dbname
+            self.client.create_database(self.dbname)
         except Exception as err:
             self.client = None
             print(str(err))
@@ -66,16 +70,11 @@ class influxobj():
                 print("Fatal Connection Error!")
                 print("Is InfluxDB running?")
                 sys.exit(-1)
-            except InfluxDBClientError:
+            except InfluxDBClientError as err:
                 if debug is True:
                     print("Failed to write_points")
-                # That usually means that the database doesn't exist so make it
-                try:
-                    self.client.create_database(self.dbase)
-                    self.client.write_points(vals)
-                except Exception as err:
-                    print(str(err))
-                    sys.exit(-1)
+                print(str(err))
+                sys.exit(-1)
         else:
             print("Error: InfluxDBClient not connected!")
             sys.exit(-1)
