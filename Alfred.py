@@ -130,11 +130,15 @@ if __name__ == "__main__":
             # Now make the packet given the deserialized json answer
             meas = ['FreeSpace']
             tags = {'host': iobj.host}
+            ts = dt.datetime.utcnow()
             if fsa != {}:
                 fields = {'path': fsa['FreeSpace']['path'],
                           'total': fsa['FreeSpace']['total'],
                           'free': fsa['FreeSpace']['free']}
-                p = packetizer.makeInfluxPacket(meas)
+                # Make the packet
+                p = packetizer.makeInfluxPacket(meas=meas,
+                                                ts=ts, tags=tags,
+                                                fields=fields)
             else:
                 p = []
             print(fsa)
