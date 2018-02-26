@@ -22,10 +22,10 @@ from influxdb.exceptions import InfluxDBClientError
 class influxobj():
     """
     Creates an InfluxDB database access object, specific to a database name.
-    
+
     """
-    def __init__(self, dbase, connect=True, 
-                 host='localhost', port=8086, 
+    def __init__(self, dbase, connect=True,
+                 host='localhost', port=8086,
                  user='root', pw='root'):
         self.host = host
         self.port = port
@@ -35,19 +35,19 @@ class influxobj():
         if connect is True:
             self.openDB()
         else:
-            self.client = None    
-                
+            self.client = None
+
     def openDB(self):
         """
         """
         try:
-            client = InfluxDBClient(self.host, self.port, 
+            client = InfluxDBClient(self.host, self.port,
                                     username=self.username,
                                     password=self.password)
         except Exception as err:
             client = None
             print(str(err))
-    
+
         self.client = client
 
     def writeToDB(self, vals):
@@ -66,7 +66,7 @@ class influxobj():
         else:
             print("Error: InfluxDBClient not connected!")
             sys.exit(-1)
-        
+
     def closeDB(self):
         """
         """
@@ -74,7 +74,7 @@ class influxobj():
             self.client.close()
         except Exception as err:
             print(str(err))
-        
+
     def dropDB(self, imsure=False):
         """
         """
