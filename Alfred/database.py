@@ -18,7 +18,7 @@ import datetime as dt
 from requests.exceptions import ConnectionError
 
 from influxdb import InfluxDBClient
-from influxdb.exceptions import InfluxDBClientError
+import influxdb.exceptions.InfluxDBClientError as InfluxDBClientError
 
 
 class influxobj():
@@ -50,7 +50,7 @@ class influxobj():
             self.client = None
             print(str(err))
 
-    def writeToDB(self, vals):
+    def writeToDB(self, vals, debug=False):
         """
         Given an opened InfluxDBClient, write stuff to the given dbname
         """
@@ -59,19 +59,23 @@ class influxobj():
             # Actually try to write some points, it'll barf if the database
             #   doesn't actually exist yet so create it if needed
             try:
-                print("Trying to write_points")
+                if debug is True:
+                    print("Trying to write_points")
                 self.client.write_points(vals)
             except ConnectionError as err:
                 print("Fatal Connection Error!")
                 print("Is InfluxDB running?")
                 sys.exit(-1)
             except InfluxDBClientError:
-                print("Failed to write_points")
-                self.client.create_database(self.dbase)
-                self.client.write_points(vals)
-            except Exception as err:
-                print(str(err))
-                sys.exit(-1)
+                if debug is True:
+                    print("Failed to write_points")
+                # That usually means that the database doesn't exist so make it
+                try:
+                    self.client.create_database(self.dbase)
+                    self.client.write_points(vals)
+                except Exception as err:
+                    print(str(err))
+                    sys.exit(-1)
         else:
             print("Error: InfluxDBClient not connected!")
             sys.exit(-1)
