@@ -168,7 +168,6 @@ def parsePassConf(filename, idict, debug=False):
     tsections = ' '.join(sections)
     print("%s\n" % tsections)
 
-    print("Assigning passwords to usernames...")
     for each in idict.keys():
         # Get the username for this instrument
         iuser = idict[each].user

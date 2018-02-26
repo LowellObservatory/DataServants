@@ -108,7 +108,8 @@ if __name__ == "__main__":
             p = packetizer.makeInfluxPacket(meas=meas,
                                             ts=ts, tags=tags,
                                             fields=fields)
-            print(p)
+            if args.debug is True:
+                print(p)
             # Actually write to the database to store the stuff for Grafana
             #   or whatever other thing is doing the plotting/monitoring
             dbase = idb.influxobj(dbname, connect=True)
@@ -142,7 +143,8 @@ if __name__ == "__main__":
                                                 fields=fields)
             else:
                 p = []
-            print(p)
+            if args.debug is True:
+                print(p)
             if p != []:
                 dbase = idb.influxobj(dbname, connect=True)
                 dbase.writeToDB(p)
@@ -156,10 +158,11 @@ if __name__ == "__main__":
                 break
 #            if runner.halt is True:
 #                break
+            # Time to sleep between instruments
             time.sleep(10)
+        # Time to sleep between whole sequences of instruments
+        time.sleep(300)
 
-        # Temporary hack to only run through once
-        stopper = True
 #
 #    # The above loop is exited when someone sends wadsworth.py SIGTERM...
 #    #   (via 'kill' or 'wadsworth.py -k') so once we get that, we'll clean
