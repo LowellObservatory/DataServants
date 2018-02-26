@@ -108,11 +108,12 @@ class InstrumentHost():
                 print("Key not found: %s" % (str(err)))
                 nicerExit(err)
 
-    def addPass(self, password=None):
+    def addPass(self, password=None, debug=False):
         """
         """
         if password is None:
-            print("Password is empty!!")
+            if debug is True:
+                print("Password is empty!!")
         else:
             self.password = password
 
@@ -178,7 +179,9 @@ def parsePassConf(filename, idict, debug=False):
             if debug is True:
                 print("Username %s has no password!" % (iuser))
             passw = None
-        print(iuser, passw)
+
+        if debug is True:
+            print(iuser, passw)
         idict[each].addPass(passw)
 
     return idict

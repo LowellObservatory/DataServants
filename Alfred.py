@@ -111,7 +111,7 @@ if __name__ == "__main__":
             print(p)
             # Actually write to the database to store the stuff for Grafana
             #   or whatever other thing is doing the plotting/monitoring
-            dbase = idb.influxobj(dbname)
+            dbase = idb.influxobj(dbname, connect=True)
             dbase.writeToDB(p)
             dbase.closeDB()
 

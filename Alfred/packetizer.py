@@ -38,4 +38,4 @@ def makeInfluxPacket(meas='', ts=dt.datetime.now(), tags={}, fields={},
     if debug is True:
         print(packet)
 
-    return packet
+    return [packet]
