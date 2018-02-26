@@ -49,7 +49,7 @@ class influxobj():
             # Create the database if it doesn't exist; underneath the hood
             #   InfluxDB is basically doing
             #   CREATE DATABASE IF NOT EXISTS dbname
-            self.client.create_database(self.dbname)
+            self.client.create_database(self.dbase)
         except Exception as err:
             self.client = None
             print(str(err))
