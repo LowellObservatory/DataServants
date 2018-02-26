@@ -14,6 +14,7 @@ from __future__ import division, print_function, absolute_import
 import os
 import re
 import fnmatch
+import numpy as np
 from os.path import join, isdir, listdir
 
 from . import common
@@ -147,9 +148,13 @@ def checkFreeSpace(loc, debug=False):
             print("%.0f%% remaining" % (100.*free/total))
 
         # Make it a bit more clear what is what via a dictionary
-        retdict = {'path': None, 'total': None, 'free': None}
+        retdict = {'path': None,
+                   'total': None,
+                   'free': None,
+                   'percentfree': None}
         retdict['path'] = loc
         retdict['total'] = total
         retdict['free'] = free
+        retdict['percentfree'] = np.around(free/total, decimals=2)
 
         return retdict
