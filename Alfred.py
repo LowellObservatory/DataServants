@@ -94,8 +94,9 @@ if __name__ == "__main__":
     while stopper is False:
         for inst in idict:
             iobj = idict[inst]
-            print("\n%s" % ("="*11))
-            print("Instrument: %s" % (inst))
+            if debug is True:
+                print("\n%s" % ("="*11))
+                print("Instrument: %s" % (inst))
 
             # Timeouts and stuff are handled elsewhere in here
             #   BUT! timeout must be an int >= 1 (second)
