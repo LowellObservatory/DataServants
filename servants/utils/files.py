@@ -146,4 +146,10 @@ def checkFreeSpace(loc, debug=False):
             print("Total: %.2f\nFree: %.2f" % (total, free))
             print("%.0f%% remaining" % (100.*free/total))
 
-        return {loc: [total, free]}
+        # Make it a bit more clear what is what via a dictionary
+        retdict = {'path': None, 'total': None, 'free': None}
+        retdict['path'] = loc
+        retdict['total'] = total
+        retdict['free'] = free
+
+        return retdict
