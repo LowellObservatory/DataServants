@@ -134,14 +134,15 @@ if __name__ == "__main__":
             if fsa != {}:
                 fields = {'path': fsa['FreeSpace']['path'],
                           'total': fsa['FreeSpace']['total'],
-                          'free': fsa['FreeSpace']['free']}
+                          'free': fsa['FreeSpace']['free'],
+                          'percent': fsa['FreeSpace']['percent']}
                 # Make the packet
                 p = packetizer.makeInfluxPacket(meas=meas,
                                                 ts=ts, tags=tags,
                                                 fields=fields)
             else:
                 p = []
-            print(fsa)
+            print(p)
             if p != []:
                 dbase = idb.influxobj(dbname, connect=True)
                 dbase.writeToDB(p)
