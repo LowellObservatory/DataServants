@@ -106,10 +106,18 @@ class InstrumentHost():
                 print()
             except KeyError as err:
                 print("Key not found: %s" % (str(err)))
-#                nicerExit(err)
+                nicerExit(err)
+
+    def addPass(self, password=None):
+        """
+        """
+        if password is None:
+            print("Password is empty!!")
+        else:
+            self.password = password
 
 
-def parse_conffile(filename, debug=False):
+def parseInstConf(filename, debug=False):
     """
     Parse the .conf file that gives the setup per instrument
     Returns an ordered dict of Instrument classes that the conf file
@@ -117,12 +125,9 @@ def parse_conffile(filename, debug=False):
     """
     try:
         config = conf.SafeConfigParser()
-        fp = open(filename)
-        config.readfp(fp)
+        config.read_file(open(filename, 'r'))
     except IOError as err:
         nicerExit(err)
-    finally:
-        fp.close()
 
     print("Found the following instruments in the configuration file:")
     sections = config.sections()
@@ -140,6 +145,41 @@ def parse_conffile(filename, debug=False):
     for inst in inlist:
         if inst.enabled is True:
             idict.update({inst.name: inst})
+
+    return idict
+
+
+def parsePassConf(filename, idict, debug=False):
+    """
+    Parse the .conf file that gives the passwords per user.
+
+    Returns an ordered dict of results, that then need to be associated with
+    the idict returned from parseInstConf.
+    """
+    try:
+        config = conf.SafeConfigParser()
+        config.read_file(open(filename, 'r'))
+    except IOError as err:
+        nicerExit(err)
+
+    print("Found the following usernames in the password file:")
+    sections = config.sections()
+    tsections = ' '.join(sections)
+    print("%s\n" % tsections)
+
+    print("Assigning passwords to usernames...")
+    for each in idict.keys():
+        # Get the username for this instrument
+        iuser = idict[each].user
+        # Now see if we have a password for this username
+        try:
+            passw = config[iuser]['pw']
+        except KeyError:
+            if debug is True:
+                print("Username %s has no password!" % (iuser))
+            passw = None
+        print(iuser, passw)
+        idict[each].addPass(passw)
 
     return idict
 
