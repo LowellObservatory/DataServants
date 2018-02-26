@@ -27,7 +27,8 @@ def calcMedian(vals):
     return avg
 
 
-def ping(host, port=22, repeats=7, waittime=0.5, timeout=1, debug=False):
+def ping(host, port=22, repeats=7, waittime=0.5, timeout=1,
+         pingavg=True, debug=False):
     """
     Want a decent number of pings since some hosts (like OS X) can
     take a few seconds to wake up their hard drives if they're sleeping
@@ -61,4 +62,9 @@ def ping(host, port=22, repeats=7, waittime=0.5, timeout=1, debug=False):
         nretries += 1
         time.sleep(waittime)
 
-    return pres, dropped
+    if pingavg is True:
+        ping = calcMedian(pres)
+    else:
+        ping = pres
+
+    return ping, dropped

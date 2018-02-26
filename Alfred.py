@@ -14,11 +14,13 @@ from __future__ import division, print_function, absolute_import
 import sys
 import time
 import json
+import datetime as dt
 
-from Alfred import config
-from Alfred import pingaling as pingy
-from Alfred import database as idb
 from Alfred import ssh
+from Alfred import config
+from Alfred import packetizer
+from Alfred import database as idb
+from Alfred import pingaling as pingy
 
 
 def checkFreeSpace(sshConn, basecmd, sdir):
@@ -54,6 +56,9 @@ if __name__ == "__main__":
     idict = config.parsePassConf('./passwords.conf', idict)
     args = config.parseArguments()
 
+    # InfluxDB database name to store stuff in
+    dbname = 'LIGInstruments'
+
 #    # idict: dictionary of parsed config file
 #    # args: parsed options of wadsworth.py
 #    # runner: class that contains logic to quit nicely
@@ -76,7 +81,8 @@ if __name__ == "__main__":
     #   for Ubuntu (Vishnu) and OS X (xcam)
     #
     # Also need to make sure to use the relative path (~/) since OS X
-    #   puts stuff in /Users/<username> rather than /home/<username>
+    #   puts stuff in /Users/<username> rather than /home/<username> like
+    #   the linux hosts do. Messy but necessary due to how I'm doing SSH
     baseYcmd = 'export PATH="~/miniconda3/bin:$PATH";'
     baseYcmd += 'python ~/DataMaid/yvette.py'
     baseYcmd += ' '
@@ -94,8 +100,20 @@ if __name__ == "__main__":
             # Timeouts and stuff are handled elsewhere in here
             #   BUT! timeout must be an int >= 1 (second)
             pings, drops = pingy.ping(iobj.host, port=iobj.port, timeout=3)
-            pra = {"PingResults": [pingy.calcMedian(pings), drops]}
-            print(pra)
+            ts = dt.datetime.utcnow()
+            meas = ['PingResults']
+            tags = {'host': iobj.host}
+            fields = {'ping': pings, 'dropped': drops}
+            # Construct our packet
+            p = packetizer.makeInfluxPacket(meas=meas,
+                                            ts=ts, tags=tags,
+                                            fields=fields)
+            print(p)
+            # Actually write to the database to store the stuff for Grafana
+            #   or whatever other thing is doing the plotting/monitoring
+            dbase = idb.influxobj(dbname)
+            dbase.writeToDB(p)
+            dbase.closeDB()
 
             # Open the SSH connection; SSHHandler creates a Persistence class
             #   (in sshConnection.py) which has some retries and timeout
