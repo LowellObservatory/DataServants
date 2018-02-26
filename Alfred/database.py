@@ -45,7 +45,8 @@ class influxobj():
         try:
             self.client = InfluxDBClient(self.host, self.port,
                                          username=self.username,
-                                         password=self.password)
+                                         password=self.password,
+                                         database=self.dbase)
             # Create the database if it doesn't exist; underneath the hood
             #   InfluxDB is basically doing
             #   CREATE DATABASE IF NOT EXISTS dbname
