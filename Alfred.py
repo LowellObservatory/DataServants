@@ -127,7 +127,21 @@ if __name__ == "__main__":
             time.sleep(1)
             fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
             fsa = decodeAnswer(fs, debug=args.debug)
+            # Now make the packet given the deserialized json answer
+            meas = ['FreeSpace']
+            tags = {'host': iobj.host}
+            if fsa != {}:
+                fields = {'path': fsa['path'],
+                          'total': fsa['total'],
+                          'free': fsa['free']}
+                p = packetizer.makeInfluxPacket(meas)
+            else:
+                p = []
             print(fsa)
+            if p != []:
+                dbase = idb.influxobj(dbname, connect=True)
+                dbase.writeToDB(p)
+                dbase.closeDB()
 
             time.sleep(3)
             eSSH.closeConnection()
