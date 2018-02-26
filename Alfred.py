@@ -135,7 +135,7 @@ if __name__ == "__main__":
                 fields = {'path': fsa['FreeSpace']['path'],
                           'total': fsa['FreeSpace']['total'],
                           'free': fsa['FreeSpace']['free'],
-                          'percent': fsa['FreeSpace']['percent']}
+                          'percentfree': fsa['FreeSpace']['percentfree']}
                 # Make the packet
                 p = packetizer.makeInfluxPacket(meas=meas,
                                                 ts=ts, tags=tags,
