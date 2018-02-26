@@ -131,9 +131,9 @@ if __name__ == "__main__":
             meas = ['FreeSpace']
             tags = {'host': iobj.host}
             if fsa != {}:
-                fields = {'path': fsa['path'],
-                          'total': fsa['total'],
-                          'free': fsa['free']}
+                fields = {'path': fsa['FreeSpace']['path'],
+                          'total': fsa['FreeSpace']['total'],
+                          'free': fsa['FreeSpace']['free']}
                 p = packetizer.makeInfluxPacket(meas)
             else:
                 p = []
