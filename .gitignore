@@ -56,3 +56,13 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Don't track the actual, real password file
+remote.password
+
+# Don't track the actual, real instrument configuration either
+instruments.conf
+
+# Ignore rando code dirs
+.vscode
+
