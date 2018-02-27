@@ -19,7 +19,7 @@ from . import parseargs
 from .. import utils
 
 
-def beginButtling():
+def beginButtling(logfile=True):
     """
     """
     # Time to wait after a process is murdered before starting up again.
@@ -74,13 +74,14 @@ def beginButtling():
     # Record the active PID in the (default) file
     pid, pidf = utils.pids.write_pid_file()
 
-    # Setup logging (optional arguments shown for clarity)
-#    utils.logs.setup_logging(logName=args.log, nLogs=args.nlogs)
+    if logfile is True:
+        # Setup logging (optional arguments shown for clarity)
+        utils.logs.setup_logging(logName=args.log, nLogs=args.nlogs)
 
     # Helps to put context on when things are stopped/started/restarted
     print("PID %d recorded at %s now starting..." % (pid, pidf))
 
     # Read in the configuration file and act upon it
-    idict = utils.parseInstConf(args.config, debug=True)
+    idict = utils.confparsers.parseInstConf(args.config, debug=True)
 
     return idict, args, runner, pid, pidf
