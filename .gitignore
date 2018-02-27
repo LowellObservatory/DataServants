@@ -13,6 +13,7 @@
 
 # Don't track the actual, real password file
 remote.password
+passwords.conf
 
 # Don't track the actual, real instrument configuration either
 instruments.conf

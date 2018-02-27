@@ -15,26 +15,25 @@ import sys
 import time
 import json
 
-from servants.butler import wadsworth
-from servants.utils import sshConnection
-from servants.utils import pingaling as pingy
-#from servants.maid import yvette
+from wadsworth.utils import ssh
+from wadsworth.utils import confparsers
+from wadsworth.butler import wadsworth
 
 
-def checkFreeSpace(ssh, basecmd, sdir):
+def checkFreeSpace(sshConn, basecmd, sdir):
     """
     """
     fcmd = "%s -f %s" % (basecmd,  sdir)
-    res = ssh.sendCommand(fcmd)
+    res = sshConn.sendCommand(fcmd)
 
     return res
 
 
-def lookForNewDirectories(ssh, basecmd, sdir, dirmask, age=2, debug=False):
+def lookForNewDirectories(sshConn, basecmd, sdir, dirmask, age=2, debug=False):
     """
     """
     fcmd = "%s -l %s -r %s --rangeNew %d" % (basecmd,  sdir, dirmask, age)
-    res = ssh.sendCommand(fcmd, debug=debug)
+    res = sshConn.sendCommand(fcmd, debug=debug)
 
     return res
 
@@ -50,21 +49,16 @@ def decodeAnswer(ans, debug=False):
 
 
 if __name__ == "__main__":
-    rpwfile = './remote.password'
-    try:
-        with open(rpwfile, 'r') as f:
-            rpw = f.readline()
-        # Remove any whitespace chars (like \n)
-        rpw = rpw.strip()
-    except IOError:
-        rpw = None
-
     # idict: dictionary of parsed config file
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
     # pid: PID of wadsworth.py
     # pidf: location of PID file containing PID of wadsworth.py
-    idict, args, runner, pid, pidf = wadsworth.beginButtling()
+    idict, args, runner, pid, pidf = wadsworth.beginButtling(logfile=False)
+    idict = confparsers.parsePassConf('./passwords.conf', idict)
+
+    # InfluxDB database name to store stuff in
+    dbname = 'LIGInstruments'
 
     print(args)
 
@@ -96,20 +90,14 @@ if __name__ == "__main__":
             print("\n%s" % ("="*11))
             print("Instrument: %s" % (inst))
 
-            # Timeouts and stuff are handled elsewhere in here
-            #   BUT! timeout must be an int >= 1 (second)
-            pings, drops = pingy.ping(iobj.host, port=iobj.port, timeout=3)
-            pra = {"PingResults": [pingy.calcMedian(pings), drops]}
-            print(pra)
-
             # Open the SSH connection; SSHHandler creates a Persistence class
             #   (in sshConnection.py) which has some retries and timeout
             #   logic baked into it so we don't have to deal with it here
-            eSSH = sshConnection.SSHHandler(host=iobj.host,
-                                            port=iobj.port,
-                                            username=iobj.user,
-                                            timeout=iobj.timeout,
-                                            password=rpw)
+            eSSH = ssh.SSHHandler(host=iobj.host,
+                                  port=iobj.port,
+                                  username=iobj.user,
+                                  timeout=iobj.timeout,
+                                  password=iobj.password)
             eSSH.openConnection()
             time.sleep(1)
             fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
