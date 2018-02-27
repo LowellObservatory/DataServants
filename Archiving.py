@@ -17,7 +17,7 @@ import json
 
 from wadsworth.utils import ssh
 from wadsworth.utils import confparsers
-from wadsworth.butler import wadsworth
+from wadsworth.butler import buttle
 
 
 def checkFreeSpace(sshConn, basecmd, sdir):
@@ -49,12 +49,16 @@ def decodeAnswer(ans, debug=False):
 
 
 if __name__ == "__main__":
+    #
+    # NOTE: Any command line arguments are passed directly to
+    #   wadsworth the butler (wadsworth/butler/parseargs.py)
+    #
     # idict: dictionary of parsed config file
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
     # pid: PID of wadsworth.py
     # pidf: location of PID file containing PID of wadsworth.py
-    idict, args, runner, pid, pidf = wadsworth.beginButtling(logfile=False)
+    idict, args, runner, pid, pidf = buttle.beginButtling(logfile=False)
     idict = confparsers.parsePassConf('./passwords.conf', idict)
 
     # InfluxDB database name to store stuff in
