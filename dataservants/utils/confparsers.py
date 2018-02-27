@@ -21,7 +21,7 @@ except ImportError:
 from . import common
 
 
-def parseInstConf(filename, debug=False):
+def parseInstConf(filename, debug=False, parseHardFail=True):
     """
     Parse the .conf file that gives the setup per instrument
     Returns an ordered dict of Instrument classes that the conf file
@@ -42,7 +42,8 @@ def parseInstConf(filename, debug=False):
     inlist = []
     for each in sections:
         print("Applying '%s' section of conf. file..." % (each))
-        inlist.append(common.InstrumentHost(conf=config[each]))
+        inlist.append(common.InstrumentHost(conf=config[each],
+                                            parseHardFail=parseHardFail))
 
     # Making a dict of *just* the active instruments
     idict = OrderedDict()

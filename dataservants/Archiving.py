@@ -11,6 +11,7 @@
 
 from __future__ import division, print_function, absolute_import
 
+import sys
 import time
 import json
 import datetime as dt
@@ -47,10 +48,6 @@ def decodeAnswer(ans, debug=False):
 
 
 if __name__ == "__main__":
-    idict = alfred.config.parseInstConf('./alfred.conf')
-    idict = alfred.config.parsePassConf('./passwords.conf', idict)
-    args = alfred.config.parseArguments()
-
     # InfluxDB database name to store stuff in
     dbname = 'LIGInstruments'
 
@@ -59,15 +56,15 @@ if __name__ == "__main__":
 #    # runner: class that contains logic to quit nicely
 #    # pid: PID of wadsworth.py
 #    # pidf: location of PID file containing PID of wadsworth.py
-#    idict, args, runner, pid, pidf = wadsworth.beginButtling()
-#
-#    print(args)
-#
-#    # Preamble/contextual messages before we really start
-#    print("Beginning to archive the following instruments:")
-#    print("%s\n" % (' '.join(idict.keys())))
-#    print("Starting the infinite archiving loop.")
-#    print("Kill PID %d to stop it." % (pid))
+    idict, args, runner, pid, pidf = alfred.valet.beginValeting()
+
+    print(args)
+
+    # Preamble/contextual messages before we really start
+    print("Beginning to archive the following instruments:")
+    print("%s\n" % (' '.join(idict.keys())))
+    print("Starting the infinite archiving loop.")
+    print("Kill PID %d to stop it." % (pid))
 
     # Note: We need to prepend the PATH setting here because some hosts
     #   (all recent OSes, really) have a more stringent SSHd config
@@ -85,8 +82,7 @@ if __name__ == "__main__":
     stopper = False
 
     # Infinite archiving loop
-#    while runner.halt is False:
-    while stopper is False:
+    while runner.halt is False:
         for inst in idict:
             iobj = idict[inst]
             if args.debug is True:
@@ -152,24 +148,22 @@ if __name__ == "__main__":
             eSSH.closeConnection()
 
             # Check to see if someone asked us to quit before continuing
-            if stopper is True:
+            if runner.halt is True:
                 break
-#            if runner.halt is True:
-#                break
             # Time to sleep between instruments
             time.sleep(10)
         # Time to sleep between whole sequences of instruments
         time.sleep(300)
 
-#
-#    # The above loop is exited when someone sends wadsworth.py SIGTERM...
-#    #   (via 'kill' or 'wadsworth.py -k') so once we get that, we'll clean
-#    #   up on our way out the door with one final notification to the log
-#    print("PID %d is now out of here!" % (pid))
-#
-#    # The PID file will have already been either deleted or overwritten by
-#    #   another function/process by this point, so just give back the console
-#    #   and return STDOUT and STDERR to their system defaults
-#    sys.stdout = sys.__stdout__
-#    sys.stderr = sys.__stderr__
-#    print("Archive loop completed; STDOUT and STDERR reset.")
+
+    # The above loop is exited when someone sends wadsworth.py SIGTERM...
+    #   (via 'kill' or 'wadsworth.py -k') so once we get that, we'll clean
+    #   up on our way out the door with one final notification to the log
+    print("PID %d is now out of here!" % (pid))
+
+    # The PID file will have already been either deleted or overwritten by
+    #   another function/process by this point, so just give back the console
+    #   and return STDOUT and STDERR to their system defaults
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__
+    print("Archive loop completed; STDOUT and STDERR reset.")

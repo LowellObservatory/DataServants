@@ -105,7 +105,7 @@ class InstrumentHost():
     Takes an optional argument of a parsed configuration file; if the parsed
     structure exists and you pass it, the class will init with its contents
     """
-    def __init__(self, conf=None):
+    def __init__(self, conf=None, parseHardFail=True):
         # This should mirror what's in the configuration file
         #   Could get all fancy-pants with assignment, but we're not to make
         #   sure that it's always clear what should be in the conf file
@@ -148,8 +148,12 @@ class InstrumentHost():
 
                 print()
             except KeyError as err:
-                print("Key not found: %s" % (str(err)))
-                nicerExit(err)
+                if parseHardFail is True:
+                    nicerExit(err)
+                else:
+                    key = err.args[0]
+                    setattr(self, key, None)
+                    print("\t%s = None" % (key))
 
     def addPass(self, password=None, debug=False):
         """
