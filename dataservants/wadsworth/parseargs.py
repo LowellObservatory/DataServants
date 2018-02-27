@@ -27,7 +27,7 @@ def setup_arguments():
     parser.add_argument('-c', '--config', metavar='/path/to/file.log',
                         type=str,
                         help='File for instrument configuration information',
-                        default='./instruments.conf', nargs='?')
+                        default='./archiving.conf', nargs='?')
 
     parser.add_argument('-l', '--log', metavar='/path/to/file.log', type=str,
                         help='File for logging of information/status messages',

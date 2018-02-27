@@ -1,0 +1,16 @@
+[key1]
+name=name1
+host=host1
+user=user1
+port=22
+srcdir=/data/path/on/host1/
+enabled=True
+
+
+[key2]
+name=name2
+host=host2
+user=user2
+port=22
+srcdir=/data/path/on/host2/
+enabled=True

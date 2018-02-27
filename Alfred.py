@@ -11,16 +11,11 @@
 
 from __future__ import division, print_function, absolute_import
 
-import sys
 import time
 import json
 import datetime as dt
 
-from Alfred import ssh
-from Alfred import config
-from Alfred import packetizer
-from Alfred import database as idb
-from Alfred import pingaling as pingy
+from dataservants import alfred
 
 
 def checkFreeSpace(sshConn, basecmd, sdir):
@@ -52,9 +47,9 @@ def decodeAnswer(ans, debug=False):
 
 
 if __name__ == "__main__":
-    idict = config.parseInstConf('./instruments.conf')
-    idict = config.parsePassConf('./passwords.conf', idict)
-    args = config.parseArguments()
+    idict = alfred.config.parseInstConf('./alfred.conf')
+    idict = alfred.config.parsePassConf('./passwords.conf', idict)
+    args = alfred.config.parseArguments()
 
     # InfluxDB database name to store stuff in
     dbname = 'LIGInstruments'
@@ -100,31 +95,33 @@ if __name__ == "__main__":
 
             # Timeouts and stuff are handled elsewhere in here
             #   BUT! timeout must be an int >= 1 (second)
-            pings, drops = pingy.ping(iobj.host, port=iobj.port, timeout=3)
+            pings, drops = alfred.pingaling.ping(iobj.host,
+                                                 port=iobj.port,
+                                                 timeout=3)
             ts = dt.datetime.utcnow()
             meas = ['PingResults']
             tags = {'host': iobj.host}
             fields = {'ping': pings, 'dropped': drops}
             # Construct our packet
-            p = packetizer.makeInfluxPacket(meas=meas,
-                                            ts=ts, tags=tags,
-                                            fields=fields)
+            p = alfred.packetizer.makeInfluxPacket(meas=meas,
+                                                   ts=ts, tags=tags,
+                                                   fields=fields)
             if args.debug is True:
                 print(p)
             # Actually write to the database to store the stuff for Grafana
             #   or whatever other thing is doing the plotting/monitoring
-            dbase = idb.influxobj(dbname, connect=True)
+            dbase = alfred.idb.influxobj(dbname, connect=True)
             dbase.writeToDB(p)
             dbase.closeDB()
 
             # Open the SSH connection; SSHHandler creates a Persistence class
             #   (in sshConnection.py) which has some retries and timeout
             #   logic baked into it so we don't have to deal with it here
-            eSSH = ssh.SSHHandler(host=iobj.host,
-                                  port=iobj.port,
-                                  username=iobj.user,
-                                  timeout=iobj.timeout,
-                                  password=iobj.password)
+            eSSH = alfred.ssh.SSHHandler(host=iobj.host,
+                                         port=iobj.port,
+                                         username=iobj.user,
+                                         timeout=iobj.timeout,
+                                         password=iobj.password)
             eSSH.openConnection()
             time.sleep(1)
             fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
@@ -139,15 +136,15 @@ if __name__ == "__main__":
                           'free': fsa['FreeSpace']['free'],
                           'percentfree': fsa['FreeSpace']['percentfree']}
                 # Make the packet
-                p = packetizer.makeInfluxPacket(meas=meas,
-                                                ts=ts, tags=tags,
-                                                fields=fields)
+                p = alfred.packetizer.makeInfluxPacket(meas=meas,
+                                                       ts=ts, tags=tags,
+                                                       fields=fields)
             else:
                 p = []
             if args.debug is True:
                 print(p)
             if p != []:
-                dbase = idb.influxobj(dbname, connect=True)
+                dbase = alfred.idb.influxobj(dbname, connect=True)
                 dbase.writeToDB(p)
                 dbase.closeDB()
 
