@@ -15,9 +15,9 @@ import sys
 import time
 import json
 
-from wadsworth.utils import ssh
-from wadsworth.utils import confparsers
-from wadsworth.wadsworth import buttle
+from dataservants.utils import ssh
+from dataservants.utils import confparsers
+from dataservants.wadsworth import buttle
 
 
 def checkFreeSpace(sshConn, basecmd, sdir):
