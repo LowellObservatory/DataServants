@@ -90,7 +90,7 @@ class HowtoStopNicely():
         except AttributeError:
             print("Got signal num. %s; stopping..." % (signum))
         try:
-            pids.remove_pid_file()
+            pids.remove_pid_file(filename=self.pidfile)
         except OSError as e:
             # Need to define why the file can't be removed here...
             print(str(e))

@@ -13,15 +13,13 @@ from __future__ import division, print_function, absolute_import
 
 import os
 import time
-import json
 import signal
-import datetime as dt
 
 from .. import utils
 from . import parseargs
 
 
-def beginValeting(logfile=True):
+def beginValeting(procname='Alfred', pidfile='alfred.pid', logfile=True):
     """
     """
     # Time to wait after a process is murdered before starting up again.
@@ -34,13 +32,14 @@ def beginValeting(logfile=True):
 
     # Setup termination signals
     runner = utils.common.HowtoStopNicely()
+    runner.pidfile = pidfile
 
     # Setup argument parsing *before* logging so help messages go to stdout
     #   NOTE: This function sets up the default values when given no args!
-    args = parseargs.setup_arguments()
+    args = parseargs.parseArguments()
 
-    pid = utils.pids.check_if_running(procname='Alfred',
-                                      filename='/alfred.pid')
+    pid = utils.pids.check_if_running(procname=procname,
+                                      filename=runner.pidfile)
     # UGLY LOGIC I'M NOT HAPPY WITH
     if pid != -1:
         if (args.fratricide is True) or (args.kill is True):
@@ -59,7 +58,7 @@ def beginValeting(logfile=True):
                 # Returning STDOUT and STDERR to the console/whatever
                 utils.common.nicerExit()
             else:
-                print("LOOK AT ME I'M THE BUTLER NOW")
+                print("LOOK AT ME I'M THE VALET NOW")
                 print("%d second pause to allow the other process to exit." %
                       (killSleep))
                 time.sleep(killSleep)
@@ -75,7 +74,8 @@ def beginValeting(logfile=True):
             utils.common.nicerExit()
 
     # Record the active PID in the (default) file
-    pid, pidf = utils.pids.write_pid_file(filename='/alfred.pid')
+    pid, pidf = utils.pids.write_pid_file(filename=runner.pidfile)
+    runner.pidfile = pidf
 
     if logfile is True:
         # Setup logging (optional arguments shown for clarity)
@@ -85,6 +85,7 @@ def beginValeting(logfile=True):
     print("PID %d recorded at %s now starting..." % (pid, pidf))
 
     # Read in the configuration file and act upon it
-    idict = utils.confparsers.parseInstConf(args.config, debug=True)
+    idict = utils.confparsers.parseInstConf(args.config, debug=True,
+                                            parseHardFail=False)
 
     return idict, args, runner, pid, pidf
