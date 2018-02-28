@@ -112,16 +112,11 @@ def write_pid_file(filename='wadsworth.pid'):
     return cpid, ploc
 
 
-def remove_pid_file(filename='wadsworth.pid'):
+def remove_pid_file(filename='/tmp/wadsworth.pid'):
     """
     """
-    # Assume a default location for now while I figure out how to
-    #   pass this function arguments from the caught signals
-    tloc = tempfile.gettempdir()
-    pidfile = tloc + "/" + filename
-
     try:
-        os.remove(pidfile)
+        os.remove(filename)
     except Exception as e:
         # Not exiting on this exception since it's not a big deal if
         #  the PID file couldn't be removed; it could be that another process

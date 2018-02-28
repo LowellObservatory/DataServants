@@ -56,14 +56,14 @@ if __name__ == "__main__":
 #    # runner: class that contains logic to quit nicely
 #    # pid: PID of wadsworth.py
 #    # pidf: location of PID file containing PID of wadsworth.py
-    idict, args, runner, pid, pidf = alfred.valet.beginValeting()
+    idict, args, runner, pid, pidf = alfred.valet.beginValeting(logfile=False)
 
     print(args)
-
+    args.debug = True
     # Preamble/contextual messages before we really start
-    print("Beginning to archive the following instruments:")
+    print("Beginning to monitor the following hosts:")
     print("%s\n" % (' '.join(idict.keys())))
-    print("Starting the infinite archiving loop.")
+    print("Starting the infinite loop.")
     print("Kill PID %d to stop it." % (pid))
 
     # Note: We need to prepend the PATH setting here because some hosts
@@ -79,10 +79,9 @@ if __name__ == "__main__":
     baseYcmd += 'python ~/DataMaid/yvette.py'
     baseYcmd += ' '
 
-    stopper = False
-
-    # Infinite archiving loop
+    # Semi-infinite loop
     while runner.halt is False:
+        print(idict)
         for inst in idict:
             iobj = idict[inst]
             if args.debug is True:
@@ -149,11 +148,18 @@ if __name__ == "__main__":
 
             # Check to see if someone asked us to quit before continuing
             if runner.halt is True:
+                print("Quit inner")
                 break
-            # Time to sleep between instruments
-            time.sleep(10)
-        # Time to sleep between whole sequences of instruments
-        time.sleep(300)
+            else:
+                # Time to sleep between instruments
+                time.sleep(10)
+        # Try to bust out of this outer loop too
+        if runner.halt is True:
+            print("Quit outer")
+            break
+        else:
+            # Time to sleep between whole sequences of instruments
+            time.sleep(300)
 
     # The above loop is exited when someone sends wadsworth.py SIGTERM...
     #   (via 'kill' or 'wadsworth.py -k') so once we get that, we'll clean
