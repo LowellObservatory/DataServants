@@ -155,7 +155,6 @@ if __name__ == "__main__":
         # Time to sleep between whole sequences of instruments
         time.sleep(300)
 
-
     # The above loop is exited when someone sends wadsworth.py SIGTERM...
     #   (via 'kill' or 'wadsworth.py -k') so once we get that, we'll clean
     #   up on our way out the door with one final notification to the log

@@ -39,7 +39,8 @@ def beginValeting(logfile=True):
     #   NOTE: This function sets up the default values when given no args!
     args = parseargs.setup_arguments()
 
-    pid = utils.pids.check_if_running()
+    pid = utils.pids.check_if_running(procname='Alfred',
+                                      filename='/alfred.pid')
     # UGLY LOGIC I'M NOT HAPPY WITH
     if pid != -1:
         if (args.fratricide is True) or (args.kill is True):
@@ -74,7 +75,7 @@ def beginValeting(logfile=True):
             utils.common.nicerExit()
 
     # Record the active PID in the (default) file
-    pid, pidf = utils.pids.write_pid_file()
+    pid, pidf = utils.pids.write_pid_file(filename='/alfred.pid')
 
     if logfile is True:
         # Setup logging (optional arguments shown for clarity)

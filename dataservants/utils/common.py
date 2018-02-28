@@ -77,6 +77,7 @@ class HowtoStopNicely():
         logic in utils.check_if_running should let it start without a fuss.
         """
         # Set up signal handling before anything else!
+        self.pidfile = None
         self.halt = False
         signal.signal(signal.SIGHUP, self.signal_handler)
         signal.signal(signal.SIGINT, self.signal_handler)

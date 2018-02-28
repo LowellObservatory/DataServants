@@ -33,7 +33,7 @@ def nicerExit(err=None):
     sys.exit(cond)
 
 
-def check_if_running():
+def check_if_running(procname='wadsworth', filename='wadsworth.pid'):
     """
     Check in the common temporary places for a wadsworth.pid file, and
     if it finds one, return the found PID (if it still exists)
@@ -53,7 +53,7 @@ def check_if_running():
     running_pid = -1
     for loc in locs:
         try:
-            tfile = loc + '/wadsworth.pid'
+            tfile = loc + '/' + filename
             f = open(tfile)
             # If that worked, then save the PID and the filename
             #   Saving them as lists in case multiples are found
@@ -80,8 +80,8 @@ def check_if_running():
                 # You HAVE to search thru each element of the cmdline since
                 #   the program can accept arguments and they'll be here too!
                 for part in proc['cmdline']:
-                    if ('wadsworth' in part.lower()) is True:
-                        print("Wadsworth is running! Check PID %d" % (each))
+                    if (procname in part.lower()) is True:
+                        print("%s is running! Check PID %d" % (procname, each))
                         running_pid = each
             else:
                 print("Stale PID %d found; removing its PID file" % pid[i])
@@ -91,7 +91,7 @@ def check_if_running():
     return running_pid
 
 
-def write_pid_file():
+def write_pid_file(filename='wadsworth.pid'):
     """
     """
     # Assume a default location for now while I figure out how to
@@ -99,7 +99,7 @@ def write_pid_file():
     tloc = tempfile.gettempdir()
     cpid = os.getpid()
 
-    ploc = tloc + "/wadsworth.pid"
+    ploc = tloc + "/" + filename
 
     try:
         f = open(ploc, 'w+')
@@ -112,13 +112,13 @@ def write_pid_file():
     return cpid, ploc
 
 
-def remove_pid_file():
+def remove_pid_file(filename='wadsworth.pid'):
     """
     """
     # Assume a default location for now while I figure out how to
     #   pass this function arguments from the caught signals
     tloc = tempfile.gettempdir()
-    pidfile = tloc + "/wadsworth.pid"
+    pidfile = tloc + "/" + filename
 
     try:
         os.remove(pidfile)
