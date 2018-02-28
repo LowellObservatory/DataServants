@@ -108,9 +108,6 @@ class InstrumentHost():
     """
     def __init__(self, conf=None, parseHardFail=True):
         # This should mirror what's in the configuration file
-        #   Could get all fancy-pants with assignment, but we're not to make
-        #   sure that it's always clear what should be in the conf file
-
         # Assign them first just to make sure they always exist
         self.name = ''
         self.host = ''
@@ -124,16 +121,12 @@ class InstrumentHost():
         self.timeout = 60
         if conf is not None:
             for key in self.__dict__:
-                print(repr(key))
                 try:
-                    if (key.lower() != 'enabled') or \
-                       (key.lower() != 'engenabled'):
-                        setattr(self, key, conf[key])
+                    if (key.lower() == 'enabled') or \
+                       (key.lower() == 'engenabled'):
+                        setattr(self, key, conf.getboolean(key))
                     else:
-                        print(key)
-                        print(conf[key])
-                        print(conf.getboolean(key))
-                        setattr(self, key, 'true' == conf['enabled'].lower())
+                        setattr(self, key, conf[key])
                 except KeyError as err:
                     if parseHardFail is True:
                         nicerExit(err)
@@ -141,30 +134,6 @@ class InstrumentHost():
                         key = err.args[0]
                         setattr(self, key, None)
                 print("\t%s = %s" % (key, getattr(self, key)))
-            # OLD
-#            try:
-#                self.name = conf['name']
-#                print("\tname = %s" % (self.name))
-#                self.host = conf['host']
-#                print("\thost = %s" % (self.host))
-#                self.port = conf['port']
-#                print("\tport = %s" % (self.port))
-#                self.user = conf['user']
-#                print("\tuser = %s" % (self.user))
-#                self.srcdir = conf['srcdir']
-#                print("\tsrcdir = %s " % (self.srcdir))
-#                self.dirmask = conf['dirmask']
-#                print("\tdirmask = %s " % (self.dirmask))
-#                self.destdir = conf['destdir']
-#                print("\tdestdir = %s" % (self.destdir))
-#
-#                # If you think about these last two, I promise it makes sense
-#                #   It's a cheap way to actually get the right bool back,
-#                #   since typecasting won't work; bool('False') == True
-#                self.enabled = 'true' == conf['enabled'].lower()
-#                print("\tenabled = %s" % (str(self.enabled)))
-#                self.engEnabled = 'true' == conf['engEnabled'].lower()
-#                print("\tengEnabled = %s" % (str(self.engEnabled)))
 
     def addPass(self, password=None, debug=False):
         """

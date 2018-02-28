@@ -58,8 +58,6 @@ if __name__ == "__main__":
 #    # pidf: location of PID file containing PID of wadsworth.py
     idict, args, runner, pid, pidf = alfred.valet.beginValeting(logfile=False)
 
-    print(args)
-    args.debug = True
     # Preamble/contextual messages before we really start
     print("Beginning to monitor the following hosts:")
     print("%s\n" % (' '.join(idict.keys())))
