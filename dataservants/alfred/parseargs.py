@@ -35,7 +35,7 @@ def parseArguments():
                         default='/tmp/alfred.log', nargs='?')
 
     parser.add_argument('-k', '--kill', action='store_true',
-                        help='Kill an already running instance of Wadsworth',
+                        help='Kill an already running instance of Alfred',
                         default=False)
 
     # Note: Need to specify dest= here since there are multiple long options

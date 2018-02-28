@@ -68,9 +68,9 @@ def beginValeting(procname='Alfred', pidfile='alfred.pid', logfile=True):
             utils.common.nicerExit()
     else:
         if args.kill is True:
-            print("No Wadsworth process to kill!")
-            print("Seach for Wadsworth manually:")
-            print("ps -ef | grep -i 'Alfred'")
+            print("No %s process to kill!" % (procname))
+            print("Seach for it manually:")
+            print("ps -ef | grep -i '%s'" % (procname))
             utils.common.nicerExit()
 
     # Record the active PID in the (default) file
