@@ -16,6 +16,7 @@ import time
 import json
 import datetime as dt
 
+from dataservants import utils
 from dataservants import alfred
 
 
@@ -57,6 +58,7 @@ if __name__ == "__main__":
 #    # pid: PID of wadsworth.py
 #    # pidf: location of PID file containing PID of wadsworth.py
     idict, args, runner, pid, pidf = alfred.valet.beginValeting(logfile=False)
+  
 
     # Preamble/contextual messages before we really start
     print("Beginning to monitor the following hosts:")
@@ -88,33 +90,33 @@ if __name__ == "__main__":
 
             # Timeouts and stuff are handled elsewhere in here
             #   BUT! timeout must be an int >= 1 (second)
-            pings, drops = alfred.pingaling.ping(iobj.host,
-                                                 port=iobj.port,
-                                                 timeout=3)
+            pings, drops = utils.pingaling.ping(iobj.host,
+                                                port=iobj.port,
+                                                timeout=3)
             ts = dt.datetime.utcnow()
             meas = ['PingResults']
             tags = {'host': iobj.host}
             fields = {'ping': pings, 'dropped': drops}
             # Construct our packet
-            p = alfred.packetizer.makeInfluxPacket(meas=meas,
-                                                   ts=ts, tags=tags,
-                                                   fields=fields)
+            p = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                  ts=ts, tags=tags,
+                                                  fields=fields)
             if args.debug is True:
                 print(p)
             # Actually write to the database to store the stuff for Grafana
             #   or whatever other thing is doing the plotting/monitoring
-            dbase = alfred.idb.influxobj(dbname, connect=True)
+            dbase = utils.database.influxobj(dbname, connect=True)
             dbase.writeToDB(p)
             dbase.closeDB()
 
             # Open the SSH connection; SSHHandler creates a Persistence class
             #   (in sshConnection.py) which has some retries and timeout
             #   logic baked into it so we don't have to deal with it here
-            eSSH = alfred.ssh.SSHHandler(host=iobj.host,
-                                         port=iobj.port,
-                                         username=iobj.user,
-                                         timeout=iobj.timeout,
-                                         password=iobj.password)
+            eSSH = utils.ssh.SSHHandler(host=iobj.host,
+                                        port=iobj.port,
+                                        username=iobj.user,
+                                        timeout=iobj.timeout,
+                                        password=iobj.password)
             eSSH.openConnection()
             time.sleep(1)
             fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
@@ -129,15 +131,15 @@ if __name__ == "__main__":
                           'free': fsa['FreeSpace']['free'],
                           'percentfree': fsa['FreeSpace']['percentfree']}
                 # Make the packet
-                p = alfred.packetizer.makeInfluxPacket(meas=meas,
-                                                       ts=ts, tags=tags,
-                                                       fields=fields)
+                p = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                      ts=ts, tags=tags,
+                                                      fields=fields)
             else:
                 p = []
             if args.debug is True:
                 print(p)
             if p != []:
-                dbase = alfred.idb.influxobj(dbname, connect=True)
+                dbase = utils.database.influxobj(dbname, connect=True)
                 dbase.writeToDB(p)
                 dbase.closeDB()
 
@@ -170,3 +172,4 @@ if __name__ == "__main__":
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
     print("Archive loop completed; STDOUT and STDERR reset.")
+

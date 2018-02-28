@@ -88,4 +88,8 @@ def beginValeting(procname='Alfred', pidfile='alfred.pid', logfile=True):
     idict = utils.confparsers.parseInstConf(args.config, debug=True,
                                             parseHardFail=False)
 
+    # If there's a password file, associate that with the above
+    idict = utils.confparsers.parsePassConf(args.passes, idict,
+                                            debug=args.debug)
+
     return idict, args, runner, pid, pidf
