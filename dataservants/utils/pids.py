@@ -69,7 +69,7 @@ def check_if_running(pname='wadsworth', debug=False):
                 # You HAVE to search thru each element of the cmdline since
                 #   the program can accept arguments and they'll be here too!
                 for part in proc['cmdline']:
-                    if (pname in part.lower()) is True:
+                    if (pname.lower() in part.lower()) is True:
                         print("%s is running! Check PID %d" % (pname, each))
                         running_pid = each
                 if running_pid == -1:
