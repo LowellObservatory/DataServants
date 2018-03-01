@@ -21,8 +21,7 @@ from .. import utils
 from . import parseargs
 
 
-def beginValeting(procname='Alfred', logfile=True,
-                  makepidfile=True, pidpath='/tmp'):
+def beginValeting(procname='alfred', logfile=True):
     """
     """
     # Time to wait after a process is murdered before starting up again.
@@ -75,27 +74,16 @@ def beginValeting(procname='Alfred', logfile=True,
             print("ps -ef | grep -i '%s'" % (procname))
             utils.common.nicerExit()
 
-    try:
-        with PidFile(pidname=procname.lower(), piddir=pidpath) as p:
-            print("Current PID: %d" % (p.pid))
+    if logfile is True:
+        # Setup logging (optional arguments shown for clarity)
+        utils.logs.setup_logging(logName=args.log, nLogs=args.nlogs)
 
-            if logfile is True:
-                # Setup logging (optional arguments shown for clarity)
-                utils.logs.setup_logging(logName=args.log, nLogs=args.nlogs)
+    # Read in the configuration file and act upon it
+    idict = utils.confparsers.parseInstConf(args.config, debug=True,
+                                            parseHardFail=False)
 
-            # Helps to put context on when things are stopped/started/restarted
-            print("PID %d recorded at %s now starting..." % (p.pid,
-                                                             p.filename))
+    # If there's a password file, associate that with the above
+    idict = utils.confparsers.parsePassConf(args.passes, idict,
+                                            debug=args.debug)
 
-            # Read in the configuration file and act upon it
-            idict = utils.confparsers.parseInstConf(args.config, debug=True,
-                                                    parseHardFail=False)
-
-            # If there's a password file, associate that with the above
-            idict = utils.confparsers.parsePassConf(args.passes, idict,
-                                                    debug=args.debug)
-
-            return idict, args, runner, p
-    except PidFileError as err:
-        print("Already running! Quitting...")
-        utils.common.nicerExit()
+    return idict, args, runner

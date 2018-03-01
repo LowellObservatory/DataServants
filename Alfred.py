@@ -20,6 +20,8 @@ import datetime as dt
 from dataservants import utils
 from dataservants import alfred
 
+from pid import PidFile, PidFileError
+
 
 def checkFreeSpace(sshConn, basecmd, sdir):
     """
@@ -55,125 +57,136 @@ if __name__ == "__main__":
     if mynameis.endswith('.py'):
         mynameis = mynameis[:-3]
 
+    pidpath = '/tmp/'
+
     # InfluxDB database name to store stuff in
     dbname = 'LIGInstruments'
 
 #    # idict: dictionary of parsed config file
 #    # args: parsed options of wadsworth.py
 #    # runner: class that contains logic to quit nicely
-#    # p: PID class
-    idict, args, runner, p = alfred.valet.beginValeting(procname=mynameis,
-                                                        logfile=False)
+    idict, args, runner = alfred.valet.beginValeting(procname=mynameis,
+                                                     logfile=False)
 
-    # Preamble/contextual messages before we really start
-    print("Beginning to monitor the following hosts:")
-    print("%s\n" % (' '.join(idict.keys())))
-    print("Starting the infinite loop.")
-    print("Kill PID %d to stop it." % (p.pid))
+    try:
+        with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
+            # Helps to put context on when things are stopped/started/restarted
+            print("Current PID: %d" % (p.pid))
+            print("PID %d recorded at %s now starting..." % (p.pid,
+                                                             p.filename))
 
-    # Note: We need to prepend the PATH setting here because some hosts
-    #   (all recent OSes, really) have a more stringent SSHd config
-    #   that disallows the setting of random environment variables
-    #   at login, and I can't figure out the goddamn pty shell settings
-    #   for Ubuntu (Vishnu) and OS X (xcam)
-    #
-    # Also need to make sure to use the relative path (~/) since OS X
-    #   puts stuff in /Users/<username> rather than /home/<username> like
-    #   the linux hosts do. Messy but necessary due to how I'm doing SSH
-    baseYcmd = 'export PATH="~/miniconda3/bin:$PATH";'
-    baseYcmd += 'python ~/DataMaid/yvette.py'
-    baseYcmd += ' '
+            # Preamble/contextual messages before we really start
+            print("Beginning to monitor the following hosts:")
+            print("%s\n" % (' '.join(idict.keys())))
+            print("Starting the infinite loop.")
+            print("Kill PID %d to stop it." % (p.pid))
 
-    # Semi-infinite loop
-    while runner.halt is False:
-        print(idict)
-        for inst in idict:
-            iobj = idict[inst]
-            if args.debug is True:
-                print("\n%s" % ("=" * 11))
-                print("Instrument: %s" % (inst))
+            # Note: We need to prepend the PATH setting here because some hosts
+            #   (all recent OSes, really) have a more stringent SSHd config
+            #   that disallows the setting of random environment variables
+            #   at login, and I can't figure out the goddamn pty shell settings
+            #   for Ubuntu (Vishnu) and OS X (xcam)
+            #
+            # Also need to make sure to use the relative path (~/) since OS X
+            #   puts stuff in /Users/<username> rather than /home/<username>
+            #   Messy but necessary due to how I'm doing SSH
+            baseYcmd = 'export PATH="~/miniconda3/bin:$PATH";'
+            baseYcmd += 'python ~/DataMaid/yvette.py'
+            baseYcmd += ' '
 
-            # Timeouts and stuff are handled elsewhere in here
-            #   BUT! timeout must be an int >= 1 (second)
-            pings, drops = utils.pingaling.ping(iobj.host,
+            # Semi-infinite loop
+            while runner.halt is False:
+                print(idict)
+                for inst in idict:
+                    iobj = idict[inst]
+                    if args.debug is True:
+                        print("\n%s" % ("=" * 11))
+                        print("Instrument: %s" % (inst))
+
+                    # Timeouts and stuff are handled elsewhere in here
+                    #   BUT! timeout must be an int >= 1 (second)
+                    pings, drops = utils.pingaling.ping(iobj.host,
+                                                        port=iobj.port,
+                                                        timeout=3)
+                    ts = dt.datetime.utcnow()
+                    meas = ['PingResults']
+                    tags = {'host': iobj.host}
+                    fs = {'ping': pings, 'dropped': drops}
+                    # Construct our packet
+                    packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                               ts=ts,
+                                                               tags=tags,
+                                                               fields=fs)
+                    if args.debug is True:
+                        print(packet)
+                    # Actually write to the database to store for plotting
+                    dbase = utils.database.influxobj(dbname, connect=True)
+                    dbase.writeToDB(packet)
+                    dbase.closeDB()
+
+                    # Open the SSH connection; SSHHandler makes a Persistence
+                    #   class (in sshConnection.py) which has some retries
+                    #   and timeout logic baked into it so we don't have
+                    #   to deal with it here
+                    eSSH = utils.ssh.SSHHandler(host=iobj.host,
                                                 port=iobj.port,
-                                                timeout=3)
-            ts = dt.datetime.utcnow()
-            meas = ['PingResults']
-            tags = {'host': iobj.host}
-            fields = {'ping': pings, 'dropped': drops}
-            # Construct our packet
-            packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                       ts=ts, tags=tags,
-                                                       fields=fields)
-            if args.debug is True:
-                print(packet)
-            # Actually write to the database to store the stuff for Grafana
-            #   or whatever other thing is doing the plotting/monitoring
-            dbase = utils.database.influxobj(dbname, connect=True)
-            dbase.writeToDB(packet)
-            dbase.closeDB()
+                                                username=iobj.user,
+                                                timeout=iobj.timeout,
+                                                password=iobj.password)
+                    eSSH.openConnection()
+                    time.sleep(1)
+                    fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
+                    fsa = decodeAnswer(fs, debug=args.debug)
+                    # Now make the packet given the deserialized json answer
+                    meas = ['FreeSpace']
+                    tags = {'host': iobj.host}
+                    ts = dt.datetime.utcnow()
+                    if fsa != {}:
+                        fs = {'path': fsa['FreeSpace']['path'],
+                              'total': fsa['FreeSpace']['total'],
+                              'free': fsa['FreeSpace']['free'],
+                              'percentfree': fsa['FreeSpace']['percentfree']}
+                        # Make the packet
+                        packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                                   ts=ts,
+                                                                   tags=tags,
+                                                                   fields=fs)
+                    else:
+                        packet = []
+                    if args.debug is True:
+                        print(packet)
+                    if packet != []:
+                        dbase = utils.database.influxobj(dbname, connect=True)
+                        dbase.writeToDB(packet)
+                        dbase.closeDB()
 
-            # Open the SSH connection; SSHHandler creates a Persistence class
-            #   (in sshConnection.py) which has some retries and timeout
-            #   logic baked into it so we don't have to deal with it here
-            eSSH = utils.ssh.SSHHandler(host=iobj.host,
-                                        port=iobj.port,
-                                        username=iobj.user,
-                                        timeout=iobj.timeout,
-                                        password=iobj.password)
-            eSSH.openConnection()
-            time.sleep(1)
-            fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
-            fsa = decodeAnswer(fs, debug=args.debug)
-            # Now make the packet given the deserialized json answer
-            meas = ['FreeSpace']
-            tags = {'host': iobj.host}
-            ts = dt.datetime.utcnow()
-            if fsa != {}:
-                fields = {'path': fsa['FreeSpace']['path'],
-                          'total': fsa['FreeSpace']['total'],
-                          'free': fsa['FreeSpace']['free'],
-                          'percentfree': fsa['FreeSpace']['percentfree']}
-                # Make the packet
-                packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                           ts=ts, tags=tags,
-                                                           fields=fields)
-            else:
-                packet = []
-            if args.debug is True:
-                print(packet)
-            if packet != []:
-                dbase = utils.database.influxobj(dbname, connect=True)
-                dbase.writeToDB(packet)
-                dbase.closeDB()
+                    time.sleep(3)
+                    eSSH.closeConnection()
 
-            time.sleep(3)
-            eSSH.closeConnection()
+                    # Check to see if someone asked us to quit before going on
+                    if runner.halt is True:
+                        print("Quit inner")
+                        break
+                    else:
+                        # Time to sleep between instruments
+                        time.sleep(10)
+                # Try to bust out of this outer loop too
+                if runner.halt is True:
+                    print("Quit outer")
+                    break
+                else:
+                    # Time to sleep between whole sequences of instruments
+                    time.sleep(600)
 
-            # Check to see if someone asked us to quit before continuing
-            if runner.halt is True:
-                print("Quit inner")
-                break
-            else:
-                # Time to sleep between instruments
-                time.sleep(10)
-        # Try to bust out of this outer loop too
-        if runner.halt is True:
-            print("Quit outer")
-            break
-        else:
-            # Time to sleep between whole sequences of instruments
-            time.sleep(600)
+            # The above loop is exited when someone sends wadsworth.py SIGTERM
+            print("PID %d is now out of here!" % (p.pid))
 
-    # The above loop is exited when someone sends wadsworth.py SIGTERM...
-    #   (via 'kill' or 'wadsworth.py -k') so once we get that, we'll clean
-    #   up on our way out the door with one final notification to the log
-    print("PID %d is now out of here!" % (p.pid))
-
-    # The PID file will have already been either deleted or overwritten by
-    #   another function/process by this point, so just give back the console
-    #   and return STDOUT and STDERR to their system defaults
-    sys.stdout = sys.__stdout__
-    sys.stderr = sys.__stderr__
-    print("Archive loop completed; STDOUT and STDERR reset.")
+            # The PID file will have already been either deleted/overwritten by
+            #   another function/process by this point, so just give back the
+            #   console and return STDOUT and STDERR to their system defaults
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
+            print("Archive loop completed; STDOUT and STDERR reset.")
+    except PidFileError as err:
+        print("Already running! Quitting...")
+        utils.common.nicerExit()
