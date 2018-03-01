@@ -11,6 +11,7 @@
 
 from __future__ import division, print_function, absolute_import
 
+import os
 import sys
 import time
 import json
@@ -23,7 +24,7 @@ from dataservants import alfred
 def checkFreeSpace(sshConn, basecmd, sdir):
     """
     """
-    fcmd = "%s -f %s" % (basecmd,  sdir)
+    fcmd = "%s -f %s" % (basecmd, sdir)
     res = sshConn.sendCommand(fcmd)
 
     return res
@@ -32,7 +33,7 @@ def checkFreeSpace(sshConn, basecmd, sdir):
 def lookForNewDirectories(sshConn, basecmd, sdir, dirmask, age=2, debug=False):
     """
     """
-    fcmd = "%s -l %s -r %s --rangeNew %d" % (basecmd,  sdir, dirmask, age)
+    fcmd = "%s -l %s -r %s --rangeNew %d" % (basecmd, sdir, dirmask, age)
     res = sshConn.sendCommand(fcmd, debug=debug)
 
     return res
@@ -49,6 +50,11 @@ def decodeAnswer(ans, debug=False):
 
 
 if __name__ == "__main__":
+    # For PIDfile stuff
+    mynameis = os.path.basename(__file__)
+    if mynameis.endswith('.py'):
+        mynameis = mynameis[:-3]
+
     # InfluxDB database name to store stuff in
     dbname = 'LIGInstruments'
 
@@ -57,14 +63,14 @@ if __name__ == "__main__":
 #    # runner: class that contains logic to quit nicely
 #    # pid: PID of wadsworth.py
 #    # pidf: location of PID file containing PID of wadsworth.py
-    idict, args, runner, pid, pidf = alfred.valet.beginValeting(logfile=False)
-  
+    idict, args, runner, p = alfred.valet.beginValeting(procname=mynameis,
+                                                        logfile=False)
 
     # Preamble/contextual messages before we really start
     print("Beginning to monitor the following hosts:")
     print("%s\n" % (' '.join(idict.keys())))
     print("Starting the infinite loop.")
-    print("Kill PID %d to stop it." % (pid))
+    print("Kill PID %d to stop it." % (p.pid))
 
     # Note: We need to prepend the PATH setting here because some hosts
     #   (all recent OSes, really) have a more stringent SSHd config
@@ -85,7 +91,7 @@ if __name__ == "__main__":
         for inst in idict:
             iobj = idict[inst]
             if args.debug is True:
-                print("\n%s" % ("="*11))
+                print("\n%s" % ("=" * 11))
                 print("Instrument: %s" % (inst))
 
             # Timeouts and stuff are handled elsewhere in here
@@ -164,7 +170,7 @@ if __name__ == "__main__":
     # The above loop is exited when someone sends wadsworth.py SIGTERM...
     #   (via 'kill' or 'wadsworth.py -k') so once we get that, we'll clean
     #   up on our way out the door with one final notification to the log
-    print("PID %d is now out of here!" % (pid))
+    print("PID %d is now out of here!" % (p.pid))
 
     # The PID file will have already been either deleted or overwritten by
     #   another function/process by this point, so just give back the console
@@ -172,4 +178,3 @@ if __name__ == "__main__":
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
     print("Archive loop completed; STDOUT and STDERR reset.")
-
