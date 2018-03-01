@@ -65,8 +65,7 @@ if __name__ == "__main__":
 #    # idict: dictionary of parsed config file
 #    # args: parsed options of wadsworth.py
 #    # runner: class that contains logic to quit nicely
-    idict, args, runner = alfred.valet.beginValeting(procname=mynameis,
-                                                     logfile=False)
+    idict, args, runner = alfred.valet.beginValeting(procname=mynameis)
 
     try:
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
@@ -188,5 +187,8 @@ if __name__ == "__main__":
             sys.stderr = sys.__stderr__
             print("Archive loop completed; STDOUT and STDERR reset.")
     except PidFileError as err:
+        # We've probably already started logging, so reset things
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
         print("Already running! Quitting...")
         utils.common.nicerExit()
