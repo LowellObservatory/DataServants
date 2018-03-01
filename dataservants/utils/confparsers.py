@@ -83,8 +83,6 @@ def parsePassConf(filename, idict, debug=False):
                 print("Username %s has no password!" % (iuser))
             passw = None
 
-        if debug is True:
-            print(iuser, passw)
         idict[each].addPass(passw)
 
     return idict
