@@ -61,8 +61,7 @@ if __name__ == "__main__":
 #    # idict: dictionary of parsed config file
 #    # args: parsed options of wadsworth.py
 #    # runner: class that contains logic to quit nicely
-#    # pid: PID of wadsworth.py
-#    # pidf: location of PID file containing PID of wadsworth.py
+#    # p: PID class
     idict, args, runner, p = alfred.valet.beginValeting(procname=mynameis,
                                                         logfile=False)
 
@@ -104,15 +103,15 @@ if __name__ == "__main__":
             tags = {'host': iobj.host}
             fields = {'ping': pings, 'dropped': drops}
             # Construct our packet
-            p = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                  ts=ts, tags=tags,
-                                                  fields=fields)
+            packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                       ts=ts, tags=tags,
+                                                       fields=fields)
             if args.debug is True:
-                print(p)
+                print(packet)
             # Actually write to the database to store the stuff for Grafana
             #   or whatever other thing is doing the plotting/monitoring
             dbase = utils.database.influxobj(dbname, connect=True)
-            dbase.writeToDB(p)
+            dbase.writeToDB(packet)
             dbase.closeDB()
 
             # Open the SSH connection; SSHHandler creates a Persistence class
@@ -137,16 +136,16 @@ if __name__ == "__main__":
                           'free': fsa['FreeSpace']['free'],
                           'percentfree': fsa['FreeSpace']['percentfree']}
                 # Make the packet
-                p = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                      ts=ts, tags=tags,
-                                                      fields=fields)
+                packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                           ts=ts, tags=tags,
+                                                           fields=fields)
             else:
-                p = []
+                packet = []
             if args.debug is True:
-                print(p)
-            if p != []:
+                print(packet)
+            if packet != []:
                 dbase = utils.database.influxobj(dbname, connect=True)
-                dbase.writeToDB(p)
+                dbase.writeToDB(packet)
                 dbase.closeDB()
 
             time.sleep(3)
