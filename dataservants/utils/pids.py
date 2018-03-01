@@ -33,7 +33,7 @@ def nicerExit(err=None):
     sys.exit(cond)
 
 
-def check_if_running(procname='wadsworth', filename='wadsworth.pid'):
+def check_if_running(procname='wadsworth'):
     """
     Check in the common temporary places for a wadsworth.pid file, and
     if it finds one, return the found PID (if it still exists)
@@ -47,7 +47,7 @@ def check_if_running(procname='wadsworth', filename='wadsworth.pid'):
     # Most common PID file locations. Uses the tempfile module to attempt to
     #   get a cross-platform thing at least in place for the future
     #   the others are hardcoded because YOLO
-    locs = [tempfile.gettempdir(), '~', '/var/run']
+    locs = ['/tmp', tempfile.gettempdir(), '~', '/var/run']
     pid = []
     found = []
     running_pid = -1
