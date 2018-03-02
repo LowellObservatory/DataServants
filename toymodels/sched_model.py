@@ -44,6 +44,8 @@ def func1(arg1, arg2='world'):
     #   between func3 and func2 to illustrate the sequencing with delays
     time.sleep(25)
 
+    return 'Beeeeeeeees'
+
 
 def func2(arg1, arg2='world'):
     print("Func %s!" % (arg2))
@@ -51,11 +53,15 @@ def func2(arg1, arg2='world'):
     print(diff.total_seconds())
     time.sleep(15)
 
+    return 'Penguins'
+
 
 def func3(arg1, arg2='world'):
     print("Func %s!" % (arg2))
     diff = dt.datetime.utcnow() - arg1
     print(diff.total_seconds())
+
+    return 'Harry Potter'
 
 
 def gotAlarm(signum, frame):
@@ -84,6 +90,7 @@ def scheduleMaster(s, actlist=[processDescription()]):
         elist.append(event)
 
     print("Scheduler start")
+    # How do I get the return values?
     s.run()
     print("Scheduler done")
 
@@ -111,7 +118,7 @@ if __name__ == "__main__":
 
             try:
                 # Actually arm the alarm just before we start
-                alarmtime = 30
+                alarmtime = 3000
                 signal.alarm(alarmtime)
                 print("Set an alarm for %d seconds" % (alarmtime))
                 # Act out all the actions, each within their

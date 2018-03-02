@@ -47,7 +47,7 @@ class Persistence(object):
             raise exception
         else:
             print(message, 'try', self.tries, self.errorMessage)
-            time.sleep(2*self.tries)
+            time.sleep(2 * self.tries)
             self.tries = self.tries + 1
             self.act()
             print('Succeeded on try', self.tries)
