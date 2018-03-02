@@ -23,6 +23,67 @@ from dataservants import alfred
 from pid import PidFile, PidFileError
 
 
+def actionScheduler(s, *args, **kwargs):
+    """
+    """
+    st = dt.datetime.utcnow()
+    print(st)
+
+
+def pingAction(iobj, dbname):
+    """
+    """
+    # Timeouts and stuff are handled elsewhere in here
+    #   BUT! timeout must be an int >= 1 (second)
+    pings, drops = utils.pingaling.ping(iobj.host,
+                                        port=iobj.port,
+                                        timeout=3)
+    ts = dt.datetime.utcnow()
+    meas = ['PingResults']
+    tags = {'host': iobj.host}
+    fs = {'ping': pings, 'dropped': drops}
+    # Construct our packet
+    packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                               ts=ts,
+                                               tags=tags,
+                                               fields=fs)
+    if args.debug is True:
+        print(packet)
+    # Actually write to the database to store for plotting
+    dbase = utils.database.influxobj(dbname, connect=True)
+    dbase.writeToDB(packet)
+    dbase.closeDB()
+
+
+def spaceAction(eSSH, iobj, baseYcmd, dbname):
+    """
+    """
+    fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
+    fsa = decodeAnswer(fs, debug=args.debug)
+    # Now make the packet given the deserialized json answer
+    meas = ['FreeSpace']
+    tags = {'host': iobj.host}
+    ts = dt.datetime.utcnow()
+    if fsa != {}:
+        fs = {'path': fsa['FreeSpace']['path'],
+              'total': fsa['FreeSpace']['total'],
+              'free': fsa['FreeSpace']['free'],
+              'percentfree': fsa['FreeSpace']['percentfree']}
+        # Make the packet
+        packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                   ts=ts,
+                                                   tags=tags,
+                                                   fields=fs)
+    else:
+        packet = []
+    if args.debug is True:
+        print(packet)
+    if packet != []:
+        dbase = utils.database.influxobj(dbname, connect=True)
+        dbase.writeToDB(packet)
+        dbase.closeDB()
+
+
 def checkFreeSpace(sshConn, basecmd, sdir):
     """
     """
@@ -102,26 +163,9 @@ if __name__ == "__main__":
                         print("\n%s" % ("=" * 11))
                         print("Instrument: %s" % (inst))
 
-                    # Timeouts and stuff are handled elsewhere in here
-                    #   BUT! timeout must be an int >= 1 (second)
-                    pings, drops = utils.pingaling.ping(iobj.host,
-                                                        port=iobj.port,
-                                                        timeout=3)
-                    ts = dt.datetime.utcnow()
-                    meas = ['PingResults']
-                    tags = {'host': iobj.host}
-                    fs = {'ping': pings, 'dropped': drops}
-                    # Construct our packet
-                    packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                               ts=ts,
-                                                               tags=tags,
-                                                               fields=fs)
-                    if args.debug is True:
-                        print(packet)
-                    # Actually write to the database to store for plotting
-                    dbase = utils.database.influxobj(dbname, connect=True)
-                    dbase.writeToDB(packet)
-                    dbase.closeDB()
+                    # Pings don't require an SSH connection established
+                    #   so do those first so we can see who is alive too
+                    pingAction(iobj, dbname)
 
                     # Open the SSH connection; SSHHandler makes a Persistence
                     #   class (in sshConnection.py) which has some retries
@@ -133,33 +177,12 @@ if __name__ == "__main__":
                                                 timeout=iobj.timeout,
                                                 password=iobj.password)
                     eSSH.openConnection()
-                    time.sleep(1)
-                    fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
-                    fsa = decodeAnswer(fs, debug=args.debug)
-                    # Now make the packet given the deserialized json answer
-                    meas = ['FreeSpace']
-                    tags = {'host': iobj.host}
-                    ts = dt.datetime.utcnow()
-                    if fsa != {}:
-                        fs = {'path': fsa['FreeSpace']['path'],
-                              'total': fsa['FreeSpace']['total'],
-                              'free': fsa['FreeSpace']['free'],
-                              'percentfree': fsa['FreeSpace']['percentfree']}
-                        # Make the packet
-                        packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                                   ts=ts,
-                                                                   tags=tags,
-                                                                   fields=fs)
-                    else:
-                        packet = []
-                    if args.debug is True:
-                        print(packet)
-                    if packet != []:
-                        dbase = utils.database.influxobj(dbname, connect=True)
-                        dbase.writeToDB(packet)
-                        dbase.closeDB()
-
                     time.sleep(3)
+
+                    # Refactoring here
+                    spaceAction(eSSH, iobj, baseYcmd, dbname)
+                    time.sleep(3)
+
                     eSSH.closeConnection()
 
                     # Check to see if someone asked us to quit before going on
