@@ -49,10 +49,8 @@ def pingAction(iobj, dbname):
                                                fields=fs)
     if args.debug is True:
         print(packet)
-    # Actually write to the database to store for plotting
-    dbase = utils.database.influxobj(dbname, connect=True)
-    dbase.writeToDB(packet)
-    dbase.closeDB()
+
+    return packet
 
 
 def spaceAction(eSSH, iobj, baseYcmd, dbname):
@@ -78,10 +76,8 @@ def spaceAction(eSSH, iobj, baseYcmd, dbname):
         packet = []
     if args.debug is True:
         print(packet)
-    if packet != []:
-        dbase = utils.database.influxobj(dbname, connect=True)
-        dbase.writeToDB(packet)
-        dbase.closeDB()
+
+    return packet
 
 
 def checkFreeSpace(sshConn, basecmd, sdir):
@@ -165,7 +161,8 @@ if __name__ == "__main__":
 
                     # Pings don't require an SSH connection established
                     #   so do those first so we can see who is alive too
-                    pingAction(iobj, dbname)
+                    piPacket = pingAction(iobj, dbname)
+                    time.sleep(3)
 
                     # Open the SSH connection; SSHHandler makes a Persistence
                     #   class (in sshConnection.py) which has some retries
@@ -177,13 +174,18 @@ if __name__ == "__main__":
                                                 timeout=iobj.timeout,
                                                 password=iobj.password)
                     eSSH.openConnection()
-                    time.sleep(3)
+                    time.sleep(1)
 
                     # Refactoring here
-                    spaceAction(eSSH, iobj, baseYcmd, dbname)
+                    fsPacket = spaceAction(eSSH, iobj, baseYcmd, dbname)
                     time.sleep(3)
 
                     eSSH.closeConnection()
+
+                    # Actually write to the database to store for plotting
+                    dbase = utils.database.influxobj(dbname, connect=True)
+                    dbase.writeToDB([piPacket, fsPacket])
+                    dbase.closeDB()
 
                     # Check to see if someone asked us to quit before going on
                     if runner.halt is True:
