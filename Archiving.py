@@ -15,6 +15,7 @@ import os
 import sys
 import time
 import json
+import signal
 import datetime as dt
 
 from pid import PidFile, PidFileError
@@ -83,12 +84,33 @@ def decodeAnswer(ans, debug=False):
     return final
 
 
+def instActions(acts=[utils.common.processDescription()], debug=True):
+    """
+    """
+    for i, each in enumerate(acts):
+        print("Function #%d, %s" % (i, each.func))
+
+        res = each.func(*each.args, **each.kwargs)
+        print(res)
+        # event = s.enter(each.timedelay, priority=each.priority,
+        #                 action=each.func,
+        #                 argument=each.args, kwargs=each.kwargs)
+
+    # nd = lookForNewDirectories(eSSH, baseYcmd,
+    #                            iobj.srcdir, iobj.dirmask,
+    #                            age=args.rangeNew)
+    # nda = decodeAnswer(nd, debug=args.debug)
+    # print(nda)
+
+    # spaceAction(eSSH, iobj, baseYcmd)
+    # time.sleep(3)
+
+
 if __name__ == "__main__":
-    # For PIDfile stuff
+    # For PIDfile stuff; kindly ignore
     mynameis = os.path.basename(__file__)
     if mynameis.endswith('.py'):
         mynameis = mynameis[:-3]
-
     pidpath = '/tmp/'
 
     # InfluxDB database name to store stuff in
@@ -107,10 +129,33 @@ if __name__ == "__main__":
     baseYcmd += 'python ~/DataMaid/yvette.py'
     baseYcmd += ' '
 
-#    # idict: dictionary of parsed config file
-#    # args: parsed options of wadsworth.py
-#    # runner: class that contains logic to quit nicely
-    idict, args, runner = wadsworth.buttle.beginButtling(procname=mynameis)
+    # Interval between successive runs of the instrument polling (seconds)
+    bigsleep = 300
+
+    # idict: dictionary of parsed config file
+    # args: parsed options of wadsworth.py
+    # runner: class that contains logic to quit nicely
+    idict, args, runner = wadsworth.buttle.beginButtling(procname=mynameis,
+                                                         logfile=False)
+
+    # Set up the desired actions in the main loop, using a helpful class
+    #   to pass things to each function/process more clearly
+    #   Note that we can update things per-instrument when inside the loop
+    #   it's just helpful to do the definitions out here for the constants
+
+    act1 = utils.common.processDescription(func=lookForNewDirectories,
+                                           timedelay=3.,
+                                           priority=1,
+                                           args=[],
+                                           kwargs={})
+
+    act2 = utils.common.processDescription(func=checkFreeSpace,
+                                           timedelay=3.,
+                                           priority=2,
+                                           args=[],
+                                           kwargs={})
+
+    actions = [act1, act2]
 
     try:
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
@@ -127,52 +172,58 @@ if __name__ == "__main__":
 
             # Semi-infinite loop
             while runner.halt is False:
-                print(idict)
+                # Do the instrument stuff right up front
                 for inst in idict:
-                    iobj = idict[inst]
                     if args.debug is True:
                         print("\n%s" % ("=" * 11))
                         print("Instrument: %s" % (inst))
+                    try:
+                        # Arm an alarm that will stop this inner section
+                        #   in case one instrument starts to hog the show
+                        alarmtime = 600
+                        signal.alarm(alarmtime)
+                        iobj = idict[inst]
 
-                    # Open the SSH connection; SSHHandler makes a Persistence
-                    #   class (in sshConnection.py) which has some retries
-                    #   and timeout logic baked into it so we don't have
-                    #   to deal with it here
-                    eSSH = utils.ssh.SSHHandler(host=iobj.host,
-                                                port=iobj.port,
-                                                username=iobj.user,
-                                                timeout=iobj.timeout,
-                                                password=iobj.password)
-                    eSSH.openConnection()
-                    time.sleep(3)
+                        # Open the SSH connection; SSHHandler makes a class
+                        #   (found in utils/ssh.py) which has some retries
+                        #   and timeout logic baked into it so we don't have
+                        #   to deal with it here
+                        eSSH = utils.ssh.SSHHandler(host=iobj.host,
+                                                    port=iobj.port,
+                                                    username=iobj.user,
+                                                    timeout=iobj.timeout,
+                                                    password=iobj.password)
+                        eSSH.openConnection()
+                        time.sleep(3)
 
-                    # Refactoring here
-                    nd = lookForNewDirectories(eSSH, baseYcmd,
-                                               iobj.srcdir, iobj.dirmask,
-                                               age=args.rangeNew)
-                    nda = decodeAnswer(nd, debug=args.debug)
-                    print(nda)
+                        # Update the functions with proper arguments
+                        actions[0].args = [eSSH, baseYcmd,
+                                           iobj.srcdir, iobj.dirmask]
+                        actions[0].kwargs = {'age': args.rangeNew,
+                                             'debug': args.debug}
 
-                    spaceAction(eSSH, iobj, baseYcmd)
-                    time.sleep(3)
+                        actions[1].args = [eSSH, baseYcmd, iobj.srcdir]
 
-                    eSSH.closeConnection()
+                        instActions(actions)
 
-                    # Check to see if someone asked us to quit before going on
-                    if runner.halt is True:
-                        print("Quit inner")
-                        break
-                    else:
-                        # Time to sleep between instruments
-                        time.sleep(10)
-                # Try to bust out of this outer loop too
-                if runner.halt is True:
-                    print("Quit outer")
-                    break
-                else:
-                    # Time to sleep between whole sequences of instruments
-                    time.sleep(600)
+                        eSSH.closeConnection()
 
+                        # Check to see if someone asked us to quit
+                        if runner.halt is True:
+                            print("Quit inner instrument loop")
+                            break
+                        else:
+                            # Time to sleep between instruments
+                            time.sleep(10)
+                    except utils.alarms.TimeoutException as err:
+                        print("%s took too long! Moving on." % (inst))
+                # After all the instruments are done, take a big nap
+                if runner.halt is False:
+                    # Sleep for bigsleep, but in small chunks to check abort
+                    for i in range(bigsleep):
+                        time.sleep(1)
+                        if runner.halt is True:
+                            break
             # The above loop is exited when someone sends wadsworth.py SIGTERM
             print("PID %d is now out of here!" % (p.pid))
 
