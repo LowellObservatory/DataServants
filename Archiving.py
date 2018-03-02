@@ -11,13 +11,48 @@
 
 from __future__ import division, print_function, absolute_import
 
+import os
 import sys
 import time
 import json
+import datetime as dt
 
-from dataservants.utils import ssh
-from dataservants.utils import confparsers
-from dataservants.wadsworth import buttle
+from pid import PidFile, PidFileError
+
+from dataservants import utils
+from dataservants import wadsworth
+
+
+def actionScheduler(s, *args, **kwargs):
+    """
+    """
+    st = dt.datetime.utcnow()
+    print(st)
+
+
+def spaceAction(eSSH, iobj, baseYcmd):
+    """
+    """
+    fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
+    fsa = decodeAnswer(fs, debug=args.debug)
+    # Now make the packet given the deserialized json answer
+    meas = ['FreeSpace']
+    tags = {'host': iobj.host}
+    ts = dt.datetime.utcnow()
+    if fsa != {}:
+        fs = {'path': fsa['FreeSpace']['path'],
+              'total': fsa['FreeSpace']['total'],
+              'free': fsa['FreeSpace']['free'],
+              'percentfree': fsa['FreeSpace']['percentfree']}
+        # Make the packet
+        packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                   ts=ts,
+                                                   tags=tags,
+                                                   fields=fs)
+    else:
+        packet = []
+    if args.debug is True:
+        print(packet)
 
 
 def checkFreeSpace(sshConn, basecmd, sdir):
@@ -49,90 +84,107 @@ def decodeAnswer(ans, debug=False):
 
 
 if __name__ == "__main__":
-    #
-    # NOTE: Any command line arguments are passed directly to
-    #   wadsworth the butler (wadsworth/butler/parseargs.py)
-    #
-    # idict: dictionary of parsed config file
-    # args: parsed options of wadsworth.py
-    # runner: class that contains logic to quit nicely
-    # pid: PID of wadsworth.py
-    # pidf: location of PID file containing PID of wadsworth.py
-    idict, args, runner, pid, pidf = buttle.beginButtling(logfile=False)
-    idict = confparsers.parsePassConf('./passwords.conf', idict)
+    # For PIDfile stuff
+    mynameis = os.path.basename(__file__)
+    if mynameis.endswith('.py'):
+        mynameis = mynameis[:-3]
+
+    pidpath = '/tmp/'
 
     # InfluxDB database name to store stuff in
     dbname = 'LIGInstruments'
 
-    print(args)
+#    # idict: dictionary of parsed config file
+#    # args: parsed options of wadsworth.py
+#    # runner: class that contains logic to quit nicely
+    idict, args, runner = wadsworth.buttle.beginButtling(procname=mynameis)
 
-    # Preamble/contextual messages before we really start
-    print("Beginning to archive the following instruments:")
-    print("%s\n" % (' '.join(idict.keys())))
-    print("Starting the infinite archiving loop.")
-    print("Kill PID %d to stop it." % (pid))
+    try:
+        with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
+            # Helps to put context on when things are stopped/started/restarted
+            print("Current PID: %d" % (p.pid))
+            print("PID %d recorded at %s now starting..." % (p.pid,
+                                                             p.filename))
 
-    # Note: We need to prepend the PATH setting here because some hosts
-    #   (all recent OSes, really) have a more stringent SSHd config
-    #   that disallows the setting of random environment variables
-    #   at login, and I can't figure out the goddamn pty shell settings
-    #   for Ubuntu (Vishnu) and OS X (xcam)
-    #
-    # Also need to make sure to use the relative path (~/) since OS X
-    #   puts stuff in /Users/<username> rather than /home/<username>
-    baseYcmd = 'export PATH="~/miniconda3/bin:$PATH";'
-    baseYcmd += 'python ~/DataMaid/yvette.py'
-    baseYcmd += ' '
+            # Preamble/contextual messages before we really start
+            print("Beginning to monitor the following hosts:")
+            print("%s\n" % (' '.join(idict.keys())))
+            print("Starting the infinite loop.")
+            print("Kill PID %d to stop it." % (p.pid))
 
-    # temp hack
-    args.rangeNew = 2
+            # Note: We need to prepend the PATH setting here because some hosts
+            #   (all recent OSes, really) have a more stringent SSHd config
+            #   that disallows the setting of random environment variables
+            #   at login, and I can't figure out the goddamn pty shell settings
+            #   for Ubuntu (Vishnu) and OS X (xcam)
+            #
+            # Also need to make sure to use the relative path (~/) since OS X
+            #   puts stuff in /Users/<username> rather than /home/<username>
+            #   Messy but necessary due to how I'm doing SSH
+            baseYcmd = 'export PATH="~/miniconda3/bin:$PATH";'
+            baseYcmd += 'python ~/DataMaid/yvette.py'
+            baseYcmd += ' '
 
-    # Infinite archiving loop
-    while runner.halt is False:
-        for inst in idict:
-            iobj = idict[inst]
-            print("\n%s" % ("="*11))
-            print("Instrument: %s" % (inst))
+            # Semi-infinite loop
+            while runner.halt is False:
+                print(idict)
+                for inst in idict:
+                    iobj = idict[inst]
+                    if args.debug is True:
+                        print("\n%s" % ("=" * 11))
+                        print("Instrument: %s" % (inst))
 
-            # Open the SSH connection; SSHHandler creates a Persistence class
-            #   (in sshConnection.py) which has some retries and timeout
-            #   logic baked into it so we don't have to deal with it here
-            eSSH = ssh.SSHHandler(host=iobj.host,
-                                  port=iobj.port,
-                                  username=iobj.user,
-                                  timeout=iobj.timeout,
-                                  password=iobj.password)
-            eSSH.openConnection()
-            time.sleep(1)
-            fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
-            fsa = decodeAnswer(fs, debug=args.debug)
-            print(fsa)
+                    # Open the SSH connection; SSHHandler makes a Persistence
+                    #   class (in sshConnection.py) which has some retries
+                    #   and timeout logic baked into it so we don't have
+                    #   to deal with it here
+                    eSSH = utils.ssh.SSHHandler(host=iobj.host,
+                                                port=iobj.port,
+                                                username=iobj.user,
+                                                timeout=iobj.timeout,
+                                                password=iobj.password)
+                    eSSH.openConnection()
+                    time.sleep(3)
 
-            time.sleep(3)
-            nd = lookForNewDirectories(eSSH, baseYcmd,
-                                       iobj.srcdir, iobj.dirmask,
-                                       age=args.rangeNew)
-            nda = decodeAnswer(nd, debug=args.debug)
-            print(nda)
-            time.sleep(3)
-            eSSH.closeConnection()
+                    # Refactoring here
+                    nd = lookForNewDirectories(eSSH, baseYcmd,
+                                            iobj.srcdir, iobj.dirmask,
+                                            age=args.rangeNew)
+                    nda = decodeAnswer(nd, debug=args.debug)
+                    print(nda)
 
-            # Check to see if someone asked us to quit before continuing
-            if runner.halt is True:
-                break
-            time.sleep(10)
+                    spaceAction(eSSH, iobj, baseYcmd)
+                    time.sleep(3)
 
-        # Temporary hack to only run through once
-        break
+                    eSSH.closeConnection()
 
-    # The above loop is exited when someone sends wadsworth.py SIGTERM...
-    #   (via 'kill' or 'wadsworth.py -k') so once we get that, we'll clean
-    #   up on our way out the door with one final notification to the log
-    print("PID %d is now out of here!" % (pid))
+                    # Check to see if someone asked us to quit before going on
+                    if runner.halt is True:
+                        print("Quit inner")
+                        break
+                    else:
+                        # Time to sleep between instruments
+                        time.sleep(10)
+                # Try to bust out of this outer loop too
+                if runner.halt is True:
+                    print("Quit outer")
+                    break
+                else:
+                    # Time to sleep between whole sequences of instruments
+                    time.sleep(600)
 
-    # The PID file will have already been either deleted or overwritten by
-    #   another function/process by this point, so just give back the console
-    #   and return STDOUT and STDERR to their system defaults
-    sys.stdout = sys.__stdout__
-    sys.stderr = sys.__stderr__
-    print("Archive loop completed; STDOUT and STDERR reset.")
+            # The above loop is exited when someone sends wadsworth.py SIGTERM
+            print("PID %d is now out of here!" % (p.pid))
+
+            # The PID file will have already been either deleted/overwritten by
+            #   another function/process by this point, so just give back the
+            #   console and return STDOUT and STDERR to their system defaults
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
+            print("Archive loop completed; STDOUT and STDERR reset.")
+    except PidFileError as err:
+        # We've probably already started logging, so reset things
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+        print("Already running! Quitting...")
+        utils.common.nicerExit()
