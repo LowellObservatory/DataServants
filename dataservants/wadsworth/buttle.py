@@ -19,7 +19,7 @@ from . import parseargs
 from .. import utils
 
 
-def beginButtling(logfile=True):
+def beginButtling(procname='wadsworth', logfile=True):
     """
     """
     # Time to wait after a process is murdered before starting up again.
@@ -27,18 +27,19 @@ def beginButtling(logfile=True):
     #   to write whatever to the log and then close the file nicely.
     killSleep = 30
 
-    # Debugging
-    print("Current PID: %d" % (os.getpid()))
-
     # Setup termination signals
     runner = utils.common.HowtoStopNicely()
 
     # Setup argument parsing *before* logging so help messages go to stdout
     #   NOTE: This function sets up the default values when given no args!
-    args = parseargs.setup_arguments()
+    #   Also check for kill/fratracide options so we can send SIGTERM to the
+    #   other processes before trying to start a new one
+    #   (which PidFile would block)
+    args = parseargs.parseArguments()
 
-    pid = utils.pids.check_if_running()
-    # UGLY LOGIC I'M NOT HAPPY WITH
+    pid = utils.pids.check_if_running(pname=procname)
+
+    # Slightly ugly logic
     if pid != -1:
         if (args.fratricide is True) or (args.kill is True):
             print("Sending SIGTERM to %d" % (pid))
@@ -66,22 +67,21 @@ def beginButtling(logfile=True):
             utils.common.nicerExit()
     else:
         if args.kill is True:
-            print("No Wadsworth process to kill!")
-            print("Seach for Wadsworth manually:")
-            print("ps -ef | grep -i 'Wadsworth'")
+            print("No %s process to kill!" % (procname))
+            print("Seach for it manually:")
+            print("ps -ef | grep -i '%s'" % (procname))
             utils.common.nicerExit()
-
-    # Record the active PID in the (default) file
-    pid, pidf = utils.pids.write_pid_file()
 
     if logfile is True:
         # Setup logging (optional arguments shown for clarity)
         utils.logs.setup_logging(logName=args.log, nLogs=args.nlogs)
 
-    # Helps to put context on when things are stopped/started/restarted
-    print("PID %d recorded at %s now starting..." % (pid, pidf))
-
     # Read in the configuration file and act upon it
-    idict = utils.confparsers.parseInstConf(args.config, debug=True)
+    idict = utils.confparsers.parseInstConf(args.config, debug=True,
+                                            parseHardFail=False)
 
-    return idict, args, runner, pid, pidf
+    # If there's a password file, associate that with the above
+    idict = utils.confparsers.parsePassConf(args.passes, idict,
+                                            debug=args.debug)
+
+    return idict, args, runner

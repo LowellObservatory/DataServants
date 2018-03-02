@@ -14,7 +14,7 @@ from __future__ import division, print_function, absolute_import
 import argparse as argp
 
 
-def setup_arguments():
+def parseArguments():
     """
     Setup command line arguments that could be used if so desired.
     """
