@@ -23,7 +23,8 @@ def actionLook(eSSH, iobj, baseYcmd, age=2, debug=False):
     nd = lookForNewDirectories(eSSH, baseYcmd, iobj.srcdir,
                                iobj.dirmask, age=age, debug=debug)
 
-    return nd
+    fnd = decodeAnswer(nd)
+    return fnd
 
 
 def actionPing(iobj, dbname=None, debug=False):

@@ -29,7 +29,8 @@ def instActions(acts=[utils.common.processDescription()], debug=True):
     """
     """
     for i, each in enumerate(acts):
-        print("Function #%d, %s" % (i, each.func))
+        if debug is True:
+            print("Function #%d, %s" % (i, each.func))
         # * and ** will unpack each of them properly
         res = each.func(*each.args, **each.kwargs)
         time.sleep(each.timedelay)
