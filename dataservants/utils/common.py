@@ -144,3 +144,15 @@ class InstrumentHost():
                 print("Password is empty!!")
         else:
             self.password = password
+
+
+class processDescription():
+    def __init__(self, **kwargs):
+        self.func = None
+        self.timedelay = 0.
+        self.priority = 5
+        self.args = []
+        self.kwargs = {}
+
+        for each in kwargs:
+            setattr(self, each, kwargs[each])
