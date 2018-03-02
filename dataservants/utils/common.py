@@ -122,7 +122,8 @@ class InstrumentHost():
                     if (key.lower() == 'enabled') or \
                        (key.lower() == 'engenabled'):
                         setattr(self, key, conf.getboolean(key))
-                    elif (key.lower() == 'running') or (key.lower() == 'timeout'):
+                    elif (key.lower() == 'running') or \
+                         (key.lower() == 'timeout'):
                         # Skip the keys that are self-defined in the class
                         pass
                     else:

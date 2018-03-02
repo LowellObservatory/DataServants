@@ -58,7 +58,7 @@ def spaceAction(eSSH, iobj, baseYcmd):
 def checkFreeSpace(sshConn, basecmd, sdir):
     """
     """
-    fcmd = "%s -f %s" % (basecmd,  sdir)
+    fcmd = "%s -f %s" % (basecmd, sdir)
     res = sshConn.sendCommand(fcmd)
 
     return res
@@ -67,7 +67,7 @@ def checkFreeSpace(sshConn, basecmd, sdir):
 def lookForNewDirectories(sshConn, basecmd, sdir, dirmask, age=2, debug=False):
     """
     """
-    fcmd = "%s -l %s -r %s --rangeNew %d" % (basecmd,  sdir, dirmask, age)
+    fcmd = "%s -l %s -r %s --rangeNew %d" % (basecmd, sdir, dirmask, age)
     res = sshConn.sendCommand(fcmd, debug=debug)
 
     return res
@@ -94,6 +94,19 @@ if __name__ == "__main__":
     # InfluxDB database name to store stuff in
     dbname = 'LIGInstruments'
 
+    # Note: We need to prepend the PATH setting here because some hosts
+    #   (all recent OSes, really) have a more stringent SSHd config
+    #   that disallows the setting of random environment variables
+    #   at login, and I can't figure out the goddamn pty shell settings
+    #   for Ubuntu (Vishnu) and OS X (xcam)
+    #
+    # Also need to make sure to use the relative path (~/) since OS X
+    #   puts stuff in /Users/<username> rather than /home/<username>
+    #   Messy but necessary due to how I'm doing SSH
+    baseYcmd = 'export PATH="~/miniconda3/bin:$PATH";'
+    baseYcmd += 'python ~/DataMaid/yvette.py'
+    baseYcmd += ' '
+
 #    # idict: dictionary of parsed config file
 #    # args: parsed options of wadsworth.py
 #    # runner: class that contains logic to quit nicely
@@ -111,19 +124,6 @@ if __name__ == "__main__":
             print("%s\n" % (' '.join(idict.keys())))
             print("Starting the infinite loop.")
             print("Kill PID %d to stop it." % (p.pid))
-
-            # Note: We need to prepend the PATH setting here because some hosts
-            #   (all recent OSes, really) have a more stringent SSHd config
-            #   that disallows the setting of random environment variables
-            #   at login, and I can't figure out the goddamn pty shell settings
-            #   for Ubuntu (Vishnu) and OS X (xcam)
-            #
-            # Also need to make sure to use the relative path (~/) since OS X
-            #   puts stuff in /Users/<username> rather than /home/<username>
-            #   Messy but necessary due to how I'm doing SSH
-            baseYcmd = 'export PATH="~/miniconda3/bin:$PATH";'
-            baseYcmd += 'python ~/DataMaid/yvette.py'
-            baseYcmd += ' '
 
             # Semi-infinite loop
             while runner.halt is False:
@@ -148,8 +148,8 @@ if __name__ == "__main__":
 
                     # Refactoring here
                     nd = lookForNewDirectories(eSSH, baseYcmd,
-                                            iobj.srcdir, iobj.dirmask,
-                                            age=args.rangeNew)
+                                               iobj.srcdir, iobj.dirmask,
+                                               age=args.rangeNew)
                     nda = decodeAnswer(nd, debug=args.debug)
                     print(nda)
 
