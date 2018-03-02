@@ -55,7 +55,7 @@ if __name__ == "__main__":
     #   puts stuff in /Users/<username> rather than /home/<username>
     #   Messy but necessary due to how I'm doing SSH
     baseYcmd = 'export PATH="~/miniconda3/bin:$PATH";'
-    baseYcmd += 'python ~/DataMaid/yvette.py'
+    baseYcmd += 'python ~/DataServants/Yvette.py'
     baseYcmd += ' '
 
     # Interval between successive runs of the instrument polling (seconds)
