@@ -25,7 +25,7 @@ from . import parseargs
 from . import filehashing
 
 
-if __name__ == "__main__":
+def beginTidying():
     rjson = {}
     # Setup argument parsing *before* logging so help messages go to stdout
     #   NOTE: This function sets up the default values when given no args!
@@ -94,4 +94,5 @@ if __name__ == "__main__":
         else:
             print("%s doesn't exist or isnt' readable" % (args.dir))
 
-    print(json.dumps(rjson))
+    if rjson != {}:
+        print(json.dumps(rjson))
