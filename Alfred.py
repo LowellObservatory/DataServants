@@ -14,119 +14,77 @@ from __future__ import division, print_function, absolute_import
 import os
 import sys
 import time
-import json
-import datetime as dt
+import signal
 
 from dataservants import utils
 from dataservants import alfred
+from dataservants import yvette
 
 from pid import PidFile, PidFileError
 
 
-def actionScheduler(s, *args, **kwargs):
+def instActions(acts=[utils.common.processDescription()], debug=True):
     """
     """
-    st = dt.datetime.utcnow()
-    print(st)
-
-
-def pingAction(iobj, dbname):
-    """
-    """
-    # Timeouts and stuff are handled elsewhere in here
-    #   BUT! timeout must be an int >= 1 (second)
-    pings, drops = utils.pingaling.ping(iobj.host,
-                                        port=iobj.port,
-                                        timeout=3)
-    ts = dt.datetime.utcnow()
-    meas = ['PingResults']
-    tags = {'host': iobj.host}
-    fs = {'ping': pings, 'dropped': drops}
-    # Construct our packet
-    packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                               ts=ts,
-                                               tags=tags,
-                                               fields=fs)
-    if args.debug is True:
-        print(packet)
-    # Actually write to the database to store for plotting
-    dbase = utils.database.influxobj(dbname, connect=True)
-    dbase.writeToDB(packet)
-    dbase.closeDB()
-
-
-def spaceAction(eSSH, iobj, baseYcmd, dbname):
-    """
-    """
-    fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
-    fsa = decodeAnswer(fs, debug=args.debug)
-    # Now make the packet given the deserialized json answer
-    meas = ['FreeSpace']
-    tags = {'host': iobj.host}
-    ts = dt.datetime.utcnow()
-    if fsa != {}:
-        fs = {'path': fsa['FreeSpace']['path'],
-              'total': fsa['FreeSpace']['total'],
-              'free': fsa['FreeSpace']['free'],
-              'percentfree': fsa['FreeSpace']['percentfree']}
-        # Make the packet
-        packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                   ts=ts,
-                                                   tags=tags,
-                                                   fields=fs)
-    else:
-        packet = []
-    if args.debug is True:
-        print(packet)
-    if packet != []:
-        dbase = utils.database.influxobj(dbname, connect=True)
-        dbase.writeToDB(packet)
-        dbase.closeDB()
-
-
-def checkFreeSpace(sshConn, basecmd, sdir):
-    """
-    """
-    fcmd = "%s -f %s" % (basecmd, sdir)
-    res = sshConn.sendCommand(fcmd)
-
-    return res
-
-
-def lookForNewDirectories(sshConn, basecmd, sdir, dirmask, age=2, debug=False):
-    """
-    """
-    fcmd = "%s -l %s -r %s --rangeNew %d" % (basecmd, sdir, dirmask, age)
-    res = sshConn.sendCommand(fcmd, debug=debug)
-
-    return res
-
-
-def decodeAnswer(ans, debug=False):
-    final = {}
-    if ans[0] == 0:
-        if ans[1] != '':
-            final = json.loads(ans[1])
-            if debug is True:
-                print(final)
-    return final
+    for i, each in enumerate(acts):
+        if debug is True:
+            print("Function #%d, %s" % (i, each.func))
+        # * and ** will unpack each of them properly
+        res = each.func(*each.args, **each.kwargs)
+        time.sleep(each.timedelay)
+        print(res)
 
 
 if __name__ == "__main__":
-    # For PIDfile stuff
+    # For PIDfile stuff; kindly ignore
     mynameis = os.path.basename(__file__)
     if mynameis.endswith('.py'):
         mynameis = mynameis[:-3]
-
     pidpath = '/tmp/'
 
     # InfluxDB database name to store stuff in
     dbname = 'LIGInstruments'
 
+    # Note: We need to prepend the PATH setting here because some hosts
+    #   (all recent OSes, really) have a more stringent SSHd config
+    #   that disallows the setting of random environment variables
+    #   at login, and I can't figure out the goddamn pty shell settings
+    #   for Ubuntu (Vishnu) and OS X (xcam)
+    #
+    # Also need to make sure to use the relative path (~/) since OS X
+    #   puts stuff in /Users/<username> rather than /home/<username>
+    #   Messy but necessary due to how I'm doing SSH
+    baseYcmd = 'export PATH="~/miniconda3/bin:$PATH";'
+    baseYcmd += 'python ~/DataMaid/yvette.py'
+    baseYcmd += ' '
+
+    # Interval between successive runs of the instrument polling (seconds)
+    bigsleep = 300
+
 #    # idict: dictionary of parsed config file
 #    # args: parsed options of wadsworth.py
 #    # runner: class that contains logic to quit nicely
     idict, args, runner = alfred.valet.beginValeting(procname=mynameis)
+
+    # Set up the desired actions in the main loop, using a helpful class
+    #   to pass things to each function/process more clearly
+    #   Note that we can update things per-instrument when inside the loop
+    #   it's just helpful to do the definitions out here for the constants
+    yvetteR = yvette.remote
+
+    act1 = utils.common.processDescription(func=yvetteR.actionSpace,
+                                           timedelay=3.,
+                                           priority=2,
+                                           args=[],
+                                           kwargs={})
+
+    act2 = utils.common.processDescription(func=yvetteR.actionPing,
+                                           timedelay=3.,
+                                           priority=1,
+                                           args=[],
+                                           kwargs={})
+
+    actions = [act1, act2]
 
     try:
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
@@ -141,65 +99,61 @@ if __name__ == "__main__":
             print("Starting the infinite loop.")
             print("Kill PID %d to stop it." % (p.pid))
 
-            # Note: We need to prepend the PATH setting here because some hosts
-            #   (all recent OSes, really) have a more stringent SSHd config
-            #   that disallows the setting of random environment variables
-            #   at login, and I can't figure out the goddamn pty shell settings
-            #   for Ubuntu (Vishnu) and OS X (xcam)
-            #
-            # Also need to make sure to use the relative path (~/) since OS X
-            #   puts stuff in /Users/<username> rather than /home/<username>
-            #   Messy but necessary due to how I'm doing SSH
-            baseYcmd = 'export PATH="~/miniconda3/bin:$PATH";'
-            baseYcmd += 'python ~/DataMaid/yvette.py'
-            baseYcmd += ' '
-
             # Semi-infinite loop
             while runner.halt is False:
-                print(idict)
                 for inst in idict:
                     iobj = idict[inst]
                     if args.debug is True:
                         print("\n%s" % ("=" * 11))
                         print("Instrument: %s" % (inst))
+                    try:
+                        # Arm an alarm that will stop this inner section
+                        #   in case one instrument starts to hog the show
+                        alarmtime = 600
+                        signal.alarm(alarmtime)
+                        iobj = idict[inst]
 
-                    # Pings don't require an SSH connection established
-                    #   so do those first so we can see who is alive too
-                    pingAction(iobj, dbname)
+                        # Open the SSH connection; SSHHandler makes a class
+                        #   (found in utils/ssh.py) which has some retries
+                        #   and timeout logic baked into it so we don't have
+                        #   to deal with it here
+                        eSSH = utils.ssh.SSHHandler(host=iobj.host,
+                                                    port=iobj.port,
+                                                    username=iobj.user,
+                                                    timeout=iobj.timeout,
+                                                    password=iobj.password)
+                        eSSH.openConnection()
+                        time.sleep(3)
 
-                    # Open the SSH connection; SSHHandler makes a Persistence
-                    #   class (in sshConnection.py) which has some retries
-                    #   and timeout logic baked into it so we don't have
-                    #   to deal with it here
-                    eSSH = utils.ssh.SSHHandler(host=iobj.host,
-                                                port=iobj.port,
-                                                username=iobj.user,
-                                                timeout=iobj.timeout,
-                                                password=iobj.password)
-                    eSSH.openConnection()
-                    time.sleep(3)
+                        # Update the functions with proper arguments
+                        actions[0].args = [eSSH, iobj, baseYcmd]
+                        actions[0].kwargs = {'dbname': dbname,
+                                             'debug': args.debug}
 
-                    # Refactoring here
-                    spaceAction(eSSH, iobj, baseYcmd, dbname)
-                    time.sleep(3)
+                        actions[1].args = [iobj]
+                        actions[1].kwargs = {'dbname': dbname,
+                                             'debug': args.debug}
 
-                    eSSH.closeConnection()
+                        instActions(actions)
 
-                    # Check to see if someone asked us to quit before going on
-                    if runner.halt is True:
-                        print("Quit inner")
-                        break
-                    else:
-                        # Time to sleep between instruments
-                        time.sleep(10)
-                # Try to bust out of this outer loop too
-                if runner.halt is True:
-                    print("Quit outer")
-                    break
-                else:
-                    # Time to sleep between whole sequences of instruments
-                    time.sleep(600)
+                        eSSH.closeConnection()
 
+                        # Check to see if someone asked us to quit
+                        if runner.halt is True:
+                            print("Quit inner instrument loop")
+                            break
+                        else:
+                            # Time to sleep between instruments
+                            time.sleep(5)
+                    except utils.alarms.TimeoutException as err:
+                        print("%s took too long! Moving on." % (inst))
+                # After all the instruments are done, take a big nap
+                if runner.halt is False:
+                    # Sleep for bigsleep, but in small chunks to check abort
+                    for i in range(bigsleep):
+                        time.sleep(1)
+                        if runner.halt is True:
+                            break
             # The above loop is exited when someone sends wadsworth.py SIGTERM
             print("PID %d is now out of here!" % (p.pid))
 

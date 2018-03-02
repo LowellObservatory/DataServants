@@ -14,9 +14,7 @@ from __future__ import division, print_function, absolute_import
 import os
 import sys
 import time
-import json
 import signal
-import datetime as dt
 
 from pid import PidFile, PidFileError
 
@@ -66,8 +64,7 @@ if __name__ == "__main__":
     # idict: dictionary of parsed config file
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
-    idict, args, runner = wadsworth.buttle.beginButtling(procname=mynameis,
-                                                         logfile=False)
+    idict, args, runner = wadsworth.buttle.beginButtling(procname=mynameis)
 
     # Set up the desired actions in the main loop, using a helpful class
     #   to pass things to each function/process more clearly
