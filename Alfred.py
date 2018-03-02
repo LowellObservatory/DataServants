@@ -59,7 +59,7 @@ if __name__ == "__main__":
     baseYcmd += ' '
 
     # Interval between successive runs of the instrument polling (seconds)
-    bigsleep = 300
+    bigsleep = 600
 
 #    # idict: dictionary of parsed config file
 #    # args: parsed options of wadsworth.py
