@@ -22,66 +22,7 @@ from pid import PidFile, PidFileError
 
 from dataservants import utils
 from dataservants import wadsworth
-
-
-def actionScheduler(s, *args, **kwargs):
-    """
-    """
-    st = dt.datetime.utcnow()
-    print(st)
-
-
-def spaceAction(eSSH, iobj, baseYcmd):
-    """
-    """
-    fs = checkFreeSpace(eSSH, baseYcmd, iobj.srcdir)
-    fsa = decodeAnswer(fs, debug=args.debug)
-    # Now make the packet given the deserialized json answer
-    meas = ['FreeSpace']
-    tags = {'host': iobj.host}
-    ts = dt.datetime.utcnow()
-    if fsa != {}:
-        fs = {'path': fsa['FreeSpace']['path'],
-              'total': fsa['FreeSpace']['total'],
-              'free': fsa['FreeSpace']['free'],
-              'percentfree': fsa['FreeSpace']['percentfree']}
-        # Make the packet
-        packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                   ts=ts,
-                                                   tags=tags,
-                                                   fields=fs)
-    else:
-        packet = []
-    if args.debug is True:
-        print(packet)
-
-
-def checkFreeSpace(sshConn, basecmd, sdir):
-    """
-    """
-    fcmd = "%s -f %s" % (basecmd, sdir)
-    res = sshConn.sendCommand(fcmd)
-
-    return res
-
-
-def lookForNewDirectories(sshConn, basecmd, sdir, dirmask, age=2, debug=False):
-    """
-    """
-    fcmd = "%s -l %s -r %s --rangeNew %d" % (basecmd, sdir, dirmask, age)
-    res = sshConn.sendCommand(fcmd, debug=debug)
-
-    return res
-
-
-def decodeAnswer(ans, debug=False):
-    final = {}
-    if ans[0] == 0:
-        if ans[1] != '':
-            final = json.loads(ans[1])
-            if debug is True:
-                print(final)
-    return final
+from dataservants import yvette
 
 
 def instActions(acts=[utils.common.processDescription()], debug=True):
@@ -89,21 +30,10 @@ def instActions(acts=[utils.common.processDescription()], debug=True):
     """
     for i, each in enumerate(acts):
         print("Function #%d, %s" % (i, each.func))
-
+        # * and ** will unpack each of them properly
         res = each.func(*each.args, **each.kwargs)
+        time.sleep(each.timedelay)
         print(res)
-        # event = s.enter(each.timedelay, priority=each.priority,
-        #                 action=each.func,
-        #                 argument=each.args, kwargs=each.kwargs)
-
-    # nd = lookForNewDirectories(eSSH, baseYcmd,
-    #                            iobj.srcdir, iobj.dirmask,
-    #                            age=args.rangeNew)
-    # nda = decodeAnswer(nd, debug=args.debug)
-    # print(nda)
-
-    # spaceAction(eSSH, iobj, baseYcmd)
-    # time.sleep(3)
 
 
 if __name__ == "__main__":
@@ -142,16 +72,17 @@ if __name__ == "__main__":
     #   to pass things to each function/process more clearly
     #   Note that we can update things per-instrument when inside the loop
     #   it's just helpful to do the definitions out here for the constants
+    yvetteR = yvette.remote
 
-    act1 = utils.common.processDescription(func=lookForNewDirectories,
+    act1 = utils.common.processDescription(func=yvetteR.actionSpace,
                                            timedelay=3.,
-                                           priority=1,
+                                           priority=2,
                                            args=[],
                                            kwargs={})
 
-    act2 = utils.common.processDescription(func=checkFreeSpace,
+    act2 = utils.common.processDescription(func=yvetteR.actionLook,
                                            timedelay=3.,
-                                           priority=2,
+                                           priority=1,
                                            args=[],
                                            kwargs={})
 
@@ -197,12 +128,13 @@ if __name__ == "__main__":
                         time.sleep(3)
 
                         # Update the functions with proper arguments
-                        actions[0].args = [eSSH, baseYcmd,
-                                           iobj.srcdir, iobj.dirmask]
-                        actions[0].kwargs = {'age': args.rangeNew,
+                        actions[0].args = [eSSH, iobj, baseYcmd]
+                        actions[0].kwargs = {'dbname': None,
                                              'debug': args.debug}
 
-                        actions[1].args = [eSSH, baseYcmd, iobj.srcdir]
+                        actions[1].args = [eSSH, iobj, baseYcmd]
+                        actions[1].kwargs = {'age': args.rangeNew,
+                                             'debug': args.debug}
 
                         instActions(actions)
 
@@ -214,7 +146,7 @@ if __name__ == "__main__":
                             break
                         else:
                             # Time to sleep between instruments
-                            time.sleep(10)
+                            time.sleep(5)
                     except utils.alarms.TimeoutException as err:
                         print("%s took too long! Moving on." % (inst))
                 # After all the instruments are done, take a big nap
