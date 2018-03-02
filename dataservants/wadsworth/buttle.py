@@ -78,7 +78,7 @@ def beginButtling(procname='wadsworth', logfile=True):
 
     # Read in the configuration file and act upon it
     idict = utils.confparsers.parseInstConf(args.config, debug=True,
-                                            parseHardFail=False)
+                                            parseHardFail=True)
 
     # If there's a password file, associate that with the above
     idict = utils.confparsers.parsePassConf(args.passes, idict,

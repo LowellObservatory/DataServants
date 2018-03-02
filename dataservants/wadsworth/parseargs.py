@@ -34,6 +34,14 @@ def parseArguments():
                         help='File for instrument password information',
                         default='./passwords.conf', nargs='?')
 
+    parser.add_argument('--rangeNew', type=int,
+                        help='Age (days) of directory to be actively archived',
+                        default=3, nargs="?")
+
+    parser.add_argument('--rangeOld', type=int,
+                        help='Age (days) beyond which directory is cleared',
+                        default=30, nargs="?")
+
     parser.add_argument('-l', '--log', metavar='/path/to/file.log', type=str,
                         help='File for logging of information/status messages',
                         default='/tmp/wadsworth.log', nargs='?')
