@@ -15,7 +15,11 @@ import os
 import re
 import fnmatch
 import numpy as np
-from os.path import join, isdir, listdir
+try:
+    from os.path import join, isdir
+    from os.path import listdir
+except ImportError:
+    from os import listdir
 
 from . import common
 
