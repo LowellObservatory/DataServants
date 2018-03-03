@@ -1,5 +1,6 @@
 from . import logs
 from . import pids
+from . import files
 from . import ssh
 from . import hashes
 from . import common

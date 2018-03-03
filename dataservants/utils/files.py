@@ -35,7 +35,7 @@ def getDirListing(loc, recently=2, dirmask="[0-9]{8}.*", debug=False):
         loc += "/"
 
     # Need number of seconds in the day window since calendar math sucks
-    recently *= 24.*60.*60.
+    recently *= 24. * 60. * 60.
 
     # Same setup as Peter's obsactive scripts now basically
     dirlist = [join(loc, x) for x in listdir(loc) if isdir(join(loc, x))]
@@ -145,7 +145,7 @@ def checkFreeSpace(loc, debug=False):
 
         if debug is True:
             print("Total: %.2f\nFree: %.2f" % (total, free))
-            print("%.0f%% remaining" % (100.*free/total))
+            print("%.0f%% remaining" % (100. * free/total))
 
         # Make it a bit more clear what is what via a dictionary
         retdict = {'path': None,
