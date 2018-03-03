@@ -17,8 +17,12 @@ import datetime as dt
 
 from requests.exceptions import ConnectionError
 
-from influxdb import InfluxDBClient
-from influxdb.exceptions import InfluxDBClientError
+try:
+    import influxdb
+    from influxdb import InfluxDBClient
+    from influxdb.exceptions import InfluxDBClientError
+except (ImportError, ModuleNotFoundError) as err:
+    influxdb = None
 
 
 class influxobj():
@@ -34,7 +38,7 @@ class influxobj():
         self.username = user
         self.password = pw
         self.dbase = dbase
-        if connect is True:
+        if connect is True and influxdb is not None:
             self.openDB()
         else:
             self.client = None
@@ -42,18 +46,21 @@ class influxobj():
     def openDB(self):
         """
         """
-        try:
-            self.client = InfluxDBClient(self.host, self.port,
-                                         username=self.username,
-                                         password=self.password,
-                                         database=self.dbase)
-            # Create the database if it doesn't exist; underneath the hood
-            #   InfluxDB is basically doing
-            #   CREATE DATABASE IF NOT EXISTS dbname
-            self.client.create_database(self.dbase)
-        except Exception as err:
-            self.client = None
-            print(str(err))
+        if influxdb is not None:
+            try:
+                self.client = InfluxDBClient(self.host, self.port,
+                                             username=self.username,
+                                             password=self.password,
+                                             database=self.dbase)
+                # Create the database if it doesn't exist; underneath the hood
+                #   InfluxDB is basically doing
+                #   CREATE DATABASE IF NOT EXISTS dbname
+                self.client.create_database(self.dbase)
+            except Exception as err:
+                self.client = None
+                print(str(err))
+        else:
+            print("InfluxDB-python not found!")
 
     def writeToDB(self, vals, debug=False):
         """
@@ -83,40 +90,37 @@ class influxobj():
     def closeDB(self):
         """
         """
-        try:
-            self.client.close()
-        except Exception as err:
-            print(str(err))
+        if self.client is not None:
+            try:
+                self.client.close()
+            except Exception as err:
+                print(str(err))
 
     def dropDB(self, imsure=False):
         """
         """
-        if imsure is False:
-            print("You're not sure! Doing nothing.")
-        else:
-            try:
-                self.client.drop_database(self.dbase)
-            except Exception as err:
-                print(str(err))
+        if self.client is not None:
+            if imsure is False:
+                print("You're not sure! Doing nothing.")
+            else:
+                try:
+                    self.client.drop_database(self.dbase)
+                except Exception as err:
+                    print(str(err))
 
 
 def example():
     """
     """
     dbname = 'beeeeees'
-    json_body = [
-                 {
-                  "measurement": "cpu_load_short",
-                  "tags": {
-                           "host": "server01",
+    json_body = [{"measurement": "cpu_load_short",
+                  "tags": {"host": "server01",
                            "region": "us-west"
-                          },
+                           },
                   "time": dt.datetime.now(),
-                  "fields": {
-                             "value": np.random.normal(loc=1.0)
-                            }
-                 }
-                ]
+                  "fields": {"value": np.random.normal(loc=1.0)}
+                  }
+                 ]
 
     # Calling with connect=True establishes the connection, which
     #   populates influxobj.client with the right stuff
