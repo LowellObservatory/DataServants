@@ -1,6 +1,12 @@
 dataservants.yvette package
 ===========================
 
+Usage
+-----
+
+.. program-output:: python ../../dataservants/yvette/parseargs.py --help
+
+
 Submodules
 ----------
 
