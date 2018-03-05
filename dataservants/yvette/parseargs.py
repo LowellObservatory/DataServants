@@ -13,7 +13,7 @@ from __future__ import division, print_function, absolute_import
 import argparse as argp
 
 
-def setup_arguments():
+def setup_arguments(prog=None):
     """
     Setup command line arguments that could be used if so desired.
     """
@@ -21,7 +21,8 @@ def setup_arguments():
     fclass = argp.ArgumentDefaultsHelpFormatter
 
     parser = argp.ArgumentParser(description='Yvette: The Data Maid',
-                                 formatter_class=fclass)
+                                 formatter_class=fclass,
+                                 prog=prog)
 
     parser.add_argument(dest='dir', metavar='/path/to/data/',
                         type=str,
@@ -77,4 +78,4 @@ def setup_arguments():
 
 
 if __name__ == "__main__":
-    parser, _ = main()
+    parser, args = setup_arguments(prog="Yvette.py")
