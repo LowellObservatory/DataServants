@@ -8,6 +8,14 @@
 #
 #   @author: rhamilton
 
+"""Yvette: The Data Maid
+
+Yvette is designed to live locally on each target machine and remotely called
+upon for work by a task using :mod:`dataservants.wadsworth`.  The remote
+actions are defined in :mod:`dataservants.utils`, but the actual formatting for
+the remote actions are defined in :mod:`dataservants.yvette.remote`.
+"""
+
 from __future__ import division, print_function, absolute_import
 
 import sys
@@ -38,7 +46,9 @@ def beginTidying():
     Returns:
         None
 
-
+    While this function returns nothing, it prints the results of the actions
+    to STDOUT in a JSON format, to be unpacked by whichever function (remotely)
+    called Yvette.
     """
     rjson = {}
     # Setup argument parsing *before* logging so help messages go to stdout

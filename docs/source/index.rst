@@ -7,10 +7,10 @@ Welcome to Data Servants's documentation!
 =========================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
-
+   dataservants
 
 Indices and tables
 ==================
