@@ -74,3 +74,7 @@ def setup_arguments():
     args = parser.parse_args()
 
     return parser, args
+
+
+if __name__ == "__main__":
+    parser, _ = main()
