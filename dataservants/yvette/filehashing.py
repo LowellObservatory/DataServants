@@ -34,6 +34,7 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
     than md5. Blocksize is passed verbatim and not checked, which someone
     will probably tell me someday is a terrible idea at which point I'll agree.
     """
+    # Find all the files matching filetype at and underneath mdir
     ff = utils.files.recursiveSearcher(mdir, fileext=filetype)
     if len(ff) == 0:
         if debug is True:
@@ -51,7 +52,7 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
 
     # Check to see if any of the files already have a valid hash
     #   BUT don't verify that has, assume that it's good for now
-    hfname = mdir + "AListofHashes." + htype
+    hfname = mdir + "/AListofHashes." + htype
     existingHashes = utils.hashes.readHashFile(hfname)
     unq = []
     if existingHashes == {}:
@@ -106,7 +107,7 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
     return existingHashes
 
 
-def verifyFiles(mdir, htype='xx64', bsize=2**25,
+def verifyFiles(mdir, hfname, htype='xx64', bsize=2**25,
                 filetype="*.fits", debug=False):
     """
     Given a directory, and a running dictionary of files already seen, read
@@ -133,8 +134,8 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
         print("Total of %.2f GiB" % (tsize))
 
     # Read in the existing hash file
-    hfname = mdir + "AListofHashes." + htype
-    existingHashes = utils.hashes.readHashFile(hfname, basenamed=True)
+    existingHashes = utils.hashes.readHashFile(hfname, basenamed=True,
+                                               debug=debug)
     if debug is True:
         print("%d files found in hashfile %s" % (len(existingHashes), hfname))
 
@@ -162,11 +163,15 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
         newKeys = OrderedDict(zip(bn, [h.hexdigest() for h in hs]))
 
     # Now compare the new against the old. Strip out path info again
-    mismatch = []
+    mismatch = {}
     for tf in ff:
         testfile = basename(tf)
-        if newKeys[testfile] != existingHashes[testfile]:
-            # Store the full path to make retransfters easier!
-            mismatch.update(tf)
+        try:
+            if newKeys[testfile] != existingHashes[testfile]:
+                # Store the full path to make retransfters easier!
+                mismatch.update(tf)
+        except KeyError as err:
+            print(str(err))
+            print("Hash of file %s doesn't have a comparison!" % (tf))
 
     return mismatch

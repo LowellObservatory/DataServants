@@ -101,20 +101,21 @@ def beginTidying():
                                                     debug=debug)
                 # Return logging
                 rjson.update({"HashFile": hfname})
+                print({"HashFile": hfname})
 
                 # Now read it back in for some debug checking
                 if debug is True:
                     print()
                     md2 = utils.hashes.readHashFile(hfname, debug=debug)
-                    print("MD1 == MD2?\n%s" % (md1 == md2))
+                    print("hashset1 == hashset2?\n%s" % (md1 == md2))
                     print()
 
                 # Verification step
-                broken = filehashing.verifyFiles(args.dir,
+                broken = filehashing.verifyFiles(args.dir, hfname,
                                                  filetype=args.filetype,
                                                  htype=args.hashtype,
                                                  debug=debug)
-                rjson.update({"FailedVerification": broken})
+                rjson.update({"FailedHashVerifications": broken})
         else:
             print("%s doesn't exist or isnt' readable" % (args.dir))
 

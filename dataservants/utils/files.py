@@ -31,7 +31,6 @@ def getDirListing(loc, recently=2, dirmask="[0-9]{8}.*", debug=False):
     #   {8}   == match the previous set 8 times
     #   .     == any character
     # Default: "[0-9]{8}." matches 20180123a
-#    regexp = re.compile(dirmask)
 
     # Make sure the location has an ending / to make stuff easier
     if loc[-1] != "/":
@@ -54,6 +53,7 @@ def getDirListing(loc, recently=2, dirmask="[0-9]{8}.*", debug=False):
     if debug is True:
         print(validdirs)
 
+    # Make a list of dirs in which their parsed date < than param. recently
     recentmod = [it for it in validdirs if common.dateDiff(it) < recently]
 
     if debug is True:

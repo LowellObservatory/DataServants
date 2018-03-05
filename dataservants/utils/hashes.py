@@ -72,6 +72,8 @@ def hashfunc(fname, bsize=2**25, htype='xx64', debug=False):
 def readHashFile(filename, debug=False, basenamed=False):
     """
     """
+    if debug is True:
+        print(filename)
     dat = {}
     try:
         with open(filename, 'r') as csvfile:
@@ -93,7 +95,7 @@ def readHashFile(filename, debug=False, basenamed=False):
 def writeHashFile(mdict, loc, htype='xx64', debug=False):
     """
     """
-    hfname = loc + "AListofHashes." + htype
+    hfname = loc + "/AListofHashes." + htype
     try:
         with open(hfname, 'w') as csvfile:
             writer = csv.writer(csvfile)
