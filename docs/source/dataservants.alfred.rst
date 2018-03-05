@@ -4,22 +4,10 @@ dataservants.alfred package
 Submodules
 ----------
 
-dataservants.alfred.parseargs module
-------------------------------------
+.. toctree::
 
-.. automodule:: dataservants.alfred.parseargs
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-dataservants.alfred.valet module
---------------------------------
-
-.. automodule:: dataservants.alfred.valet
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+   dataservants.alfred.parseargs
+   dataservants.alfred.valet
 
 Module contents
 ---------------

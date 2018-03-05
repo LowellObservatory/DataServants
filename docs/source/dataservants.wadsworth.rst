@@ -4,22 +4,10 @@ dataservants.wadsworth package
 Submodules
 ----------
 
-dataservants.wadsworth.buttle module
-------------------------------------
+.. toctree::
 
-.. automodule:: dataservants.wadsworth.buttle
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-dataservants.wadsworth.parseargs module
----------------------------------------
-
-.. automodule:: dataservants.wadsworth.parseargs
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+   dataservants.wadsworth.buttle
+   dataservants.wadsworth.parseargs
 
 Module contents
 ---------------
