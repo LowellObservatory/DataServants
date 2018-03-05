@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-"""
-  This Source Code Form is subject to the terms of the Mozilla Public
-  License, v. 2.0. If a copy of the MPL was not distributed with this
-  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-  Created on Tue Jan 30 12:53:33 2018
-
-  @author: rhamilton
-"""
+#
+#   This Source Code Form is subject to the terms of the Mozilla Public
+#   License, v. 2.0. If a copy of the MPL was not distributed with this
+#   file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+#   Created on Tue Jan 30 12:53:33 2018
+#
+#   @author: rhamilton
 
 from __future__ import division, print_function, absolute_import
 
@@ -26,6 +25,21 @@ from . import filehashing
 
 
 def beginTidying():
+    """Main entry point for Yvette, which also handles arguments
+
+    This will parse the arguments specified in
+    :mod:`dataservants.yvette.parseargs` and then act
+    accordingly, calling the various functions defined in
+    :mod:`dataservants.utils.files` or :mod:`dataservants.utils.hashes`
+
+    Args:
+        None
+
+    Returns:
+        None
+
+
+    """
     rjson = {}
     # Setup argument parsing *before* logging so help messages go to stdout
     #   NOTE: This function sets up the default values when given no args!

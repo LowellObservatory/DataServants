@@ -1,10 +1,10 @@
-.. Wadsworth the Data Butler documentation master file, created by
-   sphinx-quickstart on Tue Feb 13 12:38:17 2018.
+.. Data Servants documentation master file, created by
+   sphinx-quickstart on Mon Mar  5 12:42:19 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Wadsworth the Data Butler's documentation!
-=====================================================
+Welcome to Data Servants's documentation!
+=========================================
 
 .. toctree::
    :maxdepth: 2
