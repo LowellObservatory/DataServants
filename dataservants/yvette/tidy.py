@@ -129,7 +129,7 @@ def beginTidying(noprint=False):
                                                  htype=args.hashtype,
                                                  debug=debug)
                 # If hash1 is None, then there were no files to hash
-                if hash1 != None:
+                if hash1 is not None:
                     # Write it to the standard filename. If it returns not None
                     #   then everything worked as intended
                     hfname = args.dir + "/AListofHashes." + args.hashtype

@@ -8,6 +8,11 @@
 #
 #  @author: rhamilton
 
+"""Yvette's logic to make and check hashes of files.
+
+Actual hashing functions can be found in :mod:`dataservants.utils.hashes`.
+"""
+
 from __future__ import division, print_function, absolute_import
 
 import os
@@ -22,17 +27,51 @@ from .. import utils
 
 def makeManifest(mdir, htype='xx64', bsize=2**25,
                  filetype="*.fits", debug=False):
-    """
-    Given a directory, and a running dictionary of files already seen,
-    create a CSV list of files that match the given
-    extension and record both their location and their checksums.
+    """Create a CSV manifest of files,hashval for files matching `filetype`.
 
-    You don't get to control the location of the output manifest file. No.
+    Given a directory, recursively look for all files matching filetype. Look
+    for an existing hashfile ``AListofHashes`` with extension ``htype`` and
+    compare the files found against the files in that CSV list.
 
-    The hashtype is passed along to hashfunc and checked there; if it fails,
-    it'll default to sha1 since that's a better performer for large files
-    than md5. Blocksize is passed verbatim and not checked, which someone
-    will probably tell me someday is a terrible idea at which point I'll agree.
+    .. warning::
+        The hash file name is hardcoded to
+        ``AListofHashes`` with extension ``htype``. The code won't search
+        for other types, so don't switch unless it's **absolutely** necessary
+        because your old/existing hash files would be ignored and the
+        code will make new ones of the new ``htype``!
+
+    If the list isn't found, all files are hashed and the file is written
+    (but **NOT** in this function).  If the list is found, hash only the
+    uniquely found files not in the CSV list.  Return a full dict of files
+    and their hash value to the calling function so the hashfile can be
+    written from there.
+
+    Args:
+        mdir (:obj:`str`)
+            Directory to look for files
+        htype (:obj:`str`, optional)
+            Hashing function type. See the list of allowed values in
+            :func:`dataservants.yvette.parseargs.setup_arguments`
+        bsize (:obj:`int`, optional)
+            Hashing function bite size in bytes. Defaults to 2**25 or
+            33554432 bits (a.k.a. 4 MiB).
+        filetype (:obj:`str`)
+            Wildcard string to match files. Defaults to "*.fits".
+        debug (:obj:`bool`)
+            Bool to trigger additional debugging outputs. Defaults to False.
+
+    Returns:
+        existingHashes (:obj:`dict`)
+            Dictionary of hashed files, old and new, keyed to their full path.
+
+            .. code-block:: python
+
+                existingHashes = {'/mnt/lemi/lois/20140619/lmi.0001.fits':
+                                  '518eab9e1cbaf628',
+                                  '/mnt/lemi/lois/20140619/lmi.0002.fits':
+                                  'ceabecd38c8b4010',
+                                  '/mnt/lemi/lois/20140619/lmi.0003.fits':
+                                  'bc0c46fff7a10fa5'}
     """
     # Find all the files matching filetype at and underneath mdir
     ff = utils.files.recursiveSearcher(mdir, fileext=filetype)
@@ -91,12 +130,7 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
             print("%.5f seconds per file" % (telapsed/len(ff)))
             print("%.5f GiB/sec hash rate" % (tsize/telapsed))
 
-        # Now make a dict of the results so we can work a little easier
-        #   Two choices to the end user here:
-        #   1) If you want to maintain the hash objects...
-#        newKeys = OrderedDict(zip(unq, hs))
-
-        #   2) If you care about just the actual hash value...
+        # We just care about just the actual hash value, not the hash obj.
         newKeys = OrderedDict(zip(unq, [h.hexdigest() for h in hs]))
 
     # The above loop, if there are files to do, will return the dict
@@ -108,16 +142,47 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
     return existingHashes
 
 
-def verifyFiles(mdir, hfname, htype='xx64', bsize=2**25,
+def verifyFiles(mdir, htype='xx64', bsize=2**25,
                 filetype="*.fits", debug=False):
-    """
-    Given a directory, and a running dictionary of files already seen, read
-    the manifest file (default name) and re-check the files against the hashes
-    seen in that manifest file. Return/flag files that fail the check so
-    that they can be re-transferred.
+    """Verify file hashes against those in a given list.
 
-    Looks a lot like makeManifest but decided to keep it seperate since
-    it performs a different-enough function.
+    Given a directory, recursively look for all files matching filetype
+    and calculate their hashes.  It stores the hashes in a dict
+    keyed to the filename, which is then compared to the hash file read in
+    from ``hfname``.  The two are compared by the basename of their keys to
+    allow for mounting/storage path differences.  A list of files in the given
+    directory that fail the check is returned.
+
+    .. warning::
+        The hash file name is hardcoded to
+        ``AListofHashes`` with extension ``htype``. The code won't search
+        for other types, so don't switch unless it's **absolutely** necessary
+        because your old/existing hash files would be ignored and the
+        code will make new ones of the new ``htype``!
+
+    Args:
+        mdir (:obj:`str`)
+            Directory to look for files
+        htype (:obj:`str`, optional)
+            Hashing function type. See the list of allowed values in
+            :func:`dataservants.yvette.parseargs.setup_arguments`
+        bsize (:obj:`int`, optional)
+            Hashing function bite size in bytes. Defaults to 2**25 or
+            33554432 bits (a.k.a. 4 MiB).
+        filetype (:obj:`str`)
+            Wildcard string to match files. Defaults to "*.fits".
+        debug (:obj:`bool`)
+            Bool to trigger additional debugging outputs. Defaults to False.
+
+    Returns:
+        mismatch (:obj:`list`)
+            List of files in the given directory ``mdir`` that do not match
+            the hashfile found in that same ``mdir``
+
+    .. note::
+        I admit that this function could probably be 1/2 as short by just
+        calling :func:`dataservants.yvette.filehashing.makeManifest` with
+        a special option, and should probably be refactored to do just that.
     """
     ff = utils.files.recursiveSearcher(mdir, fileext=filetype)
     if len(ff) == 0:
@@ -167,13 +232,14 @@ def verifyFiles(mdir, hfname, htype='xx64', bsize=2**25,
         newKeys = OrderedDict(zip(bn, [h.hexdigest() for h in hs]))
 
     # Now compare the new against the old. Strip out path info again
-    mismatch = {}
+    mismatch = []
+    # tf == testfile, ff == found files (in given directory)
     for tf in ff:
         testfile = basename(tf)
         try:
             if newKeys[testfile] != existingHashes[testfile]:
                 # Store the full path to make retransfters easier!
-                mismatch.update(tf)
+                mismatch.append(tf)
         except KeyError as err:
             print(str(err))
             print("Hash of file %s doesn't have a comparison!" % (tf))
