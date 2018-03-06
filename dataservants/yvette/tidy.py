@@ -65,6 +65,10 @@ def beginTidying(noprint=False):
 
         # Verify inputs; only do stuff if the directory is a valid one
         dirstatus, vdir = utils.files.checkDir(args.dir, debug=debug)
+        if dirstatus is False:
+            print("Directory %s not found or accessible!" % (vdir))
+            sys.exit(-1)
+
         if args.freespace is True:
                 frees = utils.files.checkFreeSpace(args.dir, debug=debug)
                 rjson.update({"FreeSpace": frees})

@@ -114,7 +114,7 @@ def checkDir(loc, debug=False):
     if os.path.exists(fqloc) is False:
         if debug is True:
             print("%s doesn't exist!" % (fqloc))
-        return False
+        return False, fqloc
     else:
         return True, fqloc
 

@@ -62,8 +62,8 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
             print("Hashes stored in: %s" % (hfname))
         unq = ff
     else:
+        doneFiles = existingHashes.keys()
         if debug is True:
-            doneFiles = existingHashes.keys()
             print("%d files found in hashfile %s" % (len(doneFiles), hfname))
         # Check to see if the list of files found is different than the ones
         #   already in the hash file; if they're there already, remove them

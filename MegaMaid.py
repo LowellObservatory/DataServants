@@ -25,7 +25,7 @@ from dataservants import yvette
 if __name__ == "__main__":
     # Base directory in which to search
     # bdir = '/mnt/lemi/lois/'
-    bdir = '~/Codes/DataServants/datatests/'
+    bdir = '~/Codes/DataServants/datatests/cheese/'
 
     # Save the original sys.argv, otherwise we'll need to always fudge arg[0]
     oargv = sys.argv
