@@ -1,6 +1,12 @@
 dataservants.wadsworth package
 ==============================
 
+Usage
+-----
+
+.. program-output:: python ../../dataservants/wadsworth/parseargs.py --help
+
+
 Submodules
 ----------
 

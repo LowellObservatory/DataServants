@@ -13,15 +13,14 @@ from __future__ import division, print_function, absolute_import
 import argparse as argp
 
 
-def parseArguments():
+def parseArguments(prog=None):
+    """Setup command line arguments that Alfred will use.
     """
-    Setup command line arguments that could be used if so desired.
-    """
-
     fclass = argp.ArgumentDefaultsHelpFormatter
 
     parser = argp.ArgumentParser(description='Alfred: The Instrument Monitor',
-                                 formatter_class=fclass)
+                                 formatter_class=fclass,
+                                 prog=prog)
 
     parser.add_argument('-c', '--config', metavar='/path/to/file.conf',
                         type=str,
@@ -59,3 +58,7 @@ def parseArguments():
     args = parser.parse_args()
 
     return args
+
+
+if __name__ == "__main__":
+    parser, args = parseArguments(prog="Alfred.py")

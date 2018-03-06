@@ -40,11 +40,11 @@ def setup_arguments(prog=None):
                         default="*.fits")
 
     parser.add_argument('--rangeNew', type=int,
-                        help='Age (days) of directory to be actively archived',
+                        help='Age (days) of directory to be considered "new"',
                         default=3, nargs="?")
 
     parser.add_argument('--rangeOld', type=int,
-                        help='Age (days) beyond which directory is cleared',
+                        help='Age (days) beyond which directory is "old"',
                         default=30, nargs="?")
 
     parser.add_argument('--hashtype', type=str,

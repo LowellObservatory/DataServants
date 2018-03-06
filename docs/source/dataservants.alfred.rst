@@ -1,6 +1,12 @@
 dataservants.alfred package
 ===========================
 
+Usage
+-----
+
+.. program-output:: python ../../dataservants/alfred/parseargs.py --help
+
+
 Submodules
 ----------
 
