@@ -8,6 +8,15 @@
 #
 #  @author: rhamilton
 
+"""Alfred: The Instrument Monitor
+
+Alfred is designed to live on one machine amongst some group of seperate
+machines, and reguarly check various health related information from each in
+the group.  There can only be one Alfred instance running on a machine,
+controlled via a PID file in /tmp/ as well as some command line options to
+kill/restart the Alfred process.
+"""
+
 from __future__ import division, print_function, absolute_import
 
 import os
@@ -21,7 +30,42 @@ from . import parseargs
 
 
 def beginValeting(procname='alfred', logfile=True):
-    """
+    """Main entry point for Alfred, which also handles arguments.
+
+    This will parse the arguments specified in
+    :mod:`dataservants.alfred.parseargs` and then act
+    accordingly, usually by talking to a :mod:`dataservant.yvette` instance
+    on a remote machine and using the actions defined in
+    :mod:`dataservants.yvette.remote`.
+
+    Args:
+        procname (:obj:`str`, optional)
+            Process name to search for another running instance of Wadsworth.
+            Defaults to 'wadsworth'.
+        logfile (:obj:`bool`, optional)
+            Bool to control whether we write to a logfile (with rotation)
+            or just dump everything to STDOUT. Useful for debugging.
+            Defaults to True.
+
+    Returns:
+        idict (:class:`dataservants.utils.common.InstrumentHost`)
+            Class containing instrument machine target information
+            populated via :func:`dataservants.utils.confparsers.parseInstConf`.
+        args (:class:`argparse.Namespace`)
+            Class containing parsed arguments, returned from
+            :func:`dataservants.wadsworth.parseargs.parseArguments`.
+        runner (:class:`dataservants.utils.common.HowtoStopNicely`)
+            Class containing logic to catch ``SIGHUP``, ``SIGINT``, and
+            ``SIGTERM``.  Note that ``SIGKILL`` is uncatchable.
+
+    .. note::
+        This is terribly similar to :mod:`dataservants.wadsworth.buttle` but
+        Alfred actually evolved the most and changes were backported to
+        Wadsworth and Yvette as I needed to bring things together.
+
+        It might be worth thinking about a constructor of some sort
+        that could instantiate all of the servants uniformly but that's
+        a v2.0 task if at all.
     """
     # Time to wait after a process is murdered before starting up again.
     #   Might be over-precautionary, but it gives time for the previous process
