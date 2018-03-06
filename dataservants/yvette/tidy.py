@@ -134,7 +134,7 @@ def beginTidying(noprint=False):
                     #   then everything worked as intended
                     hfname = args.dir + "/AListofHashes." + args.hashtype
                     hfcheck = utils.hashes.writeHashFile(hash1, hfname,
-                                                        debug=debug)
+                                                         debug=debug)
 
                     # Return logging
                     if hfcheck is True:
@@ -151,7 +151,7 @@ def beginTidying(noprint=False):
 
             if args.verify is True:
                 # Verification step
-                broken = filehashing.verifyFiles(args.dir, args.verify,
+                broken = filehashing.verifyFiles(args.dir,
                                                  filetype=args.filetype,
                                                  htype=args.hashtype,
                                                  debug=debug)

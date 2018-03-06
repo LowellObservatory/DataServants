@@ -73,7 +73,7 @@ def actionLook(eSSH, iobj, baseYcmd, age=2, debug=False):
 
 
 def actionPing(iobj, dbname=None, debug=False):
-    """Ping a remote machine and record its response
+    """Ping a remote machine and record its response.
 
     Pings a remote machine, recording its average response time if that
     time is within the number of seconds indicated by timeout.
@@ -319,7 +319,7 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
 
 
 def decodeAnswer(ans, debug=False):
-    """Parse the JSON formatted output from Yvette
+    """Parse the JSON formatted output from Yvette.
 
     Yvette's main code :func:`dataservants.yvette.tidy.beginTidying` returns
     both the return value and the result in a JSON formatted response.  Given
