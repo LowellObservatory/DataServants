@@ -24,8 +24,7 @@ from dataservants import yvette
 
 if __name__ == "__main__":
     # Base directory in which to search
-    # bdir = '/mnt/lemi/lois/'
-    bdir = '~/Codes/DataServants/datatests/cheese/'
+    bdir = '/mnt/lemi/lois/'
 
     # Save the original sys.argv, otherwise we'll need to always fudge arg[0]
     oargv = sys.argv
@@ -40,7 +39,7 @@ if __name__ == "__main__":
 
     for key in results:
         print("%d directories older than 25d found" % (len(results[key])))
-        for cdir in results[key][0:5]:
+        for cdir in results[key]:
             # Prepare new arguments for Yvette
             args = '%s/ -p --filetype *.fits --hashtype xx64' % (cdir)
             argString = shlex.split(args)
