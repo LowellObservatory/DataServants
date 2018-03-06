@@ -69,14 +69,15 @@ def hashfunc(fname, bsize=2**25, htype='xx64', debug=False):
     return hasher
 
 
-def readHashFile(filename, debug=False, basenamed=False):
+def readHashFile(hfname, debug=False, basenamed=False):
     """
     """
     if debug is True:
-        print(filename)
+        print(hfname)
+
     dat = {}
     try:
-        with open(filename, 'r') as csvfile:
+        with open(hfname, 'r') as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
                 if basenamed is True:
@@ -92,10 +93,9 @@ def readHashFile(filename, debug=False, basenamed=False):
     return dat
 
 
-def writeHashFile(mdict, loc, htype='xx64', debug=False):
+def writeHashFile(mdict, hfname, debug=False):
     """
     """
-    hfname = loc + "/AListofHashes." + htype
     try:
         with open(hfname, 'w') as csvfile:
             writer = csv.writer(csvfile)

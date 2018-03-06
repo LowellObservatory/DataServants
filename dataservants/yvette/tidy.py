@@ -78,40 +78,47 @@ def beginTidying():
                 frees = utils.files.checkFreeSpace(args.dir, debug=debug)
                 rjson.update({"FreeSpace": frees})
 
+            # A tiny bit of nanny code
+            hashactions = [args.pack, args.verify, args.clean]
+            if any(hashactions) is True:
+                if args.hashtype == 'xx64':
+                    if xxhash is None:
+                        print("XX64 hash unavailable; falling back to sha1")
+                        args.hashtype = 'sha1'
+
+                if args.hashtype == 'md5':
+                    print("Warning: MD5 is slow! Consider another option!")
+
+            # Back to the actual possible actions
             if args.clean is True:
+                # TODO: Write the cleaning logic
                 pass
-
-            if args.hashtype == 'xx64':
-                if xxhash is None:
-                    print("XX64 hash unavailable; falling back to sha1")
-                    args.hashtype = 'sha1'
-
-            if args.hashtype == 'md5':
-                print("Warning: MD5 is slow! Consider another option!")
 
             if args.pack is True:
                 # Create a manifest dict
-                md1 = filehashing.makeManifest(args.dir,
-                                               filetype=args.filetype,
-                                               htype=args.hashtype,
-                                               debug=debug)
-                # Write it, and return the filename
-                hfname = utils.hashes.writeHashFile(md1, args.dir,
-                                                    htype=args.hashtype,
+                hash1 = filehashing.makeManifest(args.dir,
+                                                 filetype=args.filetype,
+                                                 htype=args.hashtype,
+                                                 debug=debug)
+                # Write it to the standard filename. If it returns not None
+                #   then everything worked as intended
+                hfname = args.dir + "/AListofHashes." + args.hashtype
+                hfname = utils.hashes.writeHashFile(hash1, hfname,
                                                     debug=debug)
+
                 # Return logging
                 rjson.update({"HashFile": hfname})
-                print({"HashFile": hfname})
 
                 # Now read it back in for some debug checking
                 if debug is True:
                     print()
-                    md2 = utils.hashes.readHashFile(hfname, debug=debug)
-                    print("hashset1 == hashset2?\n%s" % (md1 == md2))
+                    hash2 = utils.hashes.readHashFile(hfname, debug=debug)
+                    print("hashset1 == hashset2?\n%s" % (hash1 == hash2))
                     print()
 
+            if args.verify is True:
                 # Verification step
-                broken = filehashing.verifyFiles(args.dir, hfname,
+                broken = filehashing.verifyFiles(args.dir, args.verify,
                                                  filetype=args.filetype,
                                                  htype=args.hashtype,
                                                  debug=debug)

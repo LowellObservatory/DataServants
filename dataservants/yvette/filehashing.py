@@ -54,6 +54,7 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
     #   BUT don't verify that has, assume that it's good for now
     hfname = mdir + "/AListofHashes." + htype
     existingHashes = utils.hashes.readHashFile(hfname)
+
     unq = []
     if existingHashes == {}:
         if debug is True:
@@ -134,7 +135,10 @@ def verifyFiles(mdir, hfname, htype='xx64', bsize=2**25,
         print("Total of %.2f GiB" % (tsize))
 
     # Read in the existing hash file
-    existingHashes = utils.hashes.readHashFile(hfname, basenamed=True,
+    hfname = mdir + "/AListofHashes." + htype
+
+    existingHashes = utils.hashes.readHashFile(hfname,
+                                               basenamed=True,
                                                debug=debug)
     if debug is True:
         print("%d files found in hashfile %s" % (len(existingHashes), hfname))

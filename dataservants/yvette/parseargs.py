@@ -82,6 +82,10 @@ def setup_arguments(prog=None):
                       help=hstr,
                       default=False)
 
+    grp1.add_argument('-v', '--verify', dest='verify', action='store_true',
+                      help="Verify the hashes in the given directory",
+                      default=False)
+
     args = parser.parse_args()
 
     return parser, args
