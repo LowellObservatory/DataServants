@@ -105,6 +105,7 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
             fs = {'cpuUser': fsa['MachineCPU']['user'],
                   'cpuSys': fsa['MachineCPU']['system'],
                   'cpuIdle': fsa['MachineCPU']['idle'],
+                  'memTotal': fsa['MachineMem']['total'],
                   'memAvail': fsa['MachineMem']['available'],
                   'memActive': fsa['MachineMem']['active'],
                   'memPercent': fsa['MachineMem']['percent']}
@@ -113,6 +114,7 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
                   'cpuSys': fsa['MachineCPU']['system'],
                   'cpuIdle': fsa['MachineCPU']['idle'],
                   'cpuIO': fsa['MachineCPU']['iowait'],
+                  'memTotal': fsa['MachineMem']['total'],
                   'memAvail': fsa['MachineMem']['available'],
                   'memActive': fsa['MachineMem']['active'],
                   'memPercent': fsa['MachineMem']['percent']}
