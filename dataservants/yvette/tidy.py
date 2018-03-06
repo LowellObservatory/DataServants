@@ -40,13 +40,24 @@ def beginTidying(noprint=False):
     accordingly, calling the various functions defined in
     :mod:`dataservants.utils.files` or :mod:`dataservants.utils.hashes`
 
+    If this code is called remotely via :mod:`dataservants.wadsworth` or
+    :mod:`dataservants:alfred` then the interactions are defined in
+    :mod:`dataservants.yvette.remote`.
+
     Args:
         noprint (:obj:`bool`, optional)
             Whether to print return value to STDOUT. Defaults to False.
 
     Returns:
         rjson (:obj:`dict`)
-            Dictionary of results from specified actions
+            Dictionary of results from specified actions. See
+            :mod:`dataservants.yvette.remote` for specifics on format.
+
+    .. note::
+        The default hash is `xx64 <https://pypi.python.org/pypi/xxhash/>`_,
+        but if that is unavailable it will fall back
+        to sha1. Use Yvette option ``--hashtype`` to choose a
+        specific hashing function.
     """
     rjson = {}
     # Setup argument parsing *before* logging so help messages go to stdout

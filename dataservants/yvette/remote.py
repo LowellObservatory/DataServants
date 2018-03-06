@@ -107,7 +107,6 @@ def actionPing(iobj, dbname=None, debug=False):
                                                      21, 51, 49, 972034),
                            'fields': {'ping': 2.7909278869628906,
                                       'dropped': 0}}]
-
     """
     # Timeouts and stuff are handled elsewhere in here
     #   BUT! timeout must be an int >= 1 (second)
@@ -337,7 +336,6 @@ def decodeAnswer(ans, debug=False):
         final (:obj:`dict`)
             Dict formatted answer from Yvette, parsed only if the return
             status (ans[0]) was success (0) and the result isn't an empty str.
-
     """
     final = {}
     if ans[0] == 0:
