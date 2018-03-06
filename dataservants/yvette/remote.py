@@ -329,7 +329,6 @@ def decodeAnswer(ans, debug=False):
     Args:
         ans (:obj:`json`)
             JSON formatted response from Yvette
-
         debug (:obj:`bool`)
             Bool to trigger additional debugging outputs. Defaults to False.
     Returns:
