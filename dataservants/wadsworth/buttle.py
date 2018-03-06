@@ -8,6 +8,15 @@
 #
 #  @author: rhamilton
 
+"""Wadsworth: The Data Butler
+
+Wadsworth is designed to live on one machine amongst some group of seperate
+machines, and reguarly check for new data to archive on each machine in the
+group.  There can only be one Wadsworth instance running on a machine,
+controlled via a PID file in /tmp/ as well as some command line options to
+kill/restart the Wadsworth process.
+"""
+
 from __future__ import division, print_function, absolute_import
 
 import os
@@ -19,7 +28,33 @@ from .. import utils
 
 
 def beginButtling(procname='wadsworth', logfile=True):
-    """
+    """Main entry point for Wadsworth, which also handles arguments
+
+    This will parse the arguments specified in
+    :mod:`dataservants.wadsworth.parseargs` and then act
+    accordingly, usually by talking to a :mod:`dataservant.yvette` instance
+    on a remote machine and using the actions defined in
+    :mod:`dataservants.yvette.remote`.
+
+    Args:
+        procname (:obj:`str`, optional)
+            Process name to search for another running instance of Wadsworth.
+            Defaults to 'wadsworth'.
+        logfile (:obj:`bool`, optional)
+            Bool to control whether we write to a logfile (with rotation)
+            or just dump everything to STDOUT. Useful for debugging.
+            Defaults to True.
+
+    Returns:
+        idict (:class:`dataservants.utils.common.InstrumentHost`)
+            Class containing instrument machine target information
+            populated via :func:`dataservants.utils.confparsers.parseInstConf`.
+        args (:class:`argparse.Namespace`)
+            Class containing parsed arguments, returned from
+            :func:`dataservants.wadsworth.parseargs.parseArguments`.
+        runner (:class:`dataservants.utils.common.HowtoStopNicely`)
+            Class containing logic to catch ``SIGHUP``, ``SIGINT``, and
+            ``SIGTERM``.  Note that ``SIGKILL`` is uncatchable.
     """
     # Time to wait after a process is murdered before starting up again.
     #   Might be over-precautionary, but it gives time for the previous process

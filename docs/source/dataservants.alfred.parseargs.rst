@@ -5,3 +5,7 @@ dataservants.alfred.parseargs module
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. for programoutput
+.. program-output:: python ../../dataservants/alfred/parseargs.py --help
+
