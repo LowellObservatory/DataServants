@@ -9,8 +9,12 @@ Welcome to Data Servants's documentation!
 .. toctree::
    :maxdepth: 3
    :caption: Contents:
+   :numbered:
 
-   dataservants
+   Wadsworth: The Data Butler <dataservants.wadsworth>
+   Yvette: The Data Maid <dataservants.yvette>
+   Alfred: The Instrument Monitor <dataservants.alfred>
+   Utilities <dataservants.utils>
 
 Indices and tables
 ==================
