@@ -101,8 +101,8 @@ def writeHashFile(mdict, hfname, debug=False):
             writer = csv.writer(csvfile)
             for item in mdict.keys():
                 writer.writerow([item, mdict[item]])
-        return hfname
+        return True
     except IOError as err:
         if debug is True:
             print("%s" % (err))
-        return None
+        return False

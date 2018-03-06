@@ -24,18 +24,29 @@ from dataservants import yvette
 
 if __name__ == "__main__":
     # Base directory in which to search
-    bdir = '/mnt/lemi/lois/'
+    # bdir = '/mnt/lemi/lois/'
+    bdir = '~/Codes/DataServants/datatests/'
+
+    # Save the original sys.argv, otherwise we'll need to always fudge arg[0]
+    oargv = sys.argv
 
     # Hacking in some arguments here
     args = '%s -o --rangeOld 25' % (bdir)
     argString = shlex.split(args)
-
-    sys.argv += argString
+    sys.argv = oargv + argString
 
     # Actually call Yvette to action and get the result
     results = yvette.tidy.beginTidying(noprint=True)
 
     for key in results:
         print("%d directories older than 25d found" % (len(results[key])))
-        for cdir in results[key]:
-            print(cdir)
+        for cdir in results[key][0:5]:
+            # Prepare new arguments for Yvette
+            args = '%s/ -p --filetype *.fits --hashtype xx64' % (cdir)
+            argString = shlex.split(args)
+            sys.argv = oargv + argString
+            print("="*10)
+            print(sys.argv)
+
+            results = yvette.tidy.beginTidying(noprint=True)
+            print("%s: %s" % (cdir, results))
