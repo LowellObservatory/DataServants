@@ -98,10 +98,14 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
     tags = {'host': iobj.host}
     ts = dt.datetime.utcnow()
     if fsa != {}:
-        fs = {'path': fsa['FreeSpace']['path'],
-              'total': fsa['FreeSpace']['total'],
-              'free': fsa['FreeSpace']['free'],
-              'percentfree': fsa['FreeSpace']['percentfree']}
+        # Store some cherry picked ones to really care about rather than
+        #   storing absolutely everything...but it wouldn't be hard to change
+        fs = {'cpuUser': fsa['MachineCPU']['user'],
+              'cpuSys': fsa['MachineCPU']['system'],
+              'cpuIdle': fsa['MachineCPU']['idle'],
+              'cpuIO': fsa['MachineCPU']['iowait'],
+              'memAvail': fsa['MachineMem']['available'],
+              'memActive': fsa['MachineMem']['active']}
         # Make the packet
         packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                    ts=ts,
@@ -152,7 +156,7 @@ def lookForNewDirectories(sshConn, basecmd, sdir, dirmask, age=2, debug=False):
 def getTargetStats(sshCon, basecmd, debug=False):
     """
     """
-    fcmd = "%s -c" % (basecmd)
+    fcmd = "%s --cpumem" % (basecmd)
     res = sshCon.sendCommand(fcmd, debug=debug)
 
     return res

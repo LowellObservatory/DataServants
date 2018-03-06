@@ -31,7 +31,6 @@ def instActions(acts=[utils.common.processDescription()], debug=True):
         # * and ** will unpack each of them properly
         res = each.func(*each.args, **each.kwargs)
         time.sleep(each.timedelay)
-        print(res)
 
 
 if __name__ == "__main__":
@@ -71,19 +70,25 @@ if __name__ == "__main__":
     #   it's just helpful to do the definitions out here for the constants
     yvetteR = yvette.remote
 
-    act1 = utils.common.processDescription(func=yvetteR.actionSpace,
-                                           timedelay=3.,
-                                           priority=2,
-                                           args=[],
-                                           kwargs={})
-
-    act2 = utils.common.processDescription(func=yvetteR.actionPing,
+    act1 = utils.common.processDescription(func=yvetteR.actionPing,
                                            timedelay=3.,
                                            priority=1,
                                            args=[],
                                            kwargs={})
 
-    actions = [act1, act2]
+    act2 = utils.common.processDescription(func=yvetteR.actionSpace,
+                                           timedelay=3.,
+                                           priority=2,
+                                           args=[],
+                                           kwargs={})
+
+    act3 = utils.common.processDescription(func=yvetteR.actionStats,
+                                           timedelay=3.,
+                                           priority=1,
+                                           args=[],
+                                           kwargs={})
+
+    actions = [act1, act2, act3]
 
     try:
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
@@ -125,12 +130,21 @@ if __name__ == "__main__":
                         time.sleep(3)
 
                         # Update the functions with proper arguments
-                        actions[0].args = [eSSH, iobj, baseYcmd]
+                        # act1 == check ping times
+                        #   Technically this one doesn't need SSH opened,
+                        #   but I want to keep these together for clarity
+                        actions[0].args = [iobj]
                         actions[0].kwargs = {'dbname': dbname,
                                              'debug': args.debug}
 
-                        actions[1].args = [iobj]
+                        # act2 == check free space
+                        actions[1].args = [eSSH, iobj, baseYcmd]
                         actions[1].kwargs = {'dbname': dbname,
+                                             'debug': args.debug}
+
+                        # act3 == check target CPU/RAM stats
+                        actions[2].args = [eSSH, iobj, baseYcmd]
+                        actions[2].kwargs = {'dbname': dbname,
                                              'debug': args.debug}
 
                         instActions(actions)
