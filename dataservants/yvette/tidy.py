@@ -41,14 +41,12 @@ def beginTidying(noprint=False):
     :mod:`dataservants.utils.files` or :mod:`dataservants.utils.hashes`
 
     Args:
-        None
+        noprint (:obj:`bool`, optional)
+            Whether to print return value to STDOUT. Defaults to False.
 
     Returns:
-        None
-
-    While this function returns nothing, it prints the results of the actions
-    to STDOUT in a JSON format, to be unpacked by whichever function (remotely)
-    called Yvette.
+        rjson (:obj:`dict`)
+            Dictionary of results from specified actions
     """
     rjson = {}
     # Setup argument parsing *before* logging so help messages go to stdout

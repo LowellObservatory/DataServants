@@ -134,6 +134,7 @@ def checkFreeSpace(loc, debug=False):
         return None
     else:
         try:
+            # TODO: statvfs kinda sucks and I should replace this with psutil
             statvfs = os.statvfs(fqloc)
         except Exception as e:
             if debug is True:
@@ -144,6 +145,11 @@ def checkFreeSpace(loc, debug=False):
             print("Checking free space at %s ..." % (fqloc))
 
         # Check overall size, originally in bytes so /1024./1024./1024. == GiB
+        # Cribbing from the IEEE:
+        #   f_frsize   Fundamental file system block size [in bytes].
+        #   f_blocks   Total num of blocks on file system in units of f_frsize.
+        #   f_bfree    Total num of free blocks.
+        #   f_bavail   Num of free blocks available to non-privileged process.
         total = (statvfs.f_frsize * statvfs.f_blocks)/1024./1024./1024.
 
         # Check free, same as above. NEED .f_bavail because
