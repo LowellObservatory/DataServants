@@ -137,3 +137,5 @@ def beginTidying():
 
     if rjson != {}:
         print(json.dumps(rjson))
+
+    return rjson
