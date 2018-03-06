@@ -100,12 +100,20 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
     if fsa != {}:
         # Store some cherry picked ones to really care about rather than
         #   storing absolutely everything...but it wouldn't be hard to change
-        fs = {'cpuUser': fsa['MachineCPU']['user'],
-              'cpuSys': fsa['MachineCPU']['system'],
-              'cpuIdle': fsa['MachineCPU']['idle'],
-              'cpuIO': fsa['MachineCPU']['iowait'],
-              'memAvail': fsa['MachineMem']['available'],
-              'memActive': fsa['MachineMem']['active']}
+        # OS X doesn't give IO wait information because it sucks
+        if iobj.host == 'xcam':
+            fs = {'cpuUser': fsa['MachineCPU']['user'],
+                  'cpuSys': fsa['MachineCPU']['system'],
+                  'cpuIdle': fsa['MachineCPU']['idle'],
+                  'cpuIO': fsa['MachineCPU']['iowait'],
+                  'memAvail': fsa['MachineMem']['available'],
+                  'memActive': fsa['MachineMem']['active']}
+        else:
+            fs = {'cpuUser': fsa['MachineCPU']['user'],
+                  'cpuSys': fsa['MachineCPU']['system'],
+                  'cpuIdle': fsa['MachineCPU']['idle'],
+                  'memAvail': fsa['MachineMem']['available'],
+                  'memActive': fsa['MachineMem']['active']}
         # Make the packet
         packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                    ts=ts,
