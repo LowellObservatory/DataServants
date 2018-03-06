@@ -33,7 +33,7 @@ def setup_arguments(prog=None):
 
     parser.add_argument('-r', '--regexp', type=str,
                         help='Regular expression for finding data directories',
-                        default="[0-9]{8}.", nargs='?')
+                        default="[0-9]{8}.*", nargs='?')
 
     parser.add_argument('--filetype', type=str,
                         help='Mask for finding data',
@@ -62,16 +62,20 @@ def setup_arguments(prog=None):
                         help='Check amount of free space at ',
                         default=False)
 
+    parser.add_argument('-l', '--look', action='store_true',
+                        help='Look for new data directories matching regexp',
+                        default=False)
+
+    parser.add_argument('-o', '--old', action='store_true',
+                        help='Look for data directories older than rangeOld',
+                        default=False)
+
     # The actual actions are defined to be mutually exclusive, meaning
     #   only ONE of them will act per call to Yvette.
     #
     # This keeps things simple, and allows a more natural use of
     #   the 'dir' parameter as defined above rather than a dir per function
     grp1 = parser.add_mutually_exclusive_group(required=False)
-
-    grp1.add_argument('-l', '--look', action='store_true',
-                      help='Look for new data directories matching regexp',
-                      default=False)
 
     grp1.add_argument('-c', '--clean', action='store_true',
                       help='Clean up old data',
