@@ -32,7 +32,7 @@ from . import parseargs
 from . import filehashing
 
 
-def beginTidying():
+def beginTidying(noprint=False):
     """Main entry point for Yvette, which also handles arguments
 
     This will parse the arguments specified in
@@ -62,6 +62,7 @@ def beginTidying():
             debug = True
         else:
             debug = False
+
         # Verify inputs; only do stuff if the directory is a valid one
         dirstatus, vdir = utils.files.checkDir(args.dir, debug=debug)
         if dirstatus is True:
@@ -135,7 +136,7 @@ def beginTidying():
         else:
             print("%s doesn't exist or isnt' readable" % (args.dir))
 
-    if rjson != {}:
+    if rjson != {} and noprint is False:
         print(json.dumps(rjson))
 
     return rjson
