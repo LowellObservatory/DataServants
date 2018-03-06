@@ -32,6 +32,7 @@ if __name__ == "__main__":
 
     sys.argv += argString
 
+    # Actually call Yvette to action and get the result
     results = yvette.tidy.beginTidying(noprint=True)
 
     for key in results:
