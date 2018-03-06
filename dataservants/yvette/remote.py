@@ -105,13 +105,13 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
             fs = {'cpuUser': fsa['MachineCPU']['user'],
                   'cpuSys': fsa['MachineCPU']['system'],
                   'cpuIdle': fsa['MachineCPU']['idle'],
-                  'cpuIO': fsa['MachineCPU']['iowait'],
                   'memAvail': fsa['MachineMem']['available'],
                   'memActive': fsa['MachineMem']['active']}
         else:
             fs = {'cpuUser': fsa['MachineCPU']['user'],
                   'cpuSys': fsa['MachineCPU']['system'],
                   'cpuIdle': fsa['MachineCPU']['idle'],
+                  'cpuIO': fsa['MachineCPU']['iowait'],
                   'memAvail': fsa['MachineMem']['available'],
                   'memActive': fsa['MachineMem']['active']}
         # Make the packet
