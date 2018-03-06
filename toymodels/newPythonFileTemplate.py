@@ -8,4 +8,34 @@
 #
 #  @author: rhamilton
 
+"""One line description of module.
+
+Further description.
+"""
+
 from __future__ import division, print_function, absolute_import
+
+
+def function1():
+    """One line description.
+
+    Explanatory paragraph. Link example
+    `Paramiko <http://docs.paramiko.org/en/latest/>`_
+
+    Internal reference example
+    :func:`dataservants.utils.files.getDirListing`.
+
+    Args:
+        arg1 (:TYPE:`internal link or datatype`)
+            Description.
+        debug (:obj:`bool`)
+            Bool to trigger additional debugging outputs. Defaults to False.
+
+    Returns:
+        ret1 (:TYPE:`internal link or datatype`)
+            Description.
+
+            .. code-block:: python
+
+                stuff = things
+    """
