@@ -23,7 +23,8 @@ except ImportError:
 from . import common
 
 
-def getDirListing(loc, recently=2, dirmask="[0-9]{8}.*", debug=False):
+def getDirListing(loc, window=2, dirmask="[0-9]{8}.*",
+                  comptype='newer', debug=False):
     """
     """
     # Regular expression for the format of a data directory
@@ -37,15 +38,14 @@ def getDirListing(loc, recently=2, dirmask="[0-9]{8}.*", debug=False):
         loc += "/"
 
     # Need number of seconds in the day window since calendar math sucks
-    recently *= 24. * 60. * 60.
+    window *= 24. * 60. * 60.
 
     # Same setup as Peter's obsactive scripts now basically
     dirlist = [join(loc, x) for x in listdir(loc) if isdir(join(loc, x))]
     # At least attempt to sort it sensibly
     dirlist = sorted(dirlist)
-
-#    if debug is True:
-#        print(dirlist)
+    # if debug is True:
+    #     print(dirlist)
 
     # Need to match loc+dirmask to only catch directories ending in the
     #   regular expression (well, after the last slash)
@@ -53,12 +53,15 @@ def getDirListing(loc, recently=2, dirmask="[0-9]{8}.*", debug=False):
     if debug is True:
         print(validdirs)
 
-    # Make a list of dirs in which their parsed date < than param. recently
-    recentmod = [it for it in validdirs if common.dateDiff(it) < recently]
+    # Make a list of dirs in which their parsed date < than param. window
+    if comptype is 'newer':
+        recentmod = [it for it in validdirs if common.dateDiff(it) < window]
+    elif comptype is 'older':
+        recentmod = [it for it in validdirs if common.dateDiff(it) >= window]
 
     if debug is True:
         if recentmod != []:
-            print("Recent directories found:")
+            print("Directories found:")
             for each in recentmod:
                 print(each)
         else:
@@ -90,7 +93,8 @@ def recursiveSearcher(base, fileext="*.fits"):
     list of files that match the fileext.
     """
     curdata = []
-    for root, dirnames, filenames in os.walk(str(base)):
+    # The 2nd return value is dirnames but we don't need them so dump to _
+    for root, _, filenames in os.walk(str(base)):
         for filename in fnmatch.filter(filenames, fileext):
             curdata.append(os.path.join(root, filename))
 

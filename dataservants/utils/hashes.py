@@ -50,7 +50,7 @@ def hashfunc(fname, bsize=2**25, htype='xx64', debug=False):
         hasher = hashlib.sha256()
     elif htype.lower() == 'sha512':
         hasher = hashlib.sha512()
-    # SHA-3 family
+    # SHA-3 family (pylint might complain here, ignore it)
     elif htype.lower() == 'sha3_256':
         hasher = hashlib.sha3_256
     elif htype.lower() == 'sha3_512':

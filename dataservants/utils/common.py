@@ -28,7 +28,7 @@ def dateDiff(fstr, debug=False):
     diff = (now - dtts)
 
     if debug is True:
-        print(dtobj, dtts, now, diff)
+        print(dstr, dtobj, dtts, now, diff)
 
     return diff
 

@@ -65,18 +65,27 @@ def beginTidying():
         # Verify inputs; only do stuff if the directory is a valid one
         dirstatus, vdir = utils.files.checkDir(args.dir, debug=debug)
         if dirstatus is True:
+            # Check for non-exclusionary actions
             if args.look is True:
-                ddirs = utils.files.getDirListing(vdir,
+                ndirs = utils.files.getDirListing(vdir,
                                                   dirmask=args.regexp,
-                                                  recently=args.rangeNew,
+                                                  window=args.rangeNew,
+                                                  comptype='newer',
                                                   debug=debug)
-                rjson.update({"NewDirs": ddirs})
+                rjson.update({"DirsNew": ndirs})
 
-            # Check for optional actions
-            #   NOTE: None of these are exclusionary
             if args.freespace is True:
                 frees = utils.files.checkFreeSpace(args.dir, debug=debug)
                 rjson.update({"FreeSpace": frees})
+
+            if args.old is True:
+                odirs = utils.files.getDirListing(vdir,
+                                                  dirmask=args.regexp,
+                                                  window=args.rangeOld,
+                                                  comptype='older',
+                                                  debug=debug)
+
+                rjson.update({"DirsOld": odirs})
 
             # A tiny bit of nanny code
             hashactions = [args.pack, args.verify, args.clean]
@@ -89,7 +98,7 @@ def beginTidying():
                 if args.hashtype == 'md5':
                     print("Warning: MD5 is slow! Consider another option!")
 
-            # Back to the actual possible actions
+            # Check for EXCLUSIONARY actions (there can be only one)
             if args.clean is True:
                 # TODO: Write the cleaning logic
                 pass
