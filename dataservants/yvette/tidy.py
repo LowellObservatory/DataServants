@@ -128,17 +128,19 @@ def beginTidying(noprint=False):
                                                  filetype=args.filetype,
                                                  htype=args.hashtype,
                                                  debug=debug)
-                # Write it to the standard filename. If it returns not None
-                #   then everything worked as intended
-                hfname = args.dir + "/AListofHashes." + args.hashtype
-                hfcheck = utils.hashes.writeHashFile(hash1, hfname,
-                                                     debug=debug)
+                # If hash1 is None, then there were no files to hash
+                if hash1 != None:
+                    # Write it to the standard filename. If it returns not None
+                    #   then everything worked as intended
+                    hfname = args.dir + "/AListofHashes." + args.hashtype
+                    hfcheck = utils.hashes.writeHashFile(hash1, hfname,
+                                                        debug=debug)
 
-                # Return logging
-                if hfcheck is True:
-                    rjson.update({"HashFile": hfname})
-                else:
-                    rjson.update({"HashFile": "PROBLEM"})
+                    # Return logging
+                    if hfcheck is True:
+                        rjson.update({"HashFile": hfname})
+                    else:
+                        rjson.update({"HashFile": "PROBLEM"})
 
                 # Now read it back in for some debug checking
                 if debug is True:

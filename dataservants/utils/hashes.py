@@ -99,8 +99,12 @@ def writeHashFile(mdict, hfname, debug=False):
     try:
         with open(hfname, 'w') as csvfile:
             writer = csv.writer(csvfile)
-            for item in mdict.keys():
-                writer.writerow([item, mdict[item]])
+            # Check for a potentially empty directory, and empty file list
+            if len(mdict) != 0:
+                for item in mdict.keys():
+                    writer.writerow([item, mdict[item]])
+            else:
+                return False
         return True
     except IOError as err:
         if debug is True:
