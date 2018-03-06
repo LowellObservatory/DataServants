@@ -65,6 +65,15 @@ def beginTidying(noprint=False):
 
         # Verify inputs; only do stuff if the directory is a valid one
         dirstatus, vdir = utils.files.checkDir(args.dir, debug=debug)
+        if args.freespace is True:
+                frees = utils.files.checkFreeSpace(args.dir, debug=debug)
+                rjson.update({"FreeSpace": frees})
+
+        if args.cpumem is True:
+            loads = utils.cpumem.checkCPUusage()
+            mems = utils.cpumem.checkMemStats()
+            rjson.update({"MachineCPU": loads, "MachineMem": mems})
+
         if dirstatus is True:
             # Check for non-exclusionary actions
             if args.look is True:
@@ -74,10 +83,6 @@ def beginTidying(noprint=False):
                                                   comptype='newer',
                                                   debug=debug)
                 rjson.update({"DirsNew": ndirs})
-
-            if args.freespace is True:
-                frees = utils.files.checkFreeSpace(args.dir, debug=debug)
-                rjson.update({"FreeSpace": frees})
 
             if args.old is True:
                 odirs = utils.files.getDirListing(vdir,

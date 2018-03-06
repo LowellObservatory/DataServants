@@ -88,6 +88,39 @@ def actionSpace(eSSH, iobj, baseYcmd, dbname=None, debug=False):
     return packet
 
 
+def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
+    """
+    """
+    fs = getTargetStats(eSSH, baseYcmd, debug=debug)
+    fsa = decodeAnswer(fs, debug=debug)
+    # Now make the packet given the deserialized json answer
+    meas = ['MachineStats']
+    tags = {'host': iobj.host}
+    ts = dt.datetime.utcnow()
+    if fsa != {}:
+        fs = {'path': fsa['FreeSpace']['path'],
+              'total': fsa['FreeSpace']['total'],
+              'free': fsa['FreeSpace']['free'],
+              'percentfree': fsa['FreeSpace']['percentfree']}
+        # Make the packet
+        packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                   ts=ts,
+                                                   tags=tags,
+                                                   fields=fs)
+    else:
+        packet = []
+
+    if debug is True:
+        print(packet)
+    if packet != []:
+        if dbname is not None:
+            # Actually write to the database to store for plotting
+            dbase = utils.database.influxobj(dbname, connect=True)
+            dbase.writeToDB(packet)
+            dbase.closeDB()
+    return packet
+
+
 def decodeAnswer(ans, debug=False):
     final = {}
     if ans[0] == 0:
@@ -112,5 +145,14 @@ def lookForNewDirectories(sshConn, basecmd, sdir, dirmask, age=2, debug=False):
     """
     fcmd = "%s -l %s -r %s --rangeNew %d" % (basecmd, sdir, dirmask, age)
     res = sshConn.sendCommand(fcmd, debug=debug)
+
+    return res
+
+
+def getTargetStats(sshCon, basecmd, debug=False):
+    """
+    """
+    fcmd = "%s -c" % (basecmd)
+    res = sshCon.sendCommand(fcmd, debug=debug)
 
     return res

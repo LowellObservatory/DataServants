@@ -59,7 +59,11 @@ def setup_arguments(prog=None):
 
     # This is an action, but doesn't need to be kept from acting w/the others
     parser.add_argument('-f', '--freespace', action='store_true',
-                        help='Check amount of free space at ',
+                        help='Check amount of free space at specified dir',
+                        default=False)
+
+    parser.add_argument('--cpumem', action='store_true',
+                        help='Check on CPU and RAM usage',
                         default=False)
 
     parser.add_argument('-l', '--look', action='store_true',
