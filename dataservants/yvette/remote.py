@@ -106,14 +106,16 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
                   'cpuSys': fsa['MachineCPU']['system'],
                   'cpuIdle': fsa['MachineCPU']['idle'],
                   'memAvail': fsa['MachineMem']['available'],
-                  'memActive': fsa['MachineMem']['active']}
+                  'memActive': fsa['MachineMem']['active'],
+                  'memPercent': fsa['MachineMem']['percent']}
         else:
             fs = {'cpuUser': fsa['MachineCPU']['user'],
                   'cpuSys': fsa['MachineCPU']['system'],
                   'cpuIdle': fsa['MachineCPU']['idle'],
                   'cpuIO': fsa['MachineCPU']['iowait'],
                   'memAvail': fsa['MachineMem']['available'],
-                  'memActive': fsa['MachineMem']['active']}
+                  'memActive': fsa['MachineMem']['active'],
+                  'memPercent': fsa['MachineMem']['percent']}
         # Make the packet
         packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                    ts=ts,

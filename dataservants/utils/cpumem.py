@@ -41,4 +41,7 @@ def checkMemStats():
         # Just go ahead and put the values from bytes to GiB
         ans.update({each: rd[each]/1024./1024./1024.})
 
+    # One last one to help plotting
+    ans.update({"percent": ans["available"]/ans["total"]})
+
     return ans
