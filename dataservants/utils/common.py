@@ -8,6 +8,9 @@
 #
 #  @author: rhamilton
 
+"""Classes and functions used by any and all servants.
+"""
+
 from __future__ import division, print_function, absolute_import
 
 import sys

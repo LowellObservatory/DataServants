@@ -9,11 +9,6 @@
 #  @author: rhamilton
 
 """Utilities to set, clear, and handle timing alarms set via :mod:`signal`.
-
-.. warning::
-    Some of these are in flux; it's clear that the class-based way is
-    good in some ways but there's a duplication of code here that
-    needs to be taken care of since they have diverged slightly.
 """
 
 from __future__ import division, print_function, absolute_import
