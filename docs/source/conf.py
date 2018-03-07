@@ -93,7 +93,7 @@ pygments_style = 'sphinx'
 #
 html_theme = 'sphinx_rtd_theme'
 
-# Requires 
+# Requires
 # pip install astropy-sphinx-theme
 #html_theme = 'bootstrap-astropy'
 
