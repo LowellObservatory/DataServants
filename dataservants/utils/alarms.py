@@ -13,6 +13,22 @@ from __future__ import division, print_function, absolute_import
 import signal
 
 
+class TimeoutException(Exception):
+    """Exception thrown when signal.alarm goes off.
+
+    This class really does nothing except throw a generic
+    exception class - it isn't subclassed any further and
+    the arbitrary arguments are passed through verbatim.
+    """
+    def __init__(self, *args, **kwargs):
+        """
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
+        Exception.__init__(self, *args, **kwargs)
+
+
 class alarming(object):
     def raiseTimeout(self, signum, frame):
         """
@@ -73,8 +89,3 @@ def raiseTimeout(signum, frame):
     """
     """
     raise TimeoutException
-
-
-class TimeoutException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
