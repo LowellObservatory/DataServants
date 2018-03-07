@@ -32,7 +32,7 @@ def beginButtling(procname='wadsworth', logfile=True):
 
     This will parse the arguments specified in
     :mod:`dataservants.wadsworth.parseargs` and then act
-    accordingly, usually by talking to a :mod:`dataservant.yvette` instance
+    accordingly, usually by talking to a :mod:`dataservants.yvette` instance
     on a remote machine and using the actions defined in
     :mod:`dataservants.yvette.remote`.
 
