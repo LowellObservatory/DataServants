@@ -8,6 +8,14 @@
 #
 #  @author: rhamilton
 
+"""Utilities to set, clear, and handle timing alarms set via :mod:`signal`.
+
+.. warning::
+    Some of these are in flux; it's clear that the class-based way is
+    good in some ways but there's a duplication of code here that 
+    needs to be taken care of since they have diverged slightly.
+"""
+
 from __future__ import division, print_function, absolute_import
 
 import signal
@@ -16,30 +24,61 @@ import signal
 class TimeoutException(Exception):
     """Exception thrown when signal.alarm goes off.
 
-    This class really does nothing except throw a generic
-    exception class - it isn't subclassed any further and
-    the arbitrary arguments are passed through verbatim.
+    This class really does nothing except throw a generic exception class.
+    It isn't subclassed any further and the arbitrary arguments are 
+    passed through verbatim.
+
+    Args:
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
     """
     def __init__(self, *args, **kwargs):
-        """
-        Args:
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
-        """
         Exception.__init__(self, *args, **kwargs)
 
 
 class alarming(object):
+    """A class to contain an alarm instance.
+
+    This class creates and maintans an alarm instance
+    object which can be both passed around and 
+    used to change the timeout exception handler function.
+    """
     def raiseTimeout(self, signum, frame):
-        """
+        """Raise the :class:`TimeoutException` when the alarm goes off.
+
+        Args:
+            signum (???)
+                A signal number indicating something
+            frame (???)
+                A frame indicating something
+
+        Raises:
+            :class:`TimeoutException`
         """
         raise TimeoutException
 
     def setAlarm(self, handler=None, timeout=10, debug=False):
-        """
-        Set alarm to go off after timeout sec and issue a TimeoutException
+        """Set an alarm via :func:`signal.alarm` for timeout seconds.
 
-        Timeout can be integer only!
+        Analogous to :func:`dataservants.utils.alarms.setAlarm`, 
+        but contained within this class so the
+        ``handler`` can be specified to be an arbitrary function either
+        here or in the calling code.
+
+        Args:
+            handler (function, optional)
+                Pointer or reference to function to be called when the alarm
+                runs out and TimeoutException is thrown.  Defaults to None.
+                If None, then the handler 
+                :func:`raiseTimeout` is used.
+            timeout (:obj:`int`, optional)
+                Integer number of seconds to wait after which TimeoutException
+                is thrown and the handler is used.
+            debug (:obj:`bool`, optional)
+                Bool to trigger additional debugging outputs. Defaults to False.
+            
+        .. note::
+            Timeout can be integer only!
         """
         if timeout < 1:
             if debug is True:
@@ -58,15 +97,30 @@ class alarming(object):
         signal.alarm(timeout)
 
     def clearAlarm(self):
+        """Clear any active signal alarms.
+
+        It just calls ``signal.alarm(0)`` which nullifies an active alarm.
+        """
         signal.alarm(0)
 
 
 def setAlarm(timeout=10, debug=False):
-    """
-    Given some arbitrary function, set an alarm to go off after timeout secs.
-    and issue a TimeoutException if the alarm goes off.
+    """Set an alarm via :mod:`signal.alarm` for timeout seconds.
 
-    Timeout can be integer only!
+    Analogous to :func:`dataservants.utils.alarms.setAlarm`, 
+    but with a hardcoded handler function 
+    :func:`raiseTimeout` called when 
+    the timeout is exceeded.
+
+    Args:
+        timeout (:obj:`int`, optional)
+            Integer number of seconds to wait after which TimeoutException
+            is thrown and the handler is used.
+        debug (:obj:`bool`, optional)
+            Bool to trigger additional debugging outputs. Defaults to False.
+        
+    .. note::
+        Timeout can be integer only!
     """
     if timeout < 1:
         if debug is True:
@@ -82,10 +136,24 @@ def setAlarm(timeout=10, debug=False):
 
 
 def clearAlarm():
+    """Clear any active signal alarms.
+
+    Same as the class method, calls ``signal.alarm(0)`` 
+    which nullifies an active alarm.
+    """
     signal.alarm(0)
 
 
 def raiseTimeout(signum, frame):
-    """
+    """Raise the :class:`TimeoutException` when the alarm goes off.
+
+    Args:
+        signum (???)
+            A signal number indicating something
+        frame (???)
+            A frame indicating something
+
+    Raises:
+        :class:`TimeoutException`
     """
     raise TimeoutException
