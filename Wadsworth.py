@@ -29,9 +29,8 @@ def instActions(acts=[utils.common.processDescription()], debug=True):
         if debug is True:
             print("Function #%d, %s" % (i, each.func))
         # * and ** will unpack each of them properly
-        res = each.func(*each.args, **each.kwargs)
+        each.func(*each.args, **each.kwargs)
         time.sleep(each.timedelay)
-        print(res)
 
 
 if __name__ == "__main__":
@@ -69,6 +68,8 @@ if __name__ == "__main__":
     #   to pass things to each function/process more clearly
     #   Note that we can update things per-instrument when inside the loop
     #   it's just helpful to do the definitions out here for the constants
+
+    # A few renames to cut down on the line length
     yvetteR = yvette.remote
 
     act1 = utils.common.processDescription(func=yvetteR.actionSpace,
@@ -108,11 +109,8 @@ if __name__ == "__main__":
                     try:
                         # Arm an alarm that will stop this inner section
                         #   in case one instrument starts to hog the show
-                        #
-                        #  USE THE ALARM UTILS!
-                        #                        
                         alarmtime = 600
-                        signal.alarm(alarmtime)
+                        utils.alarms.setAlarm(timeout=alarmtime)
                         iobj = idict[inst]
 
                         # Open the SSH connection; SSHHandler makes a class
@@ -139,6 +137,7 @@ if __name__ == "__main__":
                         instActions(actions)
 
                         eSSH.closeConnection()
+                        utils.alarms.clearAlarm()
 
                         # Check to see if someone asked us to quit
                         if runner.halt is True:
@@ -149,6 +148,8 @@ if __name__ == "__main__":
                             time.sleep(5)
                     except utils.alarms.TimeoutException as err:
                         print("%s took too long! Moving on." % (inst))
+                    finally:
+                        utils.alarms.clearAlarm()
                 # After all the instruments are done, take a big nap
                 if runner.halt is False:
                     # Sleep for bigsleep, but in small chunks to check abort
