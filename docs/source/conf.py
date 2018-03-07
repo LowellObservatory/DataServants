@@ -48,11 +48,13 @@ extensions = [
     'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
     'sphinxcontrib.programoutput',
+    'sphinx.ext.intersphinx',
 ]
 
 napoleon_google_docstring = True
 napoleon_use_param = False
 napoleon_use_ivar = True
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
