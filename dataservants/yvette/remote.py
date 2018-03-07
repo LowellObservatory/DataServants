@@ -27,7 +27,7 @@ def actionLook(eSSH, iobj, baseYcmd, age=2, debug=False):
     """Look for directories matching a specified format younger than X days old.
 
     Uses a `Paramiko <http://docs.paramiko.org/en/latest/>`_ SSH
-    connection to execute commands to a :obj:`dataservant.yvette` instance
+    connection to execute commands to a :obj:`dataservants.yvette` instance
     running on a remote target machine.
 
     The main function called on the remote side is
@@ -138,7 +138,7 @@ def actionSpace(eSSH, iobj, baseYcmd, dbname=None, debug=False):
     """Check free space at the specified directory.
 
     Uses a `Paramiko <http://docs.paramiko.org/en/latest/>`_ SSH
-    connection to execute commands to a :obj:`dataservant.yvette` instance
+    connection to execute commands to a :obj:`dataservants.yvette` instance
     running on a remote target machine.
 
     The main function called on the remote side is
@@ -218,7 +218,7 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
     """Check CPU and RAM information on the remote machine.
 
     Uses a `Paramiko <http://docs.paramiko.org/en/latest/>`_ SSH
-    connection to execute commands to a :obj:`dataservant.yvette` instance
+    connection to execute commands to a :obj:`dataservants.yvette` instance
     running on a remote target machine.
 
     The main function called on the remote side is
@@ -334,7 +334,8 @@ def decodeAnswer(ans, debug=False):
     Returns:
         final (:obj:`dict`)
             Dict formatted answer from Yvette, parsed only if the return
-            status (ans[0]) was success (0) and the result isn't an empty str.
+            status (ans[0]) was success (0) and the result (ans[1])
+            isn't an empty str.
     """
     final = {}
     if ans[0] == 0:
