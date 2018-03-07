@@ -113,6 +113,9 @@ if __name__ == "__main__":
                     try:
                         # Arm an alarm that will stop this inner section
                         #   in case one instrument starts to hog the show
+                        #
+                        #  USE THE ALARM UTILS!
+                        #
                         alarmtime = 600
                         signal.alarm(alarmtime)
                         iobj = idict[inst]
