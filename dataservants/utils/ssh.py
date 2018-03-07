@@ -57,6 +57,8 @@ class Persistence(object):
 
 class SSHHandler():
     """
+
+    See also `here <http://www.hoboes.com/Mimsy/hacks/timeout-class-retry-python/retry-ssh-connections-after-transient-error/>`_
     """
     def __init__(self, host, username, password=None, port=22, timeout=30):
         self.host = host
@@ -72,17 +74,17 @@ class SSHHandler():
             opener.act()
             return True
         except SSHException as errtext:
-            self.warning('Unable to open SSH connection:',
-                         errtext, purpose)
+            print('Unable to open SSH connection:',
+                  errtext, purpose)
         except socket.error as errtext:
-            self.warning('Socket error connecting:',
-                         errtext, purpose)
+            print('Socket error connecting:',
+                  errtext, purpose)
         except EOFError as errtext:
-            self.warning('Server has terminated with EOFError:',
-                         errtext, purpose)
+            print('Server has terminated with EOFError:',
+                  errtext, purpose)
         except alarms.TimeoutException as errtext:
-            self.warning('Timeout error connecting:',
-                         errtext)
+            print('Timeout error connecting:',
+                  errtext)
         return False
 
     def openConnection(self):
