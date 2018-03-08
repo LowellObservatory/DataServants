@@ -39,6 +39,7 @@ def getDirListing(loc, window=2, oldest=7300, dirmask="[0-9]{8}.*",
 
     # Need number of seconds in the day window since calendar math sucks
     window *= 24. * 60. * 60.
+    oldest *= 24. * 60. * 60.
 
     # Same setup as Peter's obsactive scripts now basically
     dirlist = [join(loc, x) for x in listdir(loc) if isdir(join(loc, x))]
