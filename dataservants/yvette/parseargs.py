@@ -98,6 +98,13 @@ def setup_arguments(prog=None):
                       help="Verify the hashes in the given directory",
                       default=False)
 
+    # Let's never advertise this particular hand grenade. I will likely end up
+    #   removing it because my gut is telling me it is a terrible effing idea
+    grp2 = parser.add_mutually_exclusive_group(required=False)
+    grp2.add_argument('--delete', action="store_true",
+                      help=argp.SUPPRESS,
+                      default=False)
+
     args = parser.parse_args()
 
     return parser, args
