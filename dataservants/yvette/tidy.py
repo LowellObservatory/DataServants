@@ -101,6 +101,7 @@ def beginTidying(noprint=False):
                 odirs = utils.files.getDirListing(vdir,
                                                   dirmask=args.regexp,
                                                   window=args.rangeOld,
+                                                  oldest=args.oldest,
                                                   comptype='older',
                                                   debug=debug)
 
