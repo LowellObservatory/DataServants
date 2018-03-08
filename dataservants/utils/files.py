@@ -23,7 +23,7 @@ except ImportError:
 from . import common
 
 
-def getDirListing(loc, window=2, dirmask="[0-9]{8}.*",
+def getDirListing(loc, window=2, oldest=7300, dirmask="[0-9]{8}.*",
                   comptype='newer', debug=False):
     """
     """
@@ -58,6 +58,9 @@ def getDirListing(loc, window=2, dirmask="[0-9]{8}.*",
         recentmod = [it for it in validdirs if common.dateDiff(it) < window]
     elif comptype is 'older':
         recentmod = [it for it in validdirs if common.dateDiff(it) >= window]
+        # One final round of this to allow downselecting of files
+        #   older than window but less than oldest
+        recentmod = [it for it in recentmod if common.dateDiff(it) <= oldest]
 
     if debug is True:
         if recentmod != []:

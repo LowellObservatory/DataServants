@@ -47,6 +47,10 @@ def setup_arguments(prog=None):
                         help='Age (days) beyond which directory is "old"',
                         default=30, nargs="?")
 
+    parser.add_argument('--oldest', type=int,
+                        help='Age (days) beyond which to ignore directories',
+                        default=7300, nargs="?")
+
     parser.add_argument('--hashtype', type=str,
                         choices=['xx64', 'md5', 'sha1', 'sha256', 'sha512',
                                  'sha3_256', 'sha3_512'],
