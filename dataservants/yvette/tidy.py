@@ -157,7 +157,7 @@ def beginTidying(noprint=False):
                                                  htype=args.hashtype,
                                                  debug=debug)
 
-                # If repack is False and there's files to repack...then do it
+                # If norepack is False and there's files to repack...then do it
                 if args.norepack is False and broken[1] != []:
                     hash1 = filehashing.makeManifest(args.dir,
                                                      filetype=args.filetype,
@@ -172,7 +172,10 @@ def beginTidying(noprint=False):
                                                      filetype=args.filetype,
                                                      htype=args.hashtype,
                                                      debug=debug)
-                # Return the results, whatever they are
+
+                # Return the results, whatever they are. Ideally
+                #   unhashed files and missing files are [] but sometimes
+                #   shit happens and you don't know why so just be aware
                 rjson.update({"HashChecks": {"MissingFiles": broken[0],
                                              "UnhashedFiles": broken[1],
                                              "DifferentFiles": broken[2]}})
