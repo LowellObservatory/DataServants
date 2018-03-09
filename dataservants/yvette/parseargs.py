@@ -105,6 +105,11 @@ def setup_arguments(prog=None):
                       help=argp.SUPPRESS,
                       default=False)
 
+    # Some hidden arguments that normal users shouldn't be screwing with
+    parser.add_argument('--norepack', action='store_true',
+                        help=argp.SUPPRESS,
+                        default=False)
+
     args = parser.parse_args()
 
     return parser, args
