@@ -23,14 +23,12 @@ from dataservants import yvette
 
 
 if __name__ == "__main__":
-    # Base directory in which to search
-    bdir = '/mnt/lemi/lois/'
-
     # Save the original sys.argv, otherwise we'll need to always fudge arg[0]
+    #   It should contain the directory desired if nothing else
     oargv = sys.argv
 
     # Hacking in some arguments here
-    args = '%s -o --rangeOld 2 --oldest 365' % (bdir)
+    args = '-o --rangeOld 2 --oldest 365'
     argString = shlex.split(args)
     sys.argv = oargv + argString
 
