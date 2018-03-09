@@ -78,6 +78,13 @@ def beginTidying(noprint=False):
             print("Directory %s not found or accessible!" % (vdir))
             sys.exit(-1)
 
+        # Setting some variables that don't depend on states/actions
+        #   but might be useful to have declared for all of them
+        hfname = args.dir + "/AListofHashes." + args.hashtype
+
+        #
+        # ACTIONS
+        #
         if args.freespace is True:
                 frees = utils.files.checkFreeSpace(args.dir, debug=debug)
                 rjson.update({"FreeSpace": frees})
@@ -133,7 +140,6 @@ def beginTidying(noprint=False):
                 if hash1 is not None:
                     # Write it to the standard filename. If it returns not None
                     #   then everything worked as intended
-                    hfname = args.dir + "/AListofHashes." + args.hashtype
                     hfcheck = utils.hashes.writeHashFile(hash1, hfname,
                                                          debug=debug)
 
