@@ -87,7 +87,6 @@ if __name__ == "__main__":
                                            priority=1,
                                            args=[],
                                            kwargs={})
-
     actions = [act1, act2, act3]
 
     try:
@@ -150,7 +149,7 @@ if __name__ == "__main__":
                         instActions(actions)
 
                         eSSH.closeConnection()
-                        utils.alarms.clearAlarm()                        
+                        utils.alarms.clearAlarm()
 
                         # Check to see if someone asked us to quit
                         if runner.halt is True:
@@ -162,7 +161,7 @@ if __name__ == "__main__":
                     except utils.alarms.TimeoutException as err:
                         print("%s took too long! Moving on." % (inst))
                     finally:
-                        utils.alarms.clearAlarm()                        
+                        utils.alarms.clearAlarm()
                 # After all the instruments are done, take a big nap
                 if runner.halt is False:
                     # Sleep for bigsleep, but in small chunks to check abort

@@ -91,9 +91,35 @@ class SSHHandler():
         self.ssh = paramiko.SSHClient()
         self.ssh.load_system_host_keys()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.ssh.connect(self.host, port=self.port,
-                         username=self.username, password=self.password,
-                         timeout=self.timeout)
+        self.retries = 5
+        self.ctries = 0
+        self.success = False
+        while self.ctries < self.retries and self.success is False:
+            try:
+
+                self.ssh.connect(self.host, port=self.port,
+                                 username=self.username,
+                                 password=self.password,
+                                 timeout=self.timeout)
+                print("SSH connection to %s opened" % (self.host))
+                self.success = True
+            except socket.gaierror as err:
+                print("SSH connection to %s failed!" % (self.host))
+                print(str(err))
+                print("Retry %d" % (self.ctries))
+                self.ctries += 1
+                if self.ctries >= self.retries:
+                    self.ssh = None
+                else:
+                    time.sleep(3)
+            except Exception as err:
+                # If we're here, shit got desperate
+                print(str(err))
+                self.ctries += 1
+                if self.ctries >= self.retries:
+                    self.ssh = None
+                else:
+                    time.sleep(3)
 
     def closeConnection(self):
         self.ssh.close()

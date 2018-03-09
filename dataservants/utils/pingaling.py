@@ -21,7 +21,10 @@ def calcMedian(vals):
     """
     """
 #    print(vals)
-    avg = np.nanmedian(vals)
+    if all(np.isnan(vals)):
+        avg = np.nan
+    else:
+        avg = np.nanmedian(vals)
 
     return avg
 
