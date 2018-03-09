@@ -280,7 +280,9 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
         testfile = basename(tf)
         try:
             if newKeys[testfile] != relExisting[testfile][1]:
-                # Store the full path to make retransfters easier!
+                # This means that a file in the directory failed its comparison
+                #   to the value found in the hashfile.
+                #   Store the full path to make retransfters easier!
                 mismatch.append(tf)
         except KeyError:
             # This means that a valid file is in the directory but
