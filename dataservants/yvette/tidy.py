@@ -142,19 +142,11 @@ def beginTidying(noprint=False):
                     #   then everything worked as intended
                     hfcheck = utils.hashes.writeHashFile(hash1, hfname,
                                                          debug=debug)
-
                     # Return logging
                     if hfcheck is True:
                         rjson.update({"HashFile": hfname})
                     else:
                         rjson.update({"HashFile": "PROBLEM"})
-
-                # Now read it back in for some debug checking
-                if debug is True:
-                    print()
-                    hash2 = utils.hashes.readHashFile(hfname, debug=debug)
-                    print("hashset1 == hashset2?\n%s" % (hash1 == hash2))
-                    print()
 
             if args.verify is True:
                 # Verification step

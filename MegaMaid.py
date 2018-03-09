@@ -38,8 +38,9 @@ if __name__ == "__main__":
     for key in results:
         print("%d directories between 2 and 365d found" % (len(results[key])))
         for cdir in results[key]:
-            # Prepare new arguments for Yvette
-            args = '%s/ -p --filetype *.fits --hashtype xx64' % (cdir)
+            # Prepare new arguments for Yvette. Need a dummy one to be arg[0]
+            args = 'Junk! %s/ -p --filetype *.fits --hashtype xx64' % (cdir)
+            args += " --debug"
             argString = shlex.split(args)
             sys.argv = argString
             results = yvette.tidy.beginTidying(noprint=True)

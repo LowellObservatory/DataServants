@@ -25,6 +25,43 @@ from collections import OrderedDict
 from .. import utils
 
 
+def getListFilesSizes(mdir, filetype="*.fits", debug=False):
+    """Get a list of directories and the size of each file matching filetype.
+
+    Args:
+        mdir (:obj:`str`)
+            Directory to look for files
+        filetype (:obj:`str`, optional)
+            Wildcard string to match files. Defaults to "*.fits".
+        debug (:obj:`bool`, optional)
+            Bool to trigger additional debugging outputs. Defaults to False.
+
+    Returns:
+        ff (:obj:`list`)
+            List of files underneath ``mdir`` that match the regular expression
+            given by ``filetype``, sorted by name.
+        sizes (:obj:`list`)
+            List of sizes of each file in ``ff``, in GiB. Need to have them
+            in GiB to make sum(sizes) not overrun 32-bit limits.
+    """
+    # Find all the files matching filetype at and underneath mdir
+    ff = utils.files.recursiveSearcher(mdir, fileext=filetype)
+    if len(ff) == 0:
+        # No files found, so return None for both ff and sizes to show this
+        return None, None
+
+    # Need to convert to be in GiB right off the bat since some of the inst.
+    #   host machines are 32-bit, and os.path.getsize() returns bytes, so
+    #   sum(os.path.getsize()) will overrun the 32-bit val and go negative!
+    sizes = [os.path.getsize(e)/1024./1024./1024. for e in ff]
+    tsize = np.sum(sizes)
+    if debug is True:
+        print("Found %d files in %s" % (len(ff), mdir))
+        print("Total of %.2f GiB" % (tsize))
+
+    return ff, sizes
+
+
 def checkMismatches(flist, htype='xx64', bsize=2**25, debug=False):
     """
     """
@@ -62,16 +99,16 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
         bsize (:obj:`int`, optional)
             Hashing function bite size in bytes. Defaults to 2**25 or
             33554432 bits (a.k.a. 4 MiB).
-        filetype (:obj:`str`)
+        filetype (:obj:`str`, optional)
             Wildcard string to match files. Defaults to "*.fits".
-        forcerecheck (:obj:`bool`)
+        forcerecheck (:obj:`bool`, optional)
             Bool to trigger calculation of all the hashes again.
             Defaults to False.  If true, the existing hash file is ignored.
-        fullpath (:obj:`bool`)
+        fullpath (:obj:`bool`, optional)
             Bool to trigger whether the returned dict has keys giving the
             full path of the file that was hashed (True) or whether it is
             basenamed first (False). Defaults to True.
-        debug (:obj:`bool`)
+        debug (:obj:`bool`, optional)
             Bool to trigger additional debugging outputs. Defaults to False.
 
     Returns:
@@ -87,27 +124,21 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
                                   '/mnt/lemi/lois/20140619/lmi.0003.fits':
                                   'bc0c46fff7a10fa5'}
     """
-    # Find all the files matching filetype at and underneath mdir
-    ff = utils.files.recursiveSearcher(mdir, fileext=filetype)
-    if len(ff) == 0:
-        if debug is True:
-            print("No files found!")
-        return None
-
-    # Need to convert to be in GiB right off the bat since some of the inst.
-    #   host machines are 32-bit, and os.path.getsize() returns bytes, so
-    #   sum(os.path.getsize()) will overrun the 32-bit val and go negative!
-    sizes = [os.path.getsize(e)/1024./1024./1024. for e in ff]
+    ff, sizes = getListFilesSizes(mdir, filetype=filetype, debug=debug)
     tsize = np.sum(sizes)
-    if debug is True:
-        print("Found %d files in %s" % (len(ff), mdir))
-        print("Total of %.2f GiB" % (tsize))
+
+    # If there's no files, there's nothing to do.
+    if ff is None:
+        return None
 
     if forcerecheck is False:
         # Check to see if any of the files already have a valid hash
         #   BUT don't verify that has, assume that it's good for now
         hfname = mdir + "/AListofHashes." + htype
-        existingHashes = utils.hashes.readHashFile(hfname)
+        existingHashes = utils.hashes.readHashFile(hfname, basenamed=False)
+        existingFiles = [basename(each) for each in existingHashes.keys()]
+        if debug is True:
+            print("%d files in hashfile %s" % (len(existingFiles), hfname))
     else:
         existingHashes = {}
 
@@ -115,13 +146,10 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
     if existingHashes == {}:
         unq = ff
     else:
-        doneFiles = existingHashes.keys()
-        if debug is True:
-            print("%d files in hashfile %s" % (len(doneFiles), hfname))
         # Check to see if the list of files found is different than the ones
         #   already in the hash file; if they're there already, remove them
         #   from the list and only operate on the ones that aren't there.
-        unq = [f for f in ff if f not in doneFiles]
+        unq = [f for f in ff if basename(f) not in existingFiles]
         if debug is True:
             print("%d new files found; ignoring others" % (len(unq)))
 
@@ -200,56 +228,41 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
             List of files in the given directory ``mdir`` that do not match
             the hashfile found in that same ``mdir``
     """
+    ff, sizes = getListFilesSizes(mdir, filetype=filetype, debug=debug)
 
-    ff = utils.files.recursiveSearcher(mdir, fileext=filetype)
-    if len(ff) == 0:
-        if debug is True:
-            print("No files found!")
-        return None
-
-    # Need to convert to be in GiB right off the bat since some of the inst.
-    #   host machines are 32-bit, and os.path.getsize() returns bytes, so
-    #   sum(os.path.getsize()) will overrun the 32-bit val and go negative!
-    sizes = [os.path.getsize(e)/1024./1024./1024. for e in ff]
-    tsize = np.sum(sizes)
-    if debug is True:
-        print("Found %d files in %s" % (len(ff), mdir))
-        print("Total of %.2f GiB" % (tsize))
-
-    # Read in the existing hash file, keeping the full paths
+    # Read in the existing hash file
     hfname = mdir + "/AListofHashes." + htype
-    # Easier to read the file twice in two different ways then to make one
-    #   out of the other or other such type gymnastics
-    existingHashesFP = utils.hashes.readHashFile(hfname,
-                                                 basenamed=False,
-                                                 debug=debug)
-    existingHashesNP = utils.hashes.readHashFile(hfname,
-                                                 basenamed=True,
-                                                 debug=debug)
-    if debug is True:
-        print("%d files in hashfile %s" % (len(existingHashesNP), hfname))
 
-    # Calculate the new hashes by just calling the other hash logic
+    # Keep full paths for clarity, but make a basenamed list for comparison
+    existingHashes = utils.hashes.readHashFile(hfname,
+                                               basenamed=False,
+                                               debug=debug)
+    existingFiles = [basename(each) for each in existingHashes.keys()]
+
+    if debug is True:
+        print("%d files in hashfile %s" % (len(existingFiles), hfname))
+
+    # Calculate the new hashes by just calling the other hash logic.
+    #   Big difference is that the keys are relative to the given dir, not
+    #   as a full mounting path. This makes comparisons way easier.
     newKeys = {}
     newKeys = makeManifest(mdir, htype=htype, bsize=bsize,
                            filetype=filetype, forcerecheck=True,
                            fullpath=False, debug=debug)
 
     # Now compare the new against the old file list. Strip out path info again.
-    inHF = [os.path.basename(each) for each in existingHashesFP.keys()]
     inDR = [os.path.basename(each) for each in ff]
 
     # Highlight files that were in the hash file but aren't in the directory
     #   then get the filename from the hashfile but now is missing
-    missing = list(set(inHF) - set(inDR))
-    # Go backwards 1 step and get the full path of those missing files
-    hkeys = existingHashesFP.keys()
+    missing = list(set(existingFiles) - set(inDR))
+
     fpmissing = []
     # TODO: Clean this up with a fancy list comprehension
     for s in missing:
-        for key in hkeys:
-            if s in key:
-                fpmissing.append(key)
+        for fullpathfile in existingHashes.keys():
+            if s in fullpathfile:
+                fpmissing.append(fullpathfile)
 
     mismatch = []
     nohash = []
@@ -262,7 +275,7 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
     for tf in ff:
         testfile = basename(tf)
         try:
-            if newKeys[testfile] != existingHashesNP[testfile]:
+            if newKeys[testfile] != existingHashes[testfile]:
                 # Store the full path to make retransfters easier!
                 mismatch.append(tf)
         except KeyError:
