@@ -116,6 +116,36 @@ def verificationActions(args, hfname, debug=False):
     return broken
 
 
+def nanny(args):
+    """Take care of some common user input checks.
+
+    Args:
+        args (:class:`argparse.Namespace`)
+            Class containing parsed arguments, returned from
+            :func:`dataservants.yvette.parseargs.parseArguments`.
+
+    Returns:
+        dirstatus (:obj:`bool`)
+            Bool indicating whether the given directory is a valid path
+            on the filesystem
+    """
+    # A tiny bit of nanny code
+    hashactions = [args.pack, args.verify, args.clean]
+    if any(hashactions) is True:
+        if args.hashtype == 'xx64':
+            if xxhash is None:
+                print("XX64 hash unavailable; falling back to sha1")
+                args.hashtype = 'sha1'
+
+        if args.hashtype == 'md5':
+            print("Warning: MD5 is slow! Consider another option!")
+
+    # Verify inputs; only do stuff if the directory is a valid one
+    dirstatus, vdir = utils.files.checkDir(args.dir, debug=args.debug)
+
+    return dirstatus, vdir
+
+
 def beginTidying(noprint=False):
     """Main entry point for Yvette, which also handles arguments
 
@@ -151,26 +181,20 @@ def beginTidying(noprint=False):
     if len(sys.argv) == 1:
         parser.print_help()
     else:
-        if args.debug is True:
-            debug = True
-        else:
-            debug = False
-
-        # Verify inputs; only do stuff if the directory is a valid one
-        dirstatus, vdir = utils.files.checkDir(args.dir, debug=debug)
+        # Take care of some nanny actions
+        dirstatus, vdir = nanny(args)
         if dirstatus is False:
             print("Directory %s not found or accessible!" % (vdir))
-            sys.exit(-1)
 
         # Setting some variables that don't depend on states/actions
         #   but might be useful to have declared for all of them
         hfname = args.dir + "/AListofHashes." + args.hashtype
 
-        #
-        # ACTIONS
-        #
+        # ACTIONS start here.  If the logic is more than one or two
+        #   function calls, it's been broken out into another function
+        #   elsewhere
         if args.freespace is True:
-                frees = utils.files.checkFreeSpace(args.dir, debug=debug)
+                frees = utils.files.checkFreeSpace(args.dir, debug=args.debug)
                 rjson.update({"FreeSpace": frees})
 
         if args.cpumem is True:
@@ -185,7 +209,7 @@ def beginTidying(noprint=False):
                                                   dirmask=args.regexp,
                                                   window=args.rangeNew,
                                                   comptype='newer',
-                                                  debug=debug)
+                                                  debug=args.debug)
                 rjson.update({"DirsNew": ndirs})
 
             if args.old is True:
@@ -194,20 +218,9 @@ def beginTidying(noprint=False):
                                                   window=args.rangeOld,
                                                   oldest=args.oldest,
                                                   comptype='older',
-                                                  debug=debug)
+                                                  debug=args.debug)
 
                 rjson.update({"DirsOld": odirs})
-
-            # A tiny bit of nanny code
-            hashactions = [args.pack, args.verify, args.clean]
-            if any(hashactions) is True:
-                if args.hashtype == 'xx64':
-                    if xxhash is None:
-                        print("XX64 hash unavailable; falling back to sha1")
-                        args.hashtype = 'sha1'
-
-                if args.hashtype == 'md5':
-                    print("Warning: MD5 is slow! Consider another option!")
 
             # Check for EXCLUSIONARY actions (there can be only one)
             if args.clean is True:
