@@ -36,7 +36,6 @@ def packActions(args, hfname, debug=False):
     """
     """
     # Create a manifest dict
-    hash1 = packActions(args, hfname, debug=args.debug)
     hash1 = filehashing.makeManifest(args.dir, filetype=args.filetype,
                                      htype=args.hashtype, debug=debug)
 
