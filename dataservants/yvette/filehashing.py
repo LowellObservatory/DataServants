@@ -271,8 +271,8 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
             nohash.append(tf)
 
     if debug is True:
-        print({"MissingButHashed": fpmissing}, "\n")
-        print({"FoundButUnHashed": nohash}, "\n")
-        print({"FailedHashCheck": mismatch}, "\n")
+        print({"MissingButHashed": fpmissing})
+        print({"FoundButUnHashed": nohash})
+        print({"FailedHashCheck": mismatch})
 
     return fpmissing, nohash, mismatch

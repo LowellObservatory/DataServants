@@ -30,7 +30,7 @@ if __name__ == "__main__":
     oargv = sys.argv
 
     # Hacking in some arguments here
-    args = '%s -o --rangeOld 25' % (bdir)
+    args = '%s -o --rangeOld 2 --oldest 365' % (bdir)
     argString = shlex.split(args)
     sys.argv = oargv + argString
 
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     results = yvette.tidy.beginTidying(noprint=True)
 
     for key in results:
-        print("%d directories older than 25d found" % (len(results[key])))
+        print("%d directories between 2 and 365d found" % (len(results[key])))
         for cdir in results[key]:
             # Prepare new arguments for Yvette
             args = '%s/ -p --filetype *.fits --hashtype xx64' % (cdir)
