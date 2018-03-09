@@ -25,8 +25,15 @@ from collections import OrderedDict
 from .. import utils
 
 
+def checkMismatches(flist, htype='xx64', bsize=2**25, debug=False):
+    """
+    """
+    pass
+
+
 def makeManifest(mdir, htype='xx64', bsize=2**25,
-                 filetype="*.fits", debug=False):
+                 filetype="*.fits", forcerecheck=False,
+                 fullpath=True, debug=False):
     """Create a CSV manifest of files,hashval for files matching `filetype`.
 
     Given a directory, recursively look for all files matching filetype. Look
@@ -57,6 +64,13 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
             33554432 bits (a.k.a. 4 MiB).
         filetype (:obj:`str`)
             Wildcard string to match files. Defaults to "*.fits".
+        forcerecheck (:obj:`bool`)
+            Bool to trigger calculation of all the hashes again.
+            Defaults to False.  If true, the existing hash file is ignored.
+        fullpath (:obj:`bool`)
+            Bool to trigger whether the returned dict has keys giving the
+            full path of the file that was hashed (True) or whether it is
+            basenamed first (False). Defaults to True.
         debug (:obj:`bool`)
             Bool to trigger additional debugging outputs. Defaults to False.
 
@@ -89,21 +103,21 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
         print("Found %d files in %s" % (len(ff), mdir))
         print("Total of %.2f GiB" % (tsize))
 
-    # Check to see if any of the files already have a valid hash
-    #   BUT don't verify that has, assume that it's good for now
-    hfname = mdir + "/AListofHashes." + htype
-    existingHashes = utils.hashes.readHashFile(hfname)
+    if forcerecheck is False:
+        # Check to see if any of the files already have a valid hash
+        #   BUT don't verify that has, assume that it's good for now
+        hfname = mdir + "/AListofHashes." + htype
+        existingHashes = utils.hashes.readHashFile(hfname)
+    else:
+        existingHashes = {}
 
     unq = []
     if existingHashes == {}:
-        if debug is True:
-            print("Hash file invalid or not found; making a new one!")
-            print("Hashes stored in: %s" % (hfname))
         unq = ff
     else:
         doneFiles = existingHashes.keys()
         if debug is True:
-            print("%d files found in hashfile %s" % (len(doneFiles), hfname))
+            print("%d files in hashfile %s" % (len(doneFiles), hfname))
         # Check to see if the list of files found is different than the ones
         #   already in the hash file; if they're there already, remove them
         #   from the list and only operate on the ones that aren't there.
@@ -139,7 +153,14 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
     #   in the ordered dict. Could be written clearer
     existingHashes.update(newKeys)
 
-    return existingHashes
+    returnDict = {}
+    if fullpath is True:
+        returnDict = existingHashes
+    else:
+        for fkey in existingHashes.keys():
+            returnDict.update({basename(fkey): existingHashes[fkey]})
+
+    return returnDict
 
 
 def verifyFiles(mdir, htype='xx64', bsize=2**25,
@@ -178,12 +199,8 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
         mismatch (:obj:`list`)
             List of files in the given directory ``mdir`` that do not match
             the hashfile found in that same ``mdir``
-
-    .. note::
-        I admit that this function could probably be 1/2 as short by just
-        calling :func:`dataservants.yvette.filehashing.makeManifest` with
-        a special option, and should probably be refactored to do just that.
     """
+
     ff = utils.files.recursiveSearcher(mdir, fileext=filetype)
     if len(ff) == 0:
         if debug is True:
@@ -199,49 +216,62 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
         print("Found %d files in %s" % (len(ff), mdir))
         print("Total of %.2f GiB" % (tsize))
 
-    # Read in the existing hash file
+    # Read in the existing hash file, keeping the full paths
     hfname = mdir + "/AListofHashes." + htype
-
-    existingHashes = utils.hashes.readHashFile(hfname,
-                                               basenamed=True,
-                                               debug=debug)
+    # Easier to read the file twice in two different ways then to make one
+    #   out of the other or other such type gymnastics
+    existingHashesFP = utils.hashes.readHashFile(hfname,
+                                                 basenamed=False,
+                                                 debug=debug)
+    existingHashesNP = utils.hashes.readHashFile(hfname,
+                                                 basenamed=True,
+                                                 debug=debug)
     if debug is True:
-        print("%d files found in hashfile %s" % (len(existingHashes), hfname))
+        print("%d files in hashfile %s" % (len(existingHashesNP), hfname))
 
-    # Calculate the new hashes, with a simple time monitor
+    # Calculate the new hashes by just calling the other hash logic
     newKeys = {}
-    if ff != []:
-        if debug is True:
-            print("Calculating hashes...")
-        dt1 = dt.datetime.utcnow()
-        # Potential for a big time sink here; consider a signal/alarm?
-        hs = [utils.hashes.hashfunc(e, htype=htype,
-                                    bsize=bsize, debug=debug) for e in ff]
-        dt2 = dt.datetime.utcnow()
-        telapsed = (dt2 - dt1).total_seconds()
+    newKeys = makeManifest(mdir, htype=htype, bsize=bsize,
+                           filetype=filetype, forcerecheck=True,
+                           fullpath=False, debug=debug)
 
-        # For informational purposes
-        if debug is True:
-            print("")
-            print("Hashes completed in %.2f seconds" % (telapsed))
-            print("%.5f seconds per file" % (telapsed/len(ff)))
-            print("%.5f GiB/sec hash rate" % (tsize/telapsed))
+    # Now compare the new against the old file list. Strip out path info again.
+    inHF = [os.path.basename(each) for each in existingHashesFP.keys()]
+    inDR = [os.path.basename(each) for each in ff]
 
-        # Strip out path information to compare filename to filename
-        bn = [basename(f) for f in ff]
-        newKeys = OrderedDict(zip(bn, [h.hexdigest() for h in hs]))
+    # Highlight files that were in the hash file but aren't in the directory
+    #   then get the filename from the hashfile but now is missing
+    missing = list(set(inHF) - set(inDR))
+    # Go backwards 1 step and get the full path of those missing files
+    hkeys = existingHashesFP.keys()
+    fpmissing = []
+    # TODO: Clean this up with a fancy list comprehension
+    for s in missing:
+        for key in hkeys:
+            if s in key:
+                fpmissing.append(key)
 
-    # Now compare the new against the old. Strip out path info again
     mismatch = []
-    # tf == testfile, ff == found files (in given directory)
+    nohash = []
+    # existingHashesNP == basenamed files in hashfile
+    # tf == testfile
+    # ff == list of files in directory
+    # Want to verify on basename basis so this can be used between machines
+    #   who differ in mount points/structure
+
     for tf in ff:
         testfile = basename(tf)
         try:
-            if newKeys[testfile] != existingHashes[testfile]:
+            if newKeys[testfile] != existingHashesNP[testfile]:
                 # Store the full path to make retransfters easier!
                 mismatch.append(tf)
-        except KeyError as err:
-            print(str(err))
-            print("Hash of file %s doesn't have a comparison!" % (tf))
+        except KeyError:
+            # This means that a valid file is in the directory but
+            #   it doesn't have a hash in the hashfile
+            nohash.append(tf)
 
-    return mismatch
+    print({"MissingButHashed": fpmissing})
+    print({"FoundButUnHashed": nohash})
+    print({"FailedHashCheck": mismatch})
+
+    return fpmissing, nohash, mismatch
