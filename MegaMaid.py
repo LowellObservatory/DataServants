@@ -41,6 +41,6 @@ if __name__ == "__main__":
             # Prepare new arguments for Yvette
             args = '%s/ -p --filetype *.fits --hashtype xx64' % (cdir)
             argString = shlex.split(args)
-            sys.argv = oargv + argString
+            sys.argv = argString
             results = yvette.tidy.beginTidying(noprint=True)
             print("%s: %s" % (cdir, results))
