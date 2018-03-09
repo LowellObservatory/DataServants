@@ -32,8 +32,29 @@ from . import parseargs
 from . import filehashing
 
 
-def packActions(args, hfname, debug=False):
+def cleanActions(args, hfname, debug=False):
     """
+    """
+    pass
+
+
+def packActions(args, hfname, debug=False):
+    """Logic needed to create a file of hashes in a given data directory.
+
+    Args:
+        args (:class:`argparse.Namespace`)
+            Class containing parsed arguments, returned from
+            :func:`dataservants.yvette.parseargs.parseArguments`.
+        hfname (:obj:`str`)
+            String containing the (hardcoded) hash filename.
+        debug (:obj:`bool`, optional)
+            Bool to trigger additional debugging outputs. Defaults to False.
+
+    Returns:
+        hfcheck (:obj:`str`)
+            A string containing the full path to the created hash file. If
+            the hash file could not be created, it returns the string
+            "PROBLEM" indicating a problem has occured.
     """
     # Create a manifest dict
     hash1 = filehashing.makeManifest(args.dir, filetype=args.filetype,
@@ -52,7 +73,26 @@ def packActions(args, hfname, debug=False):
 
 
 def verificationActions(args, hfname, debug=False):
-    """
+    """Logic needed to verify hashes in a given data directory.
+
+    Args:
+        args (:class:`argparse.Namespace`)
+            Class containing parsed arguments, returned from
+            :func:`dataservants.yvette.parseargs.parseArguments`.
+        hfname (:obj:`str`)
+            String containing the (hardcoded) hash filename.
+        debug (:obj:`bool`, optional)
+            Bool to trigger additional debugging outputs. Defaults to False.
+
+    Returns:
+        broken (:obj:`list`)
+            A list of 3 elements:
+                1) List of files missing in the directory, but are in the
+                   hash file
+                2) List of files found in the directory, but are not in the
+                   has file
+                3) List of files existing in both the directory and the hash
+                   file, but with mismatched hashes
     """
     # Verification step
     broken = filehashing.verifyFiles(args.dir, filetype=args.filetype,
