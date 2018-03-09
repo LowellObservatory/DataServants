@@ -32,6 +32,51 @@ from . import parseargs
 from . import filehashing
 
 
+def packActions(args, hfname, debug=False):
+    """
+    """
+    # Create a manifest dict
+    hash1 = packActions(args, hfname, debug=args.debug)
+    hash1 = filehashing.makeManifest(args.dir, filetype=args.filetype,
+                                     htype=args.hashtype, debug=debug)
+
+    # If hash1 is None, then there were no files to hash
+    if hash1 is not None:
+        # Write it to the standard filename. If it returns not None
+        #   then everything worked as intended
+        hfcheck = utils.hashes.writeHashFile(hash1, hfname, debug=debug)
+        # Return logging
+        if hfcheck is True:
+            return hfname
+    else:
+        return "PROBLEM"
+
+
+def verificationActions(args, hfname, debug=False):
+    """
+    """
+    # Verification step
+    broken = filehashing.verifyFiles(args.dir, filetype=args.filetype,
+                                     htype=args.hashtype, debug=debug)
+
+    # If norepack is False and there's files to repack...then do it
+    if args.norepack is False and broken[1] != []:
+        hash1 = filehashing.makeManifest(args.dir, filetype=args.filetype,
+                                         htype=args.hashtype, debug=debug)
+
+        hfcheck = utils.hashes.writeHashFile(hash1, hfname, debug=debug)
+        # Return logging; only try again if we wrote the file correctly
+        if hfcheck is True:
+            # Verify one more time to see if we got them all
+            broken = filehashing.verifyFiles(args.dir, filetype=args.filetype,
+                                             htype=args.hashtype, debug=debug)
+
+    # Return the results, whatever they are. Ideally
+    #   unhashed files and missing files are [] but sometimes
+    #   shit happens and you don't know why so just be aware
+    return broken
+
+
 def beginTidying(noprint=False):
     """Main entry point for Yvette, which also handles arguments
 
@@ -132,48 +177,11 @@ def beginTidying(noprint=False):
 
             if args.pack is True:
                 # Create a manifest dict
-                hash1 = filehashing.makeManifest(args.dir,
-                                                 filetype=args.filetype,
-                                                 htype=args.hashtype,
-                                                 debug=debug)
-                # If hash1 is None, then there were no files to hash
-                if hash1 is not None:
-                    # Write it to the standard filename. If it returns not None
-                    #   then everything worked as intended
-                    hfcheck = utils.hashes.writeHashFile(hash1, hfname,
-                                                         debug=debug)
-                    # Return logging
-                    if hfcheck is True:
-                        rjson.update({"HashFile": hfname})
-                    else:
-                        rjson.update({"HashFile": "PROBLEM"})
+                hfname = packActions(args, hfname, debug=args.debug)
+                rjson.update({"HashFile": hfname})
 
             if args.verify is True:
-                # Verification step
-                broken = filehashing.verifyFiles(args.dir,
-                                                 filetype=args.filetype,
-                                                 htype=args.hashtype,
-                                                 debug=debug)
-
-                # If norepack is False and there's files to repack...then do it
-                if args.norepack is False and broken[1] != []:
-                    hash1 = filehashing.makeManifest(args.dir,
-                                                     filetype=args.filetype,
-                                                     htype=args.hashtype,
-                                                     debug=debug)
-                    hfname = args.dir + "/AListofHashes." + args.hashtype
-                    hfcheck = utils.hashes.writeHashFile(hash1, hfname,
-                                                         debug=debug)
-
-                    # Verify one more time to see if we got them all
-                    broken = filehashing.verifyFiles(args.dir,
-                                                     filetype=args.filetype,
-                                                     htype=args.hashtype,
-                                                     debug=debug)
-
-                # Return the results, whatever they are. Ideally
-                #   unhashed files and missing files are [] but sometimes
-                #   shit happens and you don't know why so just be aware
+                broken = verificationActions(args, hfname, debug=args.debug)
                 rjson.update({"HashChecks": {"MissingFiles": broken[0],
                                              "UnhashedFiles": broken[1],
                                              "DifferentFiles": broken[2]}})

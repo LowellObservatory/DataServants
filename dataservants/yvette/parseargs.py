@@ -86,7 +86,7 @@ def setup_arguments(prog=None):
     grp1 = parser.add_mutually_exclusive_group(required=False)
 
     grp1.add_argument('-c', '--clean', action='store_true',
-                      help='Clean up old data',
+                      help='Check for directories that can be deleted',
                       default=False)
 
     hstr = 'Create data manifests for filetypes with hashtype'
