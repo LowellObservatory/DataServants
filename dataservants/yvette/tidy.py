@@ -156,7 +156,10 @@ def beginTidying(noprint=False):
                                                  filetype=args.filetype,
                                                  htype=args.hashtype,
                                                  debug=debug)
-                rjson.update({"FailedHashVerifications": broken})
+
+                rjson.update({"HashChecks": {"MissingFiles": broken[0],
+                                             "UnhashedFiles": broken[1],
+                                             "DifferentFiles": broken[2]}})
         else:
             print("%s doesn't exist or isnt' readable" % (args.dir))
 
