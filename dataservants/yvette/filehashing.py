@@ -266,16 +266,20 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
 
     mismatch = []
     nohash = []
-    # existingHashesNP == basenamed files in hashfile
-    # tf == testfile
-    # ff == list of files in directory
     # Want to verify on basename basis so this can be used between machines
-    #   who differ in mount points/structure
+    #   who differ only in mount points/file structure & layout.
+    #   At this point existingHashes is keyed with full paths, so repack it
+    #   to be relative but still refer to the original.
+
+    #     ff == list of files in directory
+    relExisting = {}
+    for it in existingHashes.items():
+        relExisting.update({basename(it[0]): [it[0], it[1]]})
 
     for tf in ff:
         testfile = basename(tf)
         try:
-            if newKeys[testfile] != existingHashes[testfile]:
+            if newKeys[testfile] != relExisting[testfile][1]:
                 # Store the full path to make retransfters easier!
                 mismatch.append(tf)
         except KeyError:
