@@ -203,7 +203,7 @@ def actionPing(iobj, dbname=None, debug=False):
     tags = {'host': iobj.host}
     # InfluxDB can only store one datatype per field, so no NaN or null
     if np.isnan(pings) is True:
-        pings = 9999
+        pings = -9999
     fs = {'ping': pings, 'dropped': drops}
     # Construct our packet
     packet = utils.packetizer.makeInfluxPacket(meas=meas,

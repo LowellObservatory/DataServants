@@ -22,7 +22,7 @@ def calcMedian(vals):
     """
 #    print(vals)
     if all(np.isnan(vals)):
-        avg = np.nan
+        avg = -9999
     else:
         avg = np.nanmedian(vals)
 
@@ -68,5 +68,8 @@ def ping(host, port=22, repeats=7, waittime=0.5, timeout=1,
         ping = calcMedian(pres)
     else:
         ping = pres
+
+    if dropped == 7:
+        ping = -9999
 
     return ping, dropped
