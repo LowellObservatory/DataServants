@@ -120,12 +120,17 @@ if __name__ == "__main__":
                         #   (found in utils/ssh.py) which has some retries
                         #   and timeout logic baked into it so we don't have
                         #   to deal with it here
-                        eSSH = utils.ssh.SSHHandler(host=iobj.host,
+                        # eSSH = utils.ssh.SSHHandler(host=iobj.host,
+                        #                             port=iobj.port,
+                        #                             username=iobj.user,
+                        #                             timeout=iobj.timeout,
+                        #                             password=iobj.password)
+                        eSSH = utils.ssh.SSHWrapper(host=iobj.host,
                                                     port=iobj.port,
                                                     username=iobj.user,
                                                     timeout=iobj.timeout,
-                                                    password=iobj.password)
-                        eSSH.openConnection()
+                                                    password=iobj.password,
+                                                    connectOnInit=True)
                         time.sleep(3)
 
                         # Update the functions with proper arguments

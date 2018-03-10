@@ -63,10 +63,11 @@ def setAlarm(handler=None, timeout=10, debug=False):
                                                      int(timeout)))
         timeout = int(timeout)
 
-    if handler is not None:
-        signal.signal(signal.SIGALRM, handler)
-    else:
+    if handler is None:
         signal.signal(signal.SIGALRM, raiseTimeout)
+    else:
+        signal.signal(signal.SIGALRM, handler)
+
     signal.alarm(timeout)
 
 
