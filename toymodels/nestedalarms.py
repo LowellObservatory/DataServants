@@ -3,8 +3,11 @@
 Uses a `heapq` to store the objects to be called when an alarm signal is
 raised, so that the next alarm is always at the top of the heap.
 
-I didn't write this, but I found it on StackOverflow and then cleaned up
-the formatting to satisfy my PyLint settings.
+I didn't write the majority of this, I found it on StackOverflow and then
+cleaned up the formatting to satisfy my PyLint settings as well as add
+actually sensible examples rather than the useless one given by the
+StackOverflow author; their example fails when the outer timer
+is shorter than the inner timer since .id_ wasn't being checked.
 
 From StackOverflow
 https://stackoverflow.com/a/34999808
@@ -235,7 +238,6 @@ if __name__ == "__main__":
                     sleep(each.timedelay)
             except TimeoutError as e:
                 print("Raised TimeOut for " + e.id_)
-
 
             print("Done with instrument")
     except PidFileError as err:
