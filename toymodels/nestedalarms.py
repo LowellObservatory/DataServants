@@ -89,7 +89,8 @@ def __alarm_handler(*zargs):
     try:
         nextt = __next_alarm()
         while nextt is not None and nextt <= 0:
-            (tm, func, args, keys) = heapq.heappop(alarmlist)
+            # (tm, func, args, keys) = heapq.heappop(alarmlist)
+            (_, func, args, keys) = heapq.heappop(alarmlist)
             func(*args, **keys)
             nextt = __next_alarm()
     finally:
@@ -190,6 +191,8 @@ def func3(arg1, arg2='world'):
 
 
 if __name__ == "__main__":
+    """
+    """
     # Loop time to count to before blowing up and moving on
     acttimer = 20.
     insttimer = 30.
