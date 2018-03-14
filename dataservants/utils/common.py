@@ -51,6 +51,9 @@ class processDescription():
         kwargs (:obj:`dict`)
             Keyword arguments to send along to ``func``.
 
+
+        THIS NEEDS TO BE UPDATED!!!!!!
+
     .. image:: https://media.giphy.com/media/12NUbkX6p4xOO4/giphy.gif
     """
     def __init__(self, **kwargs):
@@ -58,6 +61,7 @@ class processDescription():
         self.name = ''
         self.maxtime = 60
         self.timedelay = 0.
+        self.needSSH = False
         self.args = []
         self.kwargs = {}
 

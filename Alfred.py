@@ -23,6 +23,103 @@ from dataservants import yvette
 from pid import PidFile, PidFileError
 
 
+def defineActions():
+    """
+    """
+    # Set up the desired actions using a helpful class to pass things
+    #   to each function/process more clearly.
+    #
+    #   Note that we need to also update things per-instrument when
+    #   inside the main loop via updateArguments()...it's just helpful to
+    #   do the definitions out here for the constants and for clarity.
+    act1 = utils.common.processDescription(func=yvetteR.actionPing,
+                                           timedelay=3.,
+                                           maxtime=120,
+                                           needSSH=False,
+                                           args=[],
+                                           kwargs={})
+
+    act2 = utils.common.processDescription(func=yvetteR.actionSpace,
+                                           timedelay=3.,
+                                           maxtime=120,
+                                           needSSH=True,
+                                           args=[],
+                                           kwargs={})
+
+    act3 = utils.common.processDescription(func=yvetteR.actionStats,
+                                           timedelay=3.,
+                                           maxtime=120,
+                                           needSSH=True,
+                                           args=[],
+                                           kwargs={})
+    actions = [act1, act2, act3]
+
+    return actions
+
+
+def updateArguments(actions, iobj, args):
+    """
+    """
+    # Update the functions with proper arguments.
+    #   (opened SSH connection is added just before calling)
+    # act1 == pings
+    actions[0].args = [iobj]
+    actions[0].kwargs = {'dbname': dbname,
+                         'debug': args.debug}
+
+    # act2 == check free space
+    actions[1].args = [iobj, baseYcmd]
+    actions[1].kwargs = {'dbname': dbname,
+                         'debug': args.debug}
+
+    # act3 == check target CPU/RAM stats
+    actions[2].args = [iobj, baseYcmd]
+    actions[2].kwargs = {'dbname': dbname,
+                         'debug': args.debug}
+
+    return actions
+
+
+def instAction(each):
+    """
+    """
+    ans = None
+    estop = False
+    try:
+        with malarms.Timeout(id_=each.name, seconds=each.maxtime):
+            astart = dt.datetime.utcnow()
+            ans = each.func(*each.args,
+                            **each.kwargs)
+            print(ans)
+    except malarms.TimeoutError as e:
+        print("Raised TimeOut for " + e.id_)
+        # Need a little extra care here since
+        #   TimeOutError could be from InstLoop
+        #   *or* each.func, so if we got the
+        #   InstLoop exception, break out
+        if e.id_ == "InstLoop":
+            estop = True
+        print(ans)
+    finally:
+        rnow = dt.datetime.utcnow()
+        print("Done with action, %f since start" %
+              ((rnow - astart).total_seconds()))
+
+    return ans, estop
+
+
+def printPreamble(p, idict):
+    # Helps to put context on when things are stopped/started/restarted
+    print("Current PID: %d" % (p.pid))
+    print("PID %d recorded at %s now starting..." % (p.pid, p.filename))
+
+    # Preamble/contextual messages before we really start
+    print("Beginning to monitor the following hosts:")
+    print("%s\n" % (' '.join(idict.keys())))
+    print("Starting the infinite loop.")
+    print("Kill PID %d to stop it." % (p.pid))
+
+
 if __name__ == "__main__":
     # For PIDfile stuff; kindly ignore
     mynameis = os.path.basename(__file__)
@@ -52,55 +149,31 @@ if __name__ == "__main__":
     # Total time for entire set of actions per instrument
     alarmtime = 600
 
-#    # idict: dictionary of parsed config file
-#    # args: parsed options of wadsworth.py
-#    # runner: class that contains logic to quit nicely
+    # idict: dictionary of parsed config file
+    # args: parsed options of wadsworth.py
+    # runner: class that contains logic to quit nicely
     idict, args, runner = alfred.valet.beginValeting(procname=mynameis)
 
     # Quick renaming to keep line length under control
     yvetteR = yvette.remote
     malarms = utils.multialarm
+    mssh = utils.ssh
 
-    # Set up the desired actions in the main loop, using a helpful class
-    #   to pass things to each function/process more clearly
-    #   Note that we can update things per-instrument when inside the loop
-    #   it's just helpful to do the definitions out here for the constants
-    act1 = utils.common.processDescription(func=yvetteR.actionPing,
-                                           timedelay=3.,
-                                           maxtime=120,
-                                           args=[],
-                                           kwargs={})
-
-    act2 = utils.common.processDescription(func=yvetteR.actionSpace,
-                                           timedelay=3.,
-                                           maxtime=120,
-                                           args=[],
-                                           kwargs={})
-
-    act3 = utils.common.processDescription(func=yvetteR.actionStats,
-                                           timedelay=3.,
-                                           maxtime=120,
-                                           args=[],
-                                           kwargs={})
-    actions = [act1, act2, act3]
+    actions = defineActions()
 
     try:
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
-            # Helps to put context on when things are stopped/started/restarted
-            print("Current PID: %d" % (p.pid))
-            print("PID %d recorded at %s now starting..." % (p.pid,
-                                                             p.filename))
-
-            # Preamble/contextual messages before we really start
-            print("Beginning to monitor the following hosts:")
-            print("%s\n" % (' '.join(idict.keys())))
-            print("Starting the infinite loop.")
-            print("Kill PID %d to stop it." % (p.pid))
+            # Print the preamble of this particular instance
+            #   (helpful to find starts/restarts when scanning thru logs)
+            printPreamble(p, idict)
 
             # Semi-infinite loop
             while runner.halt is False:
                 for inst in idict:
                     iobj = idict[inst]
+
+                    actions = updateArguments(actions, iobj, args)
+
                     if args.debug is True:
                         print("\n%s" % ("=" * 11))
                         print("Instrument: %s" % (inst))
@@ -112,63 +185,35 @@ if __name__ == "__main__":
                             iobj = idict[inst]
 
                             # Open the SSH connection; SSHHandler makes a class
-                            #   (found in utils/ssh.py) which has some logic
-                            #   baked into it
+                            #   (found in utils/ssh.py) which has some logic.
                             #   Timeout here is the time before giving up
                             #   to establish a working SSH connection
-                            eSSH = utils.ssh.SSHWrapper(host=iobj.host,
-                                                        port=iobj.port,
-                                                        username=iobj.user,
-                                                        timeout=60,
-                                                        password=iobj.password,
-                                                        connectOnInit=True)
+                            eSSH = mssh.SSHWrapper(host=iobj.host,
+                                                   port=iobj.port,
+                                                   username=iobj.user,
+                                                   timeout=60,
+                                                   password=iobj.password,
+                                                   connectOnInit=True)
                             time.sleep(3)
-
-                            # Update the functions with proper arguments
-                            # act1 == check ping times
-                            #   Technically this one doesn't need SSH opened,
-                            #   but I want to keep these together for clarity
-                            actions[0].args = [iobj]
-                            actions[0].kwargs = {'dbname': dbname,
-                                                 'debug': args.debug}
-
-                            # act2 == check free space
-                            actions[1].args = [eSSH, iobj, baseYcmd]
-                            actions[1].kwargs = {'dbname': dbname,
-                                                 'debug': args.debug}
-
-                            # act3 == check target CPU/RAM stats
-                            actions[2].args = [eSSH, iobj, baseYcmd]
-                            actions[2].kwargs = {'dbname': dbname,
-                                                 'debug': args.debug}
 
                             # Pre-fill our expected answers so we can see fails
                             allanswers = [None]*len(actions)
-                            for i, each in enumerate(actions):
-                                try:
-                                    ans = None
-                                    # Remember to pass actiontimer!
-                                    with malarms.Timeout(id_=each.name,
-                                                         seconds=each.maxtime):
-                                        astart = dt.datetime.utcnow()
-                                        ans = each.func(*each.args,
-                                                        **each.kwargs)
-                                        print(ans)
-                                except malarms.TimeoutError as e:
-                                    print("Raised TimeOut for " + e.id_)
-                                    # Need a little extra care here since
-                                    #   TimeOutError could be from InstLoop
-                                    #   *or* each.func, so if we got the
-                                    #   InstLoop exception, break out
-                                    if e.id_ == "InstLoop":
-                                        break
-                                    print(ans)
-                                finally:
-                                    rnow = dt.datetime.utcnow()
-                                    print("Done with action, %f since start" %
-                                          ((rnow - astart).total_seconds()))
+                            while runner.halt is False:
+                                for i, each in enumerate(actions):
+                                    # If we need SSH, it's always the first
+                                    #   positional argument so add it
+                                    if each.needSSH is True:
+                                        each.args = [eSSH] + each.args
+
+                                    ans, estop = instAction(each)
                                     allanswers[i] = ans
-                                time.sleep(each.timedelay)
+                                    # Check to see if the action caught
+                                    #  a timeout intended for the whole
+                                    #  instrument actionset or just itself
+                                    if estop is True:
+                                        break
+                                    else:
+                                        time.sleep(each.timedelay)
 
                             eSSH.closeConnection()
 
@@ -189,7 +234,8 @@ if __name__ == "__main__":
                         time.sleep(1)
                         if runner.halt is True:
                             break
-            # The above loop is exited when someone sends wadsworth.py SIGTERM
+
+            # The above loop is exited when someone sends SIGTERM
             print("PID %d is now out of here!" % (p.pid))
 
             # The PID file will have already been either deleted/overwritten by
