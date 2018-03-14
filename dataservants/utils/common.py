@@ -55,8 +55,9 @@ class processDescription():
     """
     def __init__(self, **kwargs):
         self.func = None
+        self.name = ''
+        self.maxtime = 60
         self.timedelay = 0.
-        self.priority = 5
         self.args = []
         self.kwargs = {}
 

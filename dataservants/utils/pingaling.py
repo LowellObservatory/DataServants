@@ -14,7 +14,7 @@ import time
 import numpy as np
 
 import serviceping
-from . import alarms
+from . import multialarm
 
 
 def calcMedian(vals):
@@ -22,7 +22,7 @@ def calcMedian(vals):
     """
 #    print(vals)
     if all(np.isnan(vals)):
-        avg = -9999
+        avg = -9999.
     else:
         avg = np.nanmedian(vals)
 
@@ -42,27 +42,25 @@ def ping(host, port=22, repeats=7, waittime=0.5, timeout=1,
     dropped = 0
     pres = []
     while nretries < repeats:
-        try:
-            alarms.setAlarm(timeout=timeout)
-            res = serviceping.network.scan(host, port=22, timeout=timeout)
-            alarms.clearAlarm()
-
-            pres.append(res['durations']['connect']*1000.)
-            if debug is True:
-                print(res)
-        except alarms.TimeoutException as err:
-            if debug is True:
-                print("Timed out: %s" % (str(err)))
-            dropped += 1
-            pres.append(np.nan)
-        except serviceping.network.ScanFailed as err:
-            pres.append(np.nan)
-            dropped += 1
-            if debug is True:
-                print("Connection to host '%s' failed!" % (host))
-                print(str(err))
-        nretries += 1
-        time.sleep(waittime)
+        with multialarm.Timeout(id_="Pings", seconds=timeout):
+            try:
+                res = serviceping.network.scan(host, port=22, timeout=timeout)
+                pres.append(res['durations']['connect']*1000.)
+                if debug is True:
+                    print(res)
+            except multialarm.TimeoutError as err:
+                if debug is True:
+                    print("Timed out: %s" % (str(err)))
+                dropped += 1
+                pres.append(np.nan)
+            except serviceping.network.ScanFailed as err:
+                pres.append(np.nan)
+                dropped += 1
+                if debug is True:
+                    print("Connection to host '%s' failed!" % (host))
+                    print(str(err))
+            nretries += 1
+            time.sleep(waittime)
 
     if pingavg is True:
         ping = calcMedian(pres)
@@ -70,6 +68,6 @@ def ping(host, port=22, repeats=7, waittime=0.5, timeout=1,
         ping = pres
 
     if dropped == 7:
-        ping = -9999
+        ping = -9999.
 
     return ping, dropped

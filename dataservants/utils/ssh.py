@@ -16,7 +16,7 @@ import socket
 import paramiko
 from paramiko import SSHException, AuthenticationException
 
-from . import alarms
+from . import multialarm
 
 
 class SSHWrapper():
@@ -38,34 +38,49 @@ class SSHWrapper():
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         if connectOnInit is True:
-            alarms.setAlarm(handler=None, timeout=self.timeout)
-            self.connect(retries=retries)
-            alarms.clearAlarm()
+            self.connect(retries=retries, maxtime=self.timeout)
 
-    def connect(self, retries=5):
+    def connect(self, retries=5, maxtime=60):
         """
         """
+        # Hardcoded wait/timeout of 10 seconds for SSH connection
+        #   BUT, that timeout is pretty janky and doesn't always
+        #   work or even timeout properly so that's why we have
+        #   a multialarm.Timeout wrapper on everything here below
+        sshitimeout = 5
+
+        # Counter and flag related to retries
         ctries = 0
         self.success = False
-        while ctries < self.retries and self.success is False:
-            try:
-                self.ssh.connect(self.host, port=self.port,
-                                 username=self.username,
-                                 password=self.password,
-                                 timeout=3)
-                print("SSH connection to %s opened" % (self.host))
-                self.success = True
-            except socket.gaierror as err:
-                print("SSH connection to %s failed!" % (self.host))
-                print(str(err))
-                print("Retry %d" % (ctries))
-                ctries += 1
-                if ctries >= self.retries:
-                    self.ssh = None
-                else:
-                    time.sleep(3)
-            except Exception as err:
-                # If we're here, shit got desperate
+
+        try:
+            # Set a timer for the whole connect/retry process
+            with multialarm.Timeout(id_="SSHConnTotal", seconds=maxtime):
+                while ctries < self.retries and self.success is False:
+                    try:
+                        self.ssh.connect(self.host, port=self.port,
+                                         username=self.username,
+                                         password=self.password,
+                                         timeout=sshitimeout,
+                                         banner_timeout=sshitimeout,
+                                         auth_timeout=sshitimeout)
+                        print("SSH connection to %s opened" % (self.host))
+                        self.success = True
+                    except socket.error as err:
+                        # Using base socket class to try to catch all the
+                        #   bad stuff that could go wrong...
+                        #   paramiko documentation kinda sucks here.
+                        print("SSH connection to %s failed!" % (self.host))
+                        print(str(err))
+                        print("Retry %d" % (ctries))
+                        ctries += 1
+                        if ctries >= self.retries:
+                            self.ssh = None
+                        else:
+                            time.sleep(3)
+        except multialarm.TimeoutError as err:
+            # Only deal with our specific SSH timeout error
+            if err.id_ == "SSHConnTotal":
                 print(str(err))
                 ctries += 1
                 if ctries >= self.retries:
@@ -74,85 +89,60 @@ class SSHWrapper():
                     time.sleep(3)
 
     def closeConnection(self, timeout=3):
-        alarms.setAlarm(handler=None, timeout=timeout)
-        if self.ssh is not None:
-            self.ssh.close()
-        alarms.clearAlarm()
+        try:
+            with multialarm.Timeout(id_="SSHClose", seconds=timeout):
+                if self.ssh is not None:
+                    self.ssh.close()
+        except multialarm.TimeoutError as err:
+            if err.id_ == "SSHClose":
+                self.ssh = None
+                print("SSH connection close failed? WTF?")
 
     def sendCommand(self, command, timeout=10., debug=False):
         """
         """
+        ses, stdout_data, stderr_data = None, None, None
         if(self.ssh):
-            alarms.setAlarm(handler=None, timeout=timeout)
-            stdin, stdout, stderr = self.ssh.exec_command(command)
-            # No inputs allowed
-            stdin.close()
+            try:
+                with multialarm.Timeout(id_="SSHCmd", seconds=timeout):
+                    stdin, stdout, stderr = self.ssh.exec_command(command)
+                    # No inputs allowed
+                    stdin.close()
 
-            # Prepare the return buffers and define how many bytes at a time
-            #   we'll try to digest waiting for the buffers to reach EOF
-            stdout_data = []
-            stderr_data = []
-            nbytes = 1024.
+                    # Prepare the return buffers and define how many bytes
+                    #   at a time we'll try to digest waiting for the
+                    #   buffers to reach EOF
+                    stdout_data = []
+                    stderr_data = []
+                    nbytes = 1024.
 
-            while not stdout.channel.exit_status_ready():
-                ans = stdout.channel.recv(nbytes)
-                stdout_data.append(str(ans, "utf8"))
+                    while not stdout.channel.exit_status_ready():
+                        ans = stdout.channel.recv(nbytes)
+                        stdout_data.append(str(ans, "utf8"))
 
-            # Get the exit status
-            ses = stdout.channel.exit_status
-            # Collapse into just a string
-            stdout_data = "".join(stdout_data)
+                    # Get the exit status
+                    ses = stdout.channel.exit_status
+                    # Collapse into just a string
+                    stdout_data = "".join(stdout_data)
 
-            while not stderr.channel.exit_status_ready():
-                err = stderr.channel.recv_stderr(nbytes)
-                stderr_data.append(str(err, "utf8"))
-            stderr_data = "".join(stderr_data)
+                    while not stderr.channel.exit_status_ready():
+                        err = stderr.channel.recv_stderr(nbytes)
+                        stderr_data.append(str(err, "utf8"))
+                    stderr_data = "".join(stderr_data)
 
-            if debug is True:
-                print("exit status:", ses)
-                print("stdout:")
-                print(stdout_data)
-                print("stderr:")
-                print(stderr_data)
-
-            alarms.clearAlarm()
-            return ses, stdout_data, stderr_data
+                    if debug is True:
+                        print("exit status:", ses)
+                        print("stdout:")
+                        print(stdout_data)
+                        print("stderr:")
+                        print(stderr_data)
+            except multialarm.TimeoutError as err:
+                if err.id_ == "SSHCmd":
+                    print("SSH Command Timed Out!")
+                    print(err)
         else:
             print("SSH connection not opened!")
-            return None, None, None
+            print("Trying to open it one more time...")
+            # Open once more
 
-
-class Persistence(object):
-    """
-    """
-    def __init__(self, function=None, seconds=30, tries=3,
-                 errorMessage='Timeout'):
-        self.seconds = seconds
-        self.tryLimit = tries
-        self.tries = 1
-        self.function = function
-        self.errorMessage = errorMessage
-
-    def act(self):
-        try:
-            # Set the alarm via a class to be able to specify our timeout
-            #   handler here rather than the default one in the util lib.
-            a = alarms.alarming(self.function(), self.handleTimeout)
-        except AuthenticationException as error:
-            self.tryAgain(AuthenticationException(error),
-                          'Authentication exception')
-        finally:
-            a.clearAlarm()
-
-    def tryAgain(self, exception, message):
-        if self.tries >= self.tryLimit:
-            raise exception
-        else:
-            print(message, 'try', self.tries, self.errorMessage)
-            time.sleep(2 * self.tries)
-            self.tries = self.tries + 1
-            self.act()
-            print('Succeeded on try', self.tries)
-
-    def handleTimeout(self, signum, frame):
-        self.tryAgain(alarms.TimeoutException(self.errorMessage), 'Timed out')
+        return ses, stdout_data, stderr_data

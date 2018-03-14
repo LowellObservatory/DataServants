@@ -9,4 +9,5 @@ from . import alarms
 from . import database
 from . import pingaling
 from . import packetizer
+from . import multialarm
 from . import confparsers

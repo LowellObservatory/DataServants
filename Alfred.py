@@ -14,23 +14,13 @@ import os
 import sys
 import time
 import signal
+import datetime as dt
 
 from dataservants import utils
 from dataservants import alfred
 from dataservants import yvette
 
 from pid import PidFile, PidFileError
-
-
-def instActions(acts=[utils.common.processDescription()], debug=True):
-    """
-    """
-    for i, each in enumerate(acts):
-        if debug is True:
-            print("Function #%d, %s" % (i, each.func))
-        # * and ** will unpack each of them properly
-        each.func(*each.args, **each.kwargs)
-        time.sleep(each.timedelay)
 
 
 if __name__ == "__main__":
@@ -59,32 +49,37 @@ if __name__ == "__main__":
     # Interval between successive runs of the instrument polling (seconds)
     bigsleep = 600
 
+    # Total time for entire set of actions per instrument
+    alarmtime = 600
+
 #    # idict: dictionary of parsed config file
 #    # args: parsed options of wadsworth.py
 #    # runner: class that contains logic to quit nicely
     idict, args, runner = alfred.valet.beginValeting(procname=mynameis)
 
+    # Quick renaming to keep line length under control
+    yvetteR = yvette.remote
+    malarms = utils.multialarm
+
     # Set up the desired actions in the main loop, using a helpful class
     #   to pass things to each function/process more clearly
     #   Note that we can update things per-instrument when inside the loop
     #   it's just helpful to do the definitions out here for the constants
-    yvetteR = yvette.remote
-
     act1 = utils.common.processDescription(func=yvetteR.actionPing,
                                            timedelay=3.,
-                                           priority=1,
+                                           maxtime=120,
                                            args=[],
                                            kwargs={})
 
     act2 = utils.common.processDescription(func=yvetteR.actionSpace,
                                            timedelay=3.,
-                                           priority=2,
+                                           maxtime=120,
                                            args=[],
                                            kwargs={})
 
     act3 = utils.common.processDescription(func=yvetteR.actionStats,
                                            timedelay=3.,
-                                           priority=1,
+                                           maxtime=120,
                                            args=[],
                                            kwargs={})
     actions = [act1, act2, act3]
@@ -112,49 +107,70 @@ if __name__ == "__main__":
                     try:
                         # Arm an alarm that will stop this inner section
                         #   in case one instrument starts to hog the show
-                        alarmtime = 600
-                        utils.alarms.setAlarm(timeout=alarmtime)
-                        iobj = idict[inst]
+                        with malarms.Timeout(id_='InstLoop',
+                                             seconds=alarmtime):
+                            iobj = idict[inst]
 
-                        # Open the SSH connection; SSHHandler makes a class
-                        #   (found in utils/ssh.py) which has some retries
-                        #   and timeout logic baked into it so we don't have
-                        #   to deal with it here
-                        # eSSH = utils.ssh.SSHHandler(host=iobj.host,
-                        #                             port=iobj.port,
-                        #                             username=iobj.user,
-                        #                             timeout=iobj.timeout,
-                        #                             password=iobj.password)
-                        eSSH = utils.ssh.SSHWrapper(host=iobj.host,
-                                                    port=iobj.port,
-                                                    username=iobj.user,
-                                                    timeout=iobj.timeout,
-                                                    password=iobj.password,
-                                                    connectOnInit=True)
-                        time.sleep(3)
+                            # Open the SSH connection; SSHHandler makes a class
+                            #   (found in utils/ssh.py) which has some logic
+                            #   baked into it
+                            #   Timeout here is the time before giving up
+                            #   to establish a working SSH connection
+                            eSSH = utils.ssh.SSHWrapper(host=iobj.host,
+                                                        port=iobj.port,
+                                                        username=iobj.user,
+                                                        timeout=60,
+                                                        password=iobj.password,
+                                                        connectOnInit=True)
+                            time.sleep(3)
 
-                        # Update the functions with proper arguments
-                        # act1 == check ping times
-                        #   Technically this one doesn't need SSH opened,
-                        #   but I want to keep these together for clarity
-                        actions[0].args = [iobj]
-                        actions[0].kwargs = {'dbname': dbname,
-                                             'debug': args.debug}
+                            # Update the functions with proper arguments
+                            # act1 == check ping times
+                            #   Technically this one doesn't need SSH opened,
+                            #   but I want to keep these together for clarity
+                            actions[0].args = [iobj]
+                            actions[0].kwargs = {'dbname': dbname,
+                                                 'debug': args.debug}
 
-                        # act2 == check free space
-                        actions[1].args = [eSSH, iobj, baseYcmd]
-                        actions[1].kwargs = {'dbname': dbname,
-                                             'debug': args.debug}
+                            # act2 == check free space
+                            actions[1].args = [eSSH, iobj, baseYcmd]
+                            actions[1].kwargs = {'dbname': dbname,
+                                                 'debug': args.debug}
 
-                        # act3 == check target CPU/RAM stats
-                        actions[2].args = [eSSH, iobj, baseYcmd]
-                        actions[2].kwargs = {'dbname': dbname,
-                                             'debug': args.debug}
+                            # act3 == check target CPU/RAM stats
+                            actions[2].args = [eSSH, iobj, baseYcmd]
+                            actions[2].kwargs = {'dbname': dbname,
+                                                 'debug': args.debug}
 
-                        instActions(actions)
+                            # Pre-fill our expected answers so we can see fails
+                            allanswers = [None]*len(actions)
+                            for i, each in enumerate(actions):
+                                try:
+                                    ans = None
+                                    # Remember to pass actiontimer!
+                                    with malarms.Timeout(id_=each.name,
+                                                         seconds=each.maxtime):
+                                        astart = dt.datetime.utcnow()
+                                        ans = each.func(*each.args,
+                                                        **each.kwargs)
+                                        print(ans)
+                                except malarms.TimeoutError as e:
+                                    print("Raised TimeOut for " + e.id_)
+                                    # Need a little extra care here since
+                                    #   TimeOutError could be from InstLoop
+                                    #   *or* each.func, so if we got the
+                                    #   InstLoop exception, break out
+                                    if e.id_ == "InstLoop":
+                                        break
+                                    print(ans)
+                                finally:
+                                    rnow = dt.datetime.utcnow()
+                                    print("Done with action, %f since start" %
+                                          ((rnow - astart).total_seconds()))
+                                    allanswers[i] = ans
+                                time.sleep(each.timedelay)
 
-                        eSSH.closeConnection()
-                        utils.alarms.clearAlarm()
+                            eSSH.closeConnection()
 
                         # Check to see if someone asked us to quit
                         if runner.halt is True:
@@ -163,10 +179,9 @@ if __name__ == "__main__":
                         else:
                             # Time to sleep between instruments
                             time.sleep(5)
-                    except utils.alarms.TimeoutException as err:
+                    except malarms.TimeoutError as err:
                         print("%s took too long! Moving on." % (inst))
-                    finally:
-                        utils.alarms.clearAlarm()
+
                 # After all the instruments are done, take a big nap
                 if runner.halt is False:
                     # Sleep for bigsleep, but in small chunks to check abort
