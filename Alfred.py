@@ -152,7 +152,8 @@ if __name__ == "__main__":
     # idict: dictionary of parsed config file
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
-    idict, args, runner = alfred.valet.beginValeting(procname=mynameis)
+    idict, args, runner = alfred.valet.beginValeting(procname=mynameis,
+                                                     logfile=True)
 
     # Quick renaming to keep line length under control
     yvetteR = yvette.remote
@@ -172,7 +173,8 @@ if __name__ == "__main__":
                 for inst in idict:
                     iobj = idict[inst]
 
-                    actions = updateArguments(actions, iobj, args)
+                    # Update all function arguments with new iobj
+                    cactions = updateArguments(actions, iobj, args)
 
                     if args.debug is True:
                         print("\n%s" % ("=" * 11))
@@ -197,23 +199,25 @@ if __name__ == "__main__":
                             time.sleep(3)
 
                             # Pre-fill our expected answers so we can see fails
-                            allanswers = [None]*len(actions)
-                            while runner.halt is False:
-                                for i, each in enumerate(actions):
-                                    # If we need SSH, it's always the first
-                                    #   positional argument so add it
-                                    if each.needSSH is True:
-                                        each.args = [eSSH] + each.args
+                            allanswers = [None]*len(cactions)
 
-                                    ans, estop = instAction(each)
-                                    allanswers[i] = ans
-                                    # Check to see if the action caught
-                                    #  a timeout intended for the whole
-                                    #  instrument actionset or just itself
-                                    if estop is True:
-                                        break
-                                    else:
-                                        time.sleep(each.timedelay)
+                            # This will run through each action in turn
+                            for i, each in enumerate(cactions):
+                                # If we need SSH, it's always the first
+                                #   positional argument so add it
+                                if each.needSSH is True:
+                                    each.args = [eSSH] + each.args
+                                if args.debug is True:
+                                    print("\nCalling %s" % (str(each.func)))
+                                ans, estop = instAction(each)
+                                allanswers[i] = ans
+                                # Check to see if the action caught
+                                #  a timeout intended for the whole
+                                #  instrument actionset or just itself
+                                if estop is True:
+                                    break
+                                else:
+                                    time.sleep(each.timedelay)
 
                             eSSH.closeConnection()
 

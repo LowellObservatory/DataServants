@@ -52,7 +52,8 @@ from .. import utils
 #             instantiated class's host.
 #         iobj (:class:`dataservants.utils.common.InstrumentHost`)
 #             Class containing instrument machine target information
-#             populated via :func:`dataservants.utils.confparsers.parseInstConf`.
+#             populated via
+#             :func:`dataservants.utils.confparsers.parseInstConf`.
 #         baseYcmd (:obj:`str`)
 #             String describing how to properly start Yvette on the target.
 #             Should include any necessary EXPORT statements before calling
@@ -78,7 +79,7 @@ from .. import utils
 
 
 # def actionLookNew(srcdir, dirmask, age=2, debug=False):
-#     """Look for directories matching a specified format younger than X days old.
+#     """Look for directories matching dirmask younger than X days old.
 
 #     Args:
 #         age (:obj:`int`, optional)
@@ -194,6 +195,9 @@ def actionPing(iobj, dbname=None, debug=False):
                            'fields': {'ping': 2.7909278869628906,
                                       'dropped': 0}}]
     """
+    # In case of emergency
+    superdebug = False
+
     # Timeouts and stuff are handled elsewhere in here
     #   BUT! timeout must be an int >= 1 (second)
     pings, drops = utils.pingaling.ping(iobj.host,
@@ -212,7 +216,7 @@ def actionPing(iobj, dbname=None, debug=False):
                                                tags=tags,
                                                fields=fs)
 
-    if debug is True:
+    if superdebug is True:
         print(packet)
     if packet != []:
         if dbname is not None:
@@ -272,6 +276,9 @@ def actionSpace(eSSH, iobj, baseYcmd, dbname=None, debug=False):
                                       'free': 268.3059501647949,
                                       'percentfree': 0.67}}]
     """
+    # In case of emergency
+    superdebug = False
+
     fcmd = "%s -f %s" % (baseYcmd, iobj.srcdir)
     fs = eSSH.sendCommand(fcmd)
     fsa = decodeAnswer(fs, debug=debug)
@@ -292,7 +299,7 @@ def actionSpace(eSSH, iobj, baseYcmd, dbname=None, debug=False):
     else:
         packet = []
 
-    if debug is True:
+    if superdebug is True:
         print(packet)
     if packet != []:
         if dbname is not None:
@@ -360,6 +367,9 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
         OS X does not support or report 'iowait' so this statistic will
         be unavailable on those remote machines.
     """
+    # In case of emergency
+    superdebug = False
+
     fcmd = "%s --cpumem" % (baseYcmd)
     fs = eSSH.sendCommand(fcmd, debug=debug)
     fsa = decodeAnswer(fs, debug=debug)
@@ -396,7 +406,7 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
     else:
         packet = []
 
-    if debug is True:
+    if superdebug is True:
         print(packet)
     if packet != []:
         if dbname is not None:
