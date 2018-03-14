@@ -17,6 +17,7 @@ lower level routines internal to Yvette that actually do the work
 
 from __future__ import division, print_function, absolute_import
 
+import time
 import json
 import numpy as np
 import datetime as dt
@@ -24,88 +25,88 @@ import datetime as dt
 from .. import utils
 
 
-def instActions(acts=[utils.common.processDescription()], debug=True):
-    """
-    """
-    for i, each in enumerate(acts):
-        if debug is True:
-            print("Function #%d, %s" % (i, each.func))
-        # * and ** will unpack each of them properly
-        each.func(*each.args, **each.kwargs)
-        time.sleep(each.timedelay)
+# def instActions(acts=[utils.common.processDescription()], debug=True):
+#     """
+#     """
+#     for i, each in enumerate(acts):
+#         if debug is True:
+#             print("Function #%d, %s" % (i, each.func))
+#         # * and ** will unpack each of them properly
+#         each.func(*each.args, **each.kwargs)
+#         time.sleep(each.timedelay)
 
 
-def actionBase(eSSH, iobj, baseYcmd, func, *args, **kwargs):
-    """Base function for performing a remote action.
+# def actionBase(eSSH, iobj, baseYcmd, func, *args, **kwargs):
+#     """Base function for performing a remote action.
 
-    Uses a `Paramiko <http://docs.paramiko.org/en/latest/>`_ SSH
-    connection to execute commands to a :obj:`dataservants.yvette` instance
-    running on a remote target machine.
+#     Uses a `Paramiko <http://docs.paramiko.org/en/latest/>`_ SSH
+#     connection to execute commands to a :obj:`dataservants.yvette` instance
+#     running on a remote target machine.
 
-    The main function called on the remote side is
-    :func:`dataservants.utils.files.getDirListing`.
+#     The main function called on the remote side is
+#     :func:`dataservants.utils.files.getDirListing`.
 
-    Args:
-        eSSH (:class:`dataservants.utils.ssh.SSHHandler`)
-            Class describing parameters needed to open SSH connection to
-            instantiated class's host.
-        iobj (:class:`dataservants.utils.common.InstrumentHost`)
-            Class containing instrument machine target information
-            populated via :func:`dataservants.utils.confparsers.parseInstConf`.
-        baseYcmd (:obj:`str`)
-            String describing how to properly start Yvette on the target.
-            Should include any necessary EXPORT statements before calling
-            python to take care of any environment problems.
-        func ()
-            Pointer to function to actually call to do the action
-        *args ()
-            Variable length list of positional arguments to pass to ``func``.
-        **kwargs ()
-            Variable length dict of keyword arguments to pass to ``func``.
+#     Args:
+#         eSSH (:class:`dataservants.utils.ssh.SSHHandler`)
+#             Class describing parameters needed to open SSH connection to
+#             instantiated class's host.
+#         iobj (:class:`dataservants.utils.common.InstrumentHost`)
+#             Class containing instrument machine target information
+#             populated via :func:`dataservants.utils.confparsers.parseInstConf`.
+#         baseYcmd (:obj:`str`)
+#             String describing how to properly start Yvette on the target.
+#             Should include any necessary EXPORT statements before calling
+#             python to take care of any environment problems.
+#         func ()
+#             Pointer to function to actually call to do the action
+#         *args ()
+#             Variable length list of positional arguments to pass to ``func``.
+#         **kwargs ()
+#             Variable length dict of keyword arguments to pass to ``func``.
 
-    Returns:
-        fnd (:obj:`dict`)
-            Dictionary of results, containing a single key linked to the
-            results.  See the individual actions for sample return values.
-    """
-    fcmd = "%s -l %s -r %s --rangeNew %d" % (baseYcmd,
-                                             iobj.srcdir,
-                                             iobj.dirmask,
-                                             age)
-    nd = eSSH.sendCommand(fcmd, debug=debug)
-    func(*args, **kwargs)
+#     Returns:
+#         fnd (:obj:`dict`)
+#             Dictionary of results, containing a single key linked to the
+#             results.  See the individual actions for sample return values.
+#     """
+#     fcmd = "%s -l %s -r %s --rangeNew %d" % (baseYcmd,
+#                                              iobj.srcdir,
+#                                              iobj.dirmask,
+#                                              age)
+#     nd = eSSH.sendCommand(fcmd, debug=debug)
+#     func(*args, **kwargs)
 
 
-def actionLookNew(srcdir, dirmask, age=2, debug=False):
-    """Look for directories matching a specified format younger than X days old.
+# def actionLookNew(srcdir, dirmask, age=2, debug=False):
+#     """Look for directories matching a specified format younger than X days old.
 
-    Args:
-        age (:obj:`int`, optional)
-            Age in days to consider a directory 'new' and return its path.
-            Defaults to 2.
-        debug (:obj:`bool`, optional)
-            Bool to trigger additional debugging outputs. Defaults to False.
+#     Args:
+#         age (:obj:`int`, optional)
+#             Age in days to consider a directory 'new' and return its path.
+#             Defaults to 2.
+#         debug (:obj:`bool`, optional)
+#             Bool to trigger additional debugging outputs. Defaults to False.
 
-    Returns:
-        fnd (:obj:`dict`)
-            Dictionary of results, containing a single key :obj:`DirsNew`
-            linked to a list of directories newer/younger than :obj:`age`.
+#     Returns:
+#         fnd (:obj:`dict`)
+#             Dictionary of results, containing a single key :obj:`DirsNew`
+#             linked to a list of directories newer/younger than :obj:`age`.
 
-            .. code-block:: python
+#             .. code-block:: python
 
-                fnd = {"DirsNew":
-                       ["/mnt/lemi/lois/20180305a",
-                        "/mnt/lemi/lois/20180306a"]}
-    """
-    fcmd = "%s -l %s -r %s --rangeNew %d" % (baseYcmd,
-                                             iobj.srcdir,
-                                             iobj.dirmask,
-                                             age)
-    nd = eSSH.sendCommand(fcmd, debug=debug)
+#                 fnd = {"DirsNew":
+#                        ["/mnt/lemi/lois/20180305a",
+#                         "/mnt/lemi/lois/20180306a"]}
+#     """
+#     fcmd = "%s -l %s -r %s --rangeNew %d" % (baseYcmd,
+#                                              iobj.srcdir,
+#                                              iobj.dirmask,
+#                                              age)
+#     nd = eSSH.sendCommand(fcmd, debug=debug)
 
-    fnd = decodeAnswer(nd)
+#     fnd = decodeAnswer(nd)
 
-    return fnd
+#     return fnd
 
 
 def actionLook(eSSH, iobj, baseYcmd, age=2, debug=False):
@@ -203,7 +204,7 @@ def actionPing(iobj, dbname=None, debug=False):
     tags = {'host': iobj.host}
     # InfluxDB can only store one datatype per field, so no NaN or null
     if np.isnan(pings) is True:
-        pings = -9999
+        pings = -9999.
     fs = {'ping': pings, 'dropped': drops}
     # Construct our packet
     packet = utils.packetizer.makeInfluxPacket(meas=meas,
