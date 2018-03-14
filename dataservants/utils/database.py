@@ -63,7 +63,13 @@ class influxobj():
 
     def writeToDB(self, vals, debug=False):
         """
-        Given an opened InfluxDBClient, write stuff to the given dbname
+        Given an opened InfluxDBClient, write stuff to the given dbname.
+
+        BUG: InfluxDB errors are getting returned, not caught. Don't know why.
+        e.g.
+        400: {"error":"field type conflict: input field \"ping\" on
+              measurement \"PingResults\" is type integer, already exists as
+              type float"}
         """
         # Make sure we're actually connected first
         if self.client is not None:
