@@ -101,6 +101,9 @@ class SSHWrapper():
     def sendCommand(self, command, timeout=10., debug=False):
         """
         """
+        # Use this to directly print out stdout/stderr
+        superdebug = False
+
         ses, stdout_data, stderr_data = None, None, None
         if(self.ssh):
             try:
@@ -130,7 +133,7 @@ class SSHWrapper():
                         stderr_data.append(str(err, "utf8"))
                     stderr_data = "".join(stderr_data)
 
-                    if debug is True:
+                    if superdebug is True:
                         print("exit status:", ses)
                         print("stdout:")
                         print(stdout_data)
