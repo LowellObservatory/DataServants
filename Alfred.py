@@ -116,7 +116,7 @@ if __name__ == "__main__":
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
     idict, args, runner = alfred.valet.beginValeting(procname=mynameis,
-                                                     logfile=False)
+                                                     logfile=True)
 
     # Quick renaming to keep line length under control    
     malarms = utils.multialarm
