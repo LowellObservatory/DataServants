@@ -121,7 +121,7 @@ if __name__ == "__main__":
                                                     port=iobj.port,
                                                     username=iobj.user,
                                                     timeout=iobj.timeout,
-                                                    password=iobj.password)
+                                                    password=iobj.passw)
                         eSSH.openConnection()
                         time.sleep(3)
 
