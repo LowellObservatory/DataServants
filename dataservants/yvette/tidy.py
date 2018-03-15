@@ -198,9 +198,11 @@ def beginTidying(noprint=False):
                 rjson.update({"FreeSpace": frees})
 
         if args.cpumem is True:
-            loads = utils.cpumem.checkCPUusage()
+            cpus = utils.cpumem.checkCPUusage()
             mems = utils.cpumem.checkMemStats()
-            rjson.update({"MachineCPU": loads, "MachineMem": mems})
+            loads = utils.cpumem.checkLoadAvgs()
+            rjson.update({"MachineCPU": cpus, "MachineMem": mems,
+                          "MachineLoads": loads})
 
         if dirstatus is True:
             # Check for non-exclusionary actions

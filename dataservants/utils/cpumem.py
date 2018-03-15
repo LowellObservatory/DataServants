@@ -10,7 +10,19 @@
 
 from __future__ import division, print_function, absolute_import
 
+import os
 import psutil
+
+
+def checkLoadAvgs():
+    """
+    """
+    res = os.getloadavg()
+    ans = {'Avg1Min': res[0],
+           'Avg5Min': res[1],
+           'Avg15Min': res[2]}
+
+    return ans
 
 
 def checkCPUusage():
