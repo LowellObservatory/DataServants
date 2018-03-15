@@ -22,15 +22,50 @@ from dataservants import wadsworth
 from dataservants import yvette
 
 
-def instActions(acts=[utils.common.processDescription()], debug=True):
+def defineActions():
     """
     """
-    for i, each in enumerate(acts):
-        if debug is True:
-            print("Function #%d, %s" % (i, each.func))
-        # * and ** will unpack each of them properly
-        each.func(*each.args, **each.kwargs)
-        time.sleep(each.timedelay)
+    # Set up the desired actions using a helpful class to pass things
+    #   to each function/process more clearly.
+    #
+    #   Note that we need to also update things per-instrument when
+    #   inside the main loop via updateArguments()...it's just helpful to
+    #   do the definitions out here for the constants and for clarity.
+    act1 = utils.common.processDescription(func=yvetteR.actionSpace,
+                                           timedelay=3.,
+                                           maxtime=120,
+                                           needSSH=True,
+                                           args=[],
+                                           kwargs={})
+
+    act2 = utils.common.processDescription(func=yvetteR.actionLook,
+                                           timedelay=3.,
+                                           maxtime=120,
+                                           needSSH=True,
+                                           args=[],
+                                           kwargs={})
+
+    actions = [act1, act2]
+
+    return actions
+
+
+def updateArguments(actions, iobj, args):
+    """
+    """
+    # Update the functions with proper arguments.
+    #   (opened SSH connection is added just before calling)
+    # act1 == checkFreeSpace
+    actions[0].args = [iobj, baseYcmd]
+    actions[0].kwargs = {'dbname': None,
+                         'debug': args.debug}
+
+    # act2 == Look for new directories
+    actions[1].args = [iobj, baseYcmd]
+    actions[1].kwargs = {'age': args.rangeNew,
+                         'debug': args.debug}
+
+    return actions
 
 
 if __name__ == "__main__":
@@ -59,104 +94,51 @@ if __name__ == "__main__":
     # Interval between successive runs of the instrument polling (seconds)
     bigsleep = 600
 
+    # Total time for entire set of actions per instrument
+    alarmtime = 600
+
     # idict: dictionary of parsed config file
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
-    idict, args, runner = wadsworth.buttle.beginButtling(procname=mynameis)
+    idict, args, runner = wadsworth.buttle.beginButtling(procname=mynameis,
+                                                         logfile=True)
 
     # Set up the desired actions in the main loop, using a helpful class
     #   to pass things to each function/process more clearly
     #   Note that we can update things per-instrument when inside the loop
     #   it's just helpful to do the definitions out here for the constants
 
-    # A few renames to cut down on the line length
+    # Quick renaming to keep line length under control
     yvetteR = yvette.remote
+    malarms = utils.multialarm
+    mssh = utils.ssh
 
-    act1 = utils.common.processDescription(func=yvetteR.actionSpace,
-                                           timedelay=3.,
-                                           priority=2,
-                                           args=[],
-                                           kwargs={})
-
-    act2 = utils.common.processDescription(func=yvetteR.actionLook,
-                                           timedelay=3.,
-                                           priority=1,
-                                           args=[],
-                                           kwargs={})
-
-    actions = [act1, act2]
+    # Actually define the function calls/references to functions
+    actions = defineActions()
 
     try:
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
-            # Helps to put context on when things are stopped/started/restarted
-            print("Current PID: %d" % (p.pid))
-            print("PID %d recorded at %s now starting..." % (p.pid,
-                                                             p.filename))
-
-            # Preamble/contextual messages before we really start
-            print("Beginning to monitor the following hosts:")
-            print("%s\n" % (' '.join(idict.keys())))
-            print("Starting the infinite loop.")
-            print("Kill PID %d to stop it." % (p.pid))
-
+            # Print the preamble of this particular instance
+            #   (helpful to find starts/restarts when scanning thru logs)
+            utils.common.printPreamble(p, idict)
             # Semi-infinite loop
             while runner.halt is False:
-                # Do the instrument stuff right up front
-                for inst in idict:
-                    if args.debug is True:
-                        print("\n%s" % ("=" * 11))
-                        print("Instrument: %s" % (inst))
-                    try:
-                        # Arm an alarm that will stop this inner section
-                        #   in case one instrument starts to hog the show
-                        alarmtime = 600
-                        utils.alarms.setAlarm(timeout=alarmtime)
-                        iobj = idict[inst]
-
-                        # Open the SSH connection; SSHHandler makes a class
-                        #   (found in utils/ssh.py) which has some retries
-                        #   and timeout logic baked into it so we don't have
-                        #   to deal with it here
-                        eSSH = utils.ssh.SSHHandler(host=iobj.host,
-                                                    port=iobj.port,
-                                                    username=iobj.user,
-                                                    timeout=iobj.timeout,
-                                                    password=iobj.passw)
-                        eSSH.openConnection()
-                        time.sleep(3)
-
-                        # Update the functions with proper arguments
-                        actions[0].args = [eSSH, iobj, baseYcmd]
-                        actions[0].kwargs = {'dbname': None,
-                                             'debug': args.debug}
-
-                        actions[1].args = [eSSH, iobj, baseYcmd]
-                        actions[1].kwargs = {'age': args.rangeNew,
-                                             'debug': args.debug}
-
-                        instActions(actions)
-
-                        eSSH.closeConnection()
-                        utils.alarms.clearAlarm()
-
-                        # Check to see if someone asked us to quit
-                        if runner.halt is True:
-                            print("Quit inner instrument loop")
-                            break
-                        else:
-                            # Time to sleep between instruments
-                            time.sleep(5)
-                    except utils.alarms.TimeoutException as err:
-                        print("%s took too long! Moving on." % (inst))
-                    finally:
-                        utils.alarms.clearAlarm()
+                # This is a common core function that handles the actions and 
+                #   looping over each instrument.  We keep the main while
+                #   loop out here, though, so we can do stuff with the 
+                #   results of the actions from all the instruments.
+                results = utils.common.instLooper(idict, runner, args, 
+                                                  actions, updateArguments, 
+                                                  alarmtime=alarmtime)
                 # After all the instruments are done, take a big nap
                 if runner.halt is False:
+                    print("Starting a big sleep")
                     # Sleep for bigsleep, but in small chunks to check abort
                     for i in range(bigsleep):
                         time.sleep(1)
                         if runner.halt is True:
                             break
+
             # The above loop is exited when someone sends wadsworth.py SIGTERM
             print("PID %d is now out of here!" % (p.pid))
 
