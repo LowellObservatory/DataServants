@@ -185,17 +185,6 @@ if __name__ == "__main__":
                         with malarms.Timeout(id_='InstLoop',
                                              seconds=alarmtime):
                             iobj = idict[inst]
-
-                            # Open the SSH connection; SSHHandler makes a class
-                            #   (found in utils/ssh.py) which has some logic.
-                            #   Timeout here is the time before giving up
-                            #   to establish a working SSH connection
-                            eSSH = mssh.SSHWrapper(host=iobj.host,
-                                                   port=iobj.port,
-                                                   username=iobj.user,
-                                                   timeout=60,
-                                                   password=iobj.password,
-                                                   connectOnInit=True)
                             time.sleep(3)
 
                             # Pre-fill our expected answers so we can see fails
@@ -206,20 +195,38 @@ if __name__ == "__main__":
                                 # If we need SSH, it's always the first
                                 #   positional argument so add it
                                 if each.needSSH is True:
+                                    # Open the SSH connection; SSHHandler
+                                    #   does all the hard stuff.
+                                    eSSH = mssh.SSHWrapper(host=iobj.host,
+                                                           port=iobj.port,
+                                                           username=iobj.user,
+                                                           timeout=60,
+                                                           password=iobj.passw,
+                                                           connectOnInit=True)
                                     each.args = [eSSH] + each.args
+                                else:
+                                    eSSH = None
+
                                 if args.debug is True:
                                     print("\nCalling %s" % (str(each.func)))
+
+                                # Perform the action
                                 ans, estop = instAction(each)
+
+                                # If it actually worked, close the connection
+                                if eSSH is not None:
+                                    eSSH.closeConnection()
+
+                                # Save the result if there was one
                                 allanswers[i] = ans
+
                                 # Check to see if the action caught
                                 #  a timeout intended for the whole
                                 #  instrument actionset or just itself
-                                if estop is True:
+                                if estop is True or runner.halt is True:
                                     break
                                 else:
                                     time.sleep(each.timedelay)
-
-                            eSSH.closeConnection()
 
                         # Check to see if someone asked us to quit
                         if runner.halt is True:

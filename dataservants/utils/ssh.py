@@ -28,7 +28,7 @@ class SSHWrapper():
         self.host = host
         self.username = username
         self.port = port
-        self.password = password
+        self.passw = password
         self.retries = retries
         self.timeout = timeout
 
@@ -60,7 +60,7 @@ class SSHWrapper():
                     try:
                         self.ssh.connect(self.host, port=self.port,
                                          username=self.username,
-                                         password=self.password,
+                                         password=self.passw,
                                          timeout=sshitimeout,
                                          banner_timeout=sshitimeout,
                                          auth_timeout=sshitimeout)

@@ -258,7 +258,7 @@ class InstrumentHost():
             if debug is True:
                 print("Password is empty!!")
         else:
-            self.password = password
+            self.passw = password
 
 
 def dateDiff(fstr, debug=False):
