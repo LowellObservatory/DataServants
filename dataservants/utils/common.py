@@ -14,11 +14,14 @@
 from __future__ import division, print_function, absolute_import
 
 import sys
+import time
 import signal
 import datetime as dt
 from os.path import basename
 
 from . import pids
+from . import ssh as mssh
+from . import multialarm as malarms
 
 
 class processDescription():
@@ -367,3 +370,122 @@ def nicerExit(err=None):
     sys.stderr = sys.__stderr__
 
     sys.exit(cond)
+
+
+def printPreamble(p, idict):
+    # Helps to put context on when things are stopped/started/restarted
+    print("Current PID: %d" % (p.pid))
+    print("PID %d recorded at %s now starting..." % (p.pid, p.filename))
+
+    # Preamble/contextual messages before we really start
+    print("Beginning to monitor the following hosts:")
+    print("%s\n" % (' '.join(idict.keys())))
+    print("Starting the infinite loop.")
+    print("Kill PID %d to stop it." % (p.pid))
+
+
+def instAction(each):
+    """
+    """
+    ans = None
+    estop = False
+    try:
+        with malarms.Timeout(id_=each.name, seconds=each.maxtime):
+            astart = dt.datetime.utcnow()
+            ans = each.func(*each.args,
+                            **each.kwargs)
+            print(ans)
+    except malarms.TimeoutError as e:
+        print("Raised TimeOut for " + e.id_)
+        # Need a little extra care here since
+        #   TimeOutError could be from InstLoop
+        #   *or* each.func, so if we got the
+        #   InstLoop exception, break out
+        if e.id_ == "InstLoop":
+            estop = True
+        print(ans)
+    finally:
+        rnow = dt.datetime.utcnow()
+        print("Done with action, %f since start" %
+              ((rnow - astart).total_seconds()))
+
+    return ans, estop
+
+
+def instLooper(idict, runner, args, actions, updateArguments, alarmtime=600):
+    """
+    Could bump the instrument loop out and back to the main calling function
+    if we want to do stuff per-instrument rather than on all the instruments'
+    results.
+    """
+    for inst in idict:
+        iobj = idict[inst]
+
+        # Update all function arguments with new iobj
+        cactions = updateArguments(actions, iobj, args)
+
+        # Pre-fill our expected answers so we can see fails
+        allanswers = [None]*len(cactions)
+
+        if args.debug is True:
+            print("\n%s" % ("=" * 11))
+            print("Instrument: %s" % (inst))
+        try:
+            # Arm an alarm that will stop this inner section
+            #   in case one instrument starts to hog the show
+            with malarms.Timeout(id_='InstLoop',
+                                seconds=alarmtime):
+                iobj = idict[inst]
+                time.sleep(3)
+
+                # This will run through each action in turn
+                for i, each in enumerate(cactions):
+                    # If we need SSH, it's always the first
+                    #   positional argument so add it
+                    if each.needSSH is True:
+                        # Open the SSH connection; SSHHandler
+                        #   does all the hard stuff.
+                        eSSH = mssh.SSHWrapper(host=iobj.host,
+                                                port=iobj.port,
+                                                username=iobj.user,
+                                                timeout=60,
+                                                password=iobj.passw,
+                                                connectOnInit=True)
+                        each.args = [eSSH] + each.args
+                    else:
+                        eSSH = None
+
+                    if args.debug is True:
+                        print("\nCalling %s" % (str(each.func)))
+
+                    # Perform the action
+                    ans, estop = instAction(each)
+
+                    # If it actually worked, close the connection
+                    if eSSH is not None:
+                        eSSH.closeConnection()
+
+                    # Save the result if there was one
+                    allanswers[i] = ans
+
+                    # Check to see if the action caught
+                    #  a timeout intended for the whole
+                    #  instrument actionset or just itself
+                    if estop is True or runner.halt is True:
+                        break
+                    else:
+                        time.sleep(each.timedelay)
+
+            # Check to see if someone asked us to quit
+            if runner.halt is True:
+                print("Quit inner instrument loop")
+                break
+            else:
+                # Time to sleep between instruments
+                print("Sleeping between instruments")
+                time.sleep(5)
+        except malarms.TimeoutError as err:
+            print(str(err))
+            print("%s took too long! Moving on." % (inst))
+
+    return allanswers

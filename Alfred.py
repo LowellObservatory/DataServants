@@ -80,46 +80,6 @@ def updateArguments(actions, iobj, args):
     return actions
 
 
-def instAction(each):
-    """
-    """
-    ans = None
-    estop = False
-    try:
-        with malarms.Timeout(id_=each.name, seconds=each.maxtime):
-            astart = dt.datetime.utcnow()
-            ans = each.func(*each.args,
-                            **each.kwargs)
-            print(ans)
-    except malarms.TimeoutError as e:
-        print("Raised TimeOut for " + e.id_)
-        # Need a little extra care here since
-        #   TimeOutError could be from InstLoop
-        #   *or* each.func, so if we got the
-        #   InstLoop exception, break out
-        if e.id_ == "InstLoop":
-            estop = True
-        print(ans)
-    finally:
-        rnow = dt.datetime.utcnow()
-        print("Done with action, %f since start" %
-              ((rnow - astart).total_seconds()))
-
-    return ans, estop
-
-
-def printPreamble(p, idict):
-    # Helps to put context on when things are stopped/started/restarted
-    print("Current PID: %d" % (p.pid))
-    print("PID %d recorded at %s now starting..." % (p.pid, p.filename))
-
-    # Preamble/contextual messages before we really start
-    print("Beginning to monitor the following hosts:")
-    print("%s\n" % (' '.join(idict.keys())))
-    print("Starting the infinite loop.")
-    print("Kill PID %d to stop it." % (p.pid))
-
-
 if __name__ == "__main__":
     # For PIDfile stuff; kindly ignore
     mynameis = os.path.basename(__file__)
@@ -153,98 +113,39 @@ if __name__ == "__main__":
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
     idict, args, runner = alfred.valet.beginValeting(procname=mynameis,
-                                                     logfile=True)
+                                                     logfile=False)
 
     # Quick renaming to keep line length under control
     yvetteR = yvette.remote
     malarms = utils.multialarm
     mssh = utils.ssh
 
+    # Actually define the function calls/references to functions
     actions = defineActions()
 
     try:
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
             # Print the preamble of this particular instance
             #   (helpful to find starts/restarts when scanning thru logs)
-            printPreamble(p, idict)
-
+            utils.common.printPreamble(p, idict)
             # Semi-infinite loop
             while runner.halt is False:
-                for inst in idict:
-                    iobj = idict[inst]
-
-                    # Update all function arguments with new iobj
-                    cactions = updateArguments(actions, iobj, args)
-
-                    if args.debug is True:
-                        print("\n%s" % ("=" * 11))
-                        print("Instrument: %s" % (inst))
-                    try:
-                        # Arm an alarm that will stop this inner section
-                        #   in case one instrument starts to hog the show
-                        with malarms.Timeout(id_='InstLoop',
-                                             seconds=alarmtime):
-                            iobj = idict[inst]
-                            time.sleep(3)
-
-                            # Pre-fill our expected answers so we can see fails
-                            allanswers = [None]*len(cactions)
-
-                            # This will run through each action in turn
-                            for i, each in enumerate(cactions):
-                                # If we need SSH, it's always the first
-                                #   positional argument so add it
-                                if each.needSSH is True:
-                                    # Open the SSH connection; SSHHandler
-                                    #   does all the hard stuff.
-                                    eSSH = mssh.SSHWrapper(host=iobj.host,
-                                                           port=iobj.port,
-                                                           username=iobj.user,
-                                                           timeout=60,
-                                                           password=iobj.passw,
-                                                           connectOnInit=True)
-                                    each.args = [eSSH] + each.args
-                                else:
-                                    eSSH = None
-
-                                if args.debug is True:
-                                    print("\nCalling %s" % (str(each.func)))
-
-                                # Perform the action
-                                ans, estop = instAction(each)
-
-                                # If it actually worked, close the connection
-                                if eSSH is not None:
-                                    eSSH.closeConnection()
-
-                                # Save the result if there was one
-                                allanswers[i] = ans
-
-                                # Check to see if the action caught
-                                #  a timeout intended for the whole
-                                #  instrument actionset or just itself
-                                if estop is True or runner.halt is True:
-                                    break
-                                else:
-                                    time.sleep(each.timedelay)
-
-                        # Check to see if someone asked us to quit
-                        if runner.halt is True:
-                            print("Quit inner instrument loop")
-                            break
-                        else:
-                            # Time to sleep between instruments
-                            time.sleep(5)
-                    except malarms.TimeoutError as err:
-                        print("%s took too long! Moving on." % (inst))
-
+                # This is a common core function that handles the actions and 
+                #   looping over each instrument.  We keep the main while
+                #   loop out here, though, so we can do stuff with the 
+                #   results of the actions from all the instruments.
+                results = utils.common.instLooper(idict, runner, args, 
+                                                  actions, updateArguments, 
+                                                  alarmtime=alarmtime)
                 # After all the instruments are done, take a big nap
                 if runner.halt is False:
+                    print("Starting a big sleep")
                     # Sleep for bigsleep, but in small chunks to check abort
                     for i in range(bigsleep):
                         time.sleep(1)
                         if runner.halt is True:
                             break
+
 
             # The above loop is exited when someone sends SIGTERM
             print("PID %d is now out of here!" % (p.pid))
