@@ -26,6 +26,9 @@ from pid import PidFile, PidFileError
 def defineActions():
     """
     """
+    # Renaming import to keep line length sensible
+    yvetteR = yvette.remote
+
     # Set up the desired actions using a helpful class to pass things
     #   to each function/process more clearly.
     #
@@ -113,12 +116,10 @@ if __name__ == "__main__":
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
     idict, args, runner = alfred.valet.beginValeting(procname=mynameis,
-                                                     logfile=True)
+                                                     logfile=False)
 
-    # Quick renaming to keep line length under control
-    yvetteR = yvette.remote
+    # Quick renaming to keep line length under control    
     malarms = utils.multialarm
-    mssh = utils.ssh
 
     # Actually define the function calls/references to functions
     actions = defineActions()
@@ -128,6 +129,7 @@ if __name__ == "__main__":
             # Print the preamble of this particular instance
             #   (helpful to find starts/restarts when scanning thru logs)
             utils.common.printPreamble(p, idict)
+
             # Semi-infinite loop
             while runner.halt is False:
                 # This is a common core function that handles the actions and 
@@ -137,6 +139,7 @@ if __name__ == "__main__":
                 results = utils.common.instLooper(idict, runner, args, 
                                                   actions, updateArguments, 
                                                   alarmtime=alarmtime)
+
                 # After all the instruments are done, take a big nap
                 if runner.halt is False:
                     print("Starting a big sleep")
@@ -145,7 +148,6 @@ if __name__ == "__main__":
                         time.sleep(1)
                         if runner.halt is True:
                             break
-
 
             # The above loop is exited when someone sends SIGTERM
             print("PID %d is now out of here!" % (p.pid))

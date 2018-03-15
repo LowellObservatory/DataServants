@@ -394,7 +394,7 @@ def instAction(each):
             astart = dt.datetime.utcnow()
             ans = each.func(*each.args,
                             **each.kwargs)
-            print(ans)
+            # print(ans)
     except malarms.TimeoutError as e:
         print("Raised TimeOut for " + e.id_)
         # Need a little extra care here since
@@ -403,7 +403,7 @@ def instAction(each):
         #   InstLoop exception, break out
         if e.id_ == "InstLoop":
             estop = True
-        print(ans)
+        # print(ans)
     finally:
         rnow = dt.datetime.utcnow()
         print("Done with action, %f since start" %
