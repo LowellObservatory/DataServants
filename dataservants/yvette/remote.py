@@ -25,6 +25,12 @@ import datetime as dt
 from .. import utils
 
 
+def actionBase(eSSH, iobj, baseYcmd, func, *args, **kwargs):
+    """
+    """
+    pass
+
+
 def actionLook(eSSH, iobj, baseYcmd, age=2, debug=False):
     """Look for directories matching a specified format younger than X days old.
 
@@ -196,21 +202,37 @@ def actionSpace(eSSH, iobj, baseYcmd, dbname=None, debug=False):
 
     fcmd = "%s -f %s" % (baseYcmd, iobj.srcdir)
     fs = eSSH.sendCommand(fcmd)
+    # Timestamp of when this all (just) occured
+    ts = dt.datetime.utcnow()
+
+    # Turn Yvette's JSON answer into an object
     fsa = decodeAnswer(fs, debug=debug)
+
     # Now make the packet given the deserialized json answer
     meas = ['FreeSpace']
     tags = {'host': iobj.host}
-    ts = dt.datetime.utcnow()
+    # Fields from Yvette's answer that we want to record
+    #   Looks a bit more complicated since it's a dict that gives
+    #   databasekey: YvetteAnswerKey
+    desired = ['path', 'total', 'free', 'percentfree']
+    gf = {}
     if fsa != {}:
-        fs = {'path': fsa['FreeSpace']['path'],
-              'total': fsa['FreeSpace']['total'],
-              'free': fsa['FreeSpace']['free'],
-              'percentfree': fsa['FreeSpace']['percentfree']}
+        for each in desired:
+            try:
+                gf.update({each: fsa['FreeSpace'][each]})
+            except KeyError:
+                pass
+
+        # fs = {'path': fsa['FreeSpace']['path'],
+        #       'total': fsa['FreeSpace']['total'],
+        #       'free': fsa['FreeSpace']['free'],
+        #       'percentfree': fsa['FreeSpace']['percentfree']}
+        
         # Make the packet
         packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                    ts=ts,
                                                    tags=tags,
-                                                   fields=fs)
+                                                   fields=gf)
     else:
         packet = []
 
@@ -287,37 +309,54 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
 
     fcmd = "%s --cpumem" % (baseYcmd)
     fs = eSSH.sendCommand(fcmd, debug=debug)
-    fsa = decodeAnswer(fs, debug=debug)
-    # Now make the packet given the deserialized json answer
-    meas = ['MachineStats']
-    tags = {'host': iobj.host}
+    # Timestamp of when this all (just) occured
     ts = dt.datetime.utcnow()
+
+    # Turn Yvette's JSON answer into an object
+    fsa = decodeAnswer(fs, debug=debug)
+
+    # Now make the packet given the deserialized json answer
+    meas = ['FreeSpace']
+    tags = {'host': iobj.host}
+    # Fields from Yvette's answer that we want to record.
+    #   Complicated because the storage tag doesn't match the returned tag
+    dbmapCPU = {'cpuUser': 'user', 
+                'cpuSys': 'system',
+                'cpuIdle': 'idle',
+                'cpuIO': 'iowait'}
+    dbmapLoad = {'sys1MinLoad': 'Avg1Min',
+                 'sys5MinLoad': 'Avg5Min',
+                 'sys15MinLoad': 'Avg15Min'}
+    dbmapMem = {'memTotal': 'total',
+                'memAvail': 'available',
+                'memActive': 'active',
+                'memPercent': 'percent'}
+
+    gf = {}
     if fsa != {}:
-        # Store some cherry picked ones to really care about rather than
-        #   storing absolutely everything...but it wouldn't be hard to change
-        # OS X doesn't give IO wait information because it sucks
-        if iobj.host == 'xcam':
-            fs = {'cpuUser': fsa['MachineCPU']['user'],
-                  'cpuSys': fsa['MachineCPU']['system'],
-                  'cpuIdle': fsa['MachineCPU']['idle'],
-                  'memTotal': fsa['MachineMem']['total'],
-                  'memAvail': fsa['MachineMem']['available'],
-                  'memActive': fsa['MachineMem']['active'],
-                  'memPercent': fsa['MachineMem']['percent']}
-        else:
-            fs = {'cpuUser': fsa['MachineCPU']['user'],
-                  'cpuSys': fsa['MachineCPU']['system'],
-                  'cpuIdle': fsa['MachineCPU']['idle'],
-                  'cpuIO': fsa['MachineCPU']['iowait'],
-                  'memTotal': fsa['MachineMem']['total'],
-                  'memAvail': fsa['MachineMem']['available'],
-                  'memActive': fsa['MachineMem']['active'],
-                  'memPercent': fsa['MachineMem']['percent']}
-        # Make the packet
+        for each in dbmapCPU.keys():
+            try:
+                gf.update({each: fsa['MachineCPU'][dbmapCPU[each]]})
+            except KeyError:
+                pass
+        
+        for oach in dbmapLoad.keys():
+            try:
+                gf.update({each: fsa['MachineLoads'][dbmapLoad[oach]]})
+            except KeyError:
+                pass
+
+        for pach in dbmapMem.keys():
+            try:
+                gf.update({each: fsa['MachineMem'][dbmapMem[pach]]})
+            except KeyError:
+                pass
+
+        # Actually make the packet
         packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                    ts=ts,
                                                    tags=tags,
-                                                   fields=fs)
+                                                   fields=gf)
     else:
         packet = []
 
