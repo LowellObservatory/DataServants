@@ -342,13 +342,13 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
 
         for oach in dbmapLoad.keys():
             try:
-                gf.update({each: fsa['MachineLoads'][dbmapLoad[oach]]})
+                gf.update({oach: fsa['MachineLoads'][dbmapLoad[oach]]})
             except KeyError:
                 pass
 
         for pach in dbmapMem.keys():
             try:
-                gf.update({each: fsa['MachineMem'][dbmapMem[pach]]})
+                gf.update({pach: fsa['MachineMem'][dbmapMem[pach]]})
             except KeyError:
                 pass
 
