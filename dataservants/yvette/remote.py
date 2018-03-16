@@ -227,7 +227,7 @@ def actionSpace(eSSH, iobj, baseYcmd, dbname=None, debug=False):
         #       'total': fsa['FreeSpace']['total'],
         #       'free': fsa['FreeSpace']['free'],
         #       'percentfree': fsa['FreeSpace']['percentfree']}
-        
+
         # Make the packet
         packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                    ts=ts,
@@ -316,11 +316,11 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
     fsa = decodeAnswer(fs, debug=debug)
 
     # Now make the packet given the deserialized json answer
-    meas = ['FreeSpace']
+    meas = ['MachineStats']
     tags = {'host': iobj.host}
     # Fields from Yvette's answer that we want to record.
     #   Complicated because the storage tag doesn't match the returned tag
-    dbmapCPU = {'cpuUser': 'user', 
+    dbmapCPU = {'cpuUser': 'user',
                 'cpuSys': 'system',
                 'cpuIdle': 'idle',
                 'cpuIO': 'iowait'}
@@ -339,7 +339,7 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
                 gf.update({each: fsa['MachineCPU'][dbmapCPU[each]]})
             except KeyError:
                 pass
-        
+
         for oach in dbmapLoad.keys():
             try:
                 gf.update({each: fsa['MachineLoads'][dbmapLoad[oach]]})
@@ -366,7 +366,7 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
         if dbname is not None:
             # Actually write to the database to store for plotting
             dbase = utils.database.influxobj(dbname, connect=True)
-            dbase.writeToDB(packet)
+            dbase.writeToDB(packet, debug=True)
             dbase.closeDB()
     return packet
 
