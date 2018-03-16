@@ -361,6 +361,7 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
         packet = []
 
     if superdebug is True:
+        print(gf)
         print(packet)
     if packet != []:
         if dbname is not None:
