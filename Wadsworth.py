@@ -123,12 +123,12 @@ if __name__ == "__main__":
             utils.common.printPreamble(p, idict)
             # Semi-infinite loop
             while runner.halt is False:
-                # This is a common core function that handles the actions and 
+                # This is a common core function that handles the actions and
                 #   looping over each instrument.  We keep the main while
-                #   loop out here, though, so we can do stuff with the 
+                #   loop out here, though, so we can do stuff with the
                 #   results of the actions from all the instruments.
-                results = utils.common.instLooper(idict, runner, args, 
-                                                  actions, updateArguments, 
+                results = utils.common.instLooper(idict, runner, args,
+                                                  actions, updateArguments,
                                                   alarmtime=alarmtime)
                 # After all the instruments are done, take a big nap
                 if runner.halt is False:

@@ -25,7 +25,13 @@ import datetime as dt
 from .. import utils
 
 
-def actionBase(eSSH, iobj, baseYcmd, func, *args, **kwargs):
+def actionSSHBase(eSSH, iobj, baseYcmd, func, *args, **kwargs):
+    """
+    """
+    pass
+
+
+def actionBase(iobj, baseYCmd, func, *args, **kwargs):
     """
     """
     pass
