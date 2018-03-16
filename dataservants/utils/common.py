@@ -412,7 +412,8 @@ def instAction(each):
     return ans, estop
 
 
-def instLooper(idict, runner, args, actions, updateArguments, alarmtime=600):
+def instLooper(idict, runner, args, actions, updateArguments, dbname=None,
+               alarmtime=600):
     """
     Could bump the instrument loop out and back to the main calling function
     if we want to do stuff per-instrument rather than on all the instruments'
@@ -434,7 +435,7 @@ def instLooper(idict, runner, args, actions, updateArguments, alarmtime=600):
             # Arm an alarm that will stop this inner section
             #   in case one instrument starts to hog the show
             with malarms.Timeout(id_='InstLoop',
-                                seconds=alarmtime):
+                                 seconds=alarmtime):
                 iobj = idict[inst]
                 time.sleep(3)
 
@@ -446,11 +447,11 @@ def instLooper(idict, runner, args, actions, updateArguments, alarmtime=600):
                         # Open the SSH connection; SSHHandler
                         #   does all the hard stuff.
                         eSSH = mssh.SSHWrapper(host=iobj.host,
-                                                port=iobj.port,
-                                                username=iobj.user,
-                                                timeout=60,
-                                                password=iobj.passw,
-                                                connectOnInit=True)
+                                               port=iobj.port,
+                                               username=iobj.user,
+                                               timeout=60,
+                                               password=iobj.passw,
+                                               connectOnInit=True)
                         each.args = [eSSH] + each.args
                     else:
                         eSSH = None

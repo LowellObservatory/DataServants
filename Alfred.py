@@ -60,7 +60,7 @@ def defineActions():
     return actions
 
 
-def updateArguments(actions, iobj, args):
+def updateArguments(actions, iobj, args, dbname):
     """
     """
     # Update the functions with proper arguments.
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     idict, args, runner = alfred.valet.beginValeting(procname=mynameis,
                                                      logfile=True)
 
-    # Quick renaming to keep line length under control    
+    # Quick renaming to keep line length under control
     malarms = utils.multialarm
 
     # Actually define the function calls/references to functions
@@ -132,12 +132,13 @@ if __name__ == "__main__":
 
             # Semi-infinite loop
             while runner.halt is False:
-                # This is a common core function that handles the actions and 
+                # This is a common core function that handles the actions and
                 #   looping over each instrument.  We keep the main while
-                #   loop out here, though, so we can do stuff with the 
+                #   loop out here, though, so we can do stuff with the
                 #   results of the actions from all the instruments.
-                results = utils.common.instLooper(idict, runner, args, 
-                                                  actions, updateArguments, 
+                results = utils.common.instLooper(idict, runner, args,
+                                                  actions, updateArguments,
+                                                  dbname=dbname,
                                                   alarmtime=alarmtime)
 
                 # After all the instruments are done, take a big nap
