@@ -423,7 +423,7 @@ def instLooper(idict, runner, args, actions, updateArguments, dbname=None,
         iobj = idict[inst]
 
         # Update all function arguments with new iobj
-        cactions = updateArguments(actions, iobj, args)
+        cactions = updateArguments(actions, iobj, args, dbname)
 
         # Pre-fill our expected answers so we can see fails
         allanswers = [None]*len(cactions)
