@@ -423,7 +423,7 @@ def instLooper(idict, runner, args, actions, updateArguments, dbname=None,
         iobj = idict[inst]
 
         # Update all function arguments with new iobj
-        cactions = updateArguments(actions, iobj, args, dbname)
+        cactions = updateArguments(actions, iobj, args, dbname=dbname)
 
         # Pre-fill our expected answers so we can see fails
         allanswers = [None]*len(cactions)
@@ -461,6 +461,7 @@ def instLooper(idict, runner, args, actions, updateArguments, dbname=None,
 
                     # Perform the action
                     ans, estop = instAction(each)
+                    print(ans)
 
                     # If it actually worked, close the connection
                     if eSSH is not None:

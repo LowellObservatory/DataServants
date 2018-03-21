@@ -212,7 +212,7 @@ def beginTidying(noprint=False):
                                                   window=args.rangeNew,
                                                   comptype='newer',
                                                   debug=args.debug)
-                rjson.update({"DirsNew": ndirs})
+                rjson.update({"DirsNew": (len(ndirs), ndirs)})
 
             if args.old is True:
                 odirs = utils.files.getDirListing(vdir,
@@ -222,7 +222,7 @@ def beginTidying(noprint=False):
                                                   comptype='older',
                                                   debug=args.debug)
 
-                rjson.update({"DirsOld": odirs})
+                rjson.update({"DirsOld": (len(odirs), odirs})
 
             # Check for EXCLUSIONARY actions (there can be only one)
             if args.clean is True:

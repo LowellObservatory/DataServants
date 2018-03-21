@@ -56,7 +56,7 @@ def rStringStats(baseYcmd):
     return fcmd
 
 
-def commandYvetteSimple(eSSH, baseYcmd, iobj, cmd, debug=False):
+def commandYvetteSimple(eSSH, baseYcmd, args, iobj, cmd, debug=False):
     """
     A simplifier to cut down on copy-and-paste-itis for commands that
     don't need extra processing to store results
@@ -74,10 +74,10 @@ def commandYvetteSimple(eSSH, baseYcmd, iobj, cmd, debug=False):
     # Command menu
     if cmd == 'findnew':
         fcmd = rStringLookNew(baseYcmd, iobj.srcdir, iobj.dirmask,
-                              newage=iobj.rangeNew)
+                              newage=args.rangeNew)
     elif cmd == 'findold':
         fcmd = rStringLookOld(baseYcmd, iobj.srcdir, iobj.dirmask,
-                              newage=iobj.rangeNew, oldage=iobj.rangeOld)
+                              newage=args.rangeOld, oldage=args.oldest)
     elif cmd == 'verify':
         fcmd = rStringVerify(baseYcmd, iobj.srcdir)
     else:
@@ -91,7 +91,7 @@ def commandYvetteSimple(eSSH, baseYcmd, iobj, cmd, debug=False):
     return fnd
 
 
-def actionSpace(eSSH, iobj, baseYcmd, dbname=None, debug=False):
+def actionSpace(eSSH, baseYcmd, iobj, dbname=None, debug=False):
     """Check free space at the specified directory.
 
     Uses a `Paramiko <http://docs.paramiko.org/en/latest/>`_ SSH
@@ -105,13 +105,13 @@ def actionSpace(eSSH, iobj, baseYcmd, dbname=None, debug=False):
         eSSH (:class:`dataservants.utils.ssh.SSHHandler`)
             Class describing parameters needed to open SSH connection to
             instantiated class's host.
-        iobj (:class:`dataservants.utils.common.InstrumentHost`)
-            Class containing instrument machine target information
-            populated via :func:`dataservants.utils.confparsers.parseInstConf`.
         baseYcmd (:obj:`str`)
             String describing how to properly start Yvette on the target.
             Should include any necessary EXPORT statements before calling
             python to take care of any environment problems.
+        iobj (:class:`dataservants.utils.common.InstrumentHost`)
+            Class containing instrument machine target information
+            populated via :func:`dataservants.utils.confparsers.parseInstConf`.
         dbname (:obj:`str`, optional)
             InfluxDB database name in which to write the results. Defaults to
             None, in which case the InfluxDB packet is constructed but

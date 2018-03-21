@@ -61,7 +61,7 @@ def defineActions():
     return actions
 
 
-def updateArguments(actions, iobj, args, dbname):
+def updateArguments(actions, iobj, args, dbname=None):
     """
     """
     # Update the functions with proper arguments.

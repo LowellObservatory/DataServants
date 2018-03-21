@@ -25,6 +25,9 @@ from dataservants import yvette
 def defineActions():
     """
     """
+    # Renaming import to keep line length sensible
+    yvetteR = yvette.remote
+
     # Set up the desired actions using a helpful class to pass things
     #   to each function/process more clearly.
     #
@@ -38,32 +41,44 @@ def defineActions():
                                            args=[],
                                            kwargs={})
 
-    act2 = utils.common.processDescription(func=yvetteR.actionLook,
+    act2 = utils.common.processDescription(func=yvetteR.commandYvetteSimple,
                                            timedelay=3.,
                                            maxtime=120,
                                            needSSH=True,
                                            args=[],
                                            kwargs={})
 
-    actions = [act1, act2]
+    # It's not a typo here to repeat act2 twice; it's true function is
+    #   controlled via the arguments we set shortly before calling
+    act3 = utils.common.processDescription(func=yvetteR.commandYvetteSimple,
+                                           timedelay=3.,
+                                           maxtime=120,
+                                           needSSH=True,
+                                           args=[],
+                                           kwargs={})
+
+    actions = [act1, act2, act3]
 
     return actions
 
 
-def updateArguments(actions, iobj, args):
+def updateArguments(actions, iobj, args, dbname=None):
     """
     """
     # Update the functions with proper arguments.
     #   (opened SSH connection is added just before calling)
-    # act1 == checkFreeSpace
-    actions[0].args = [iobj, baseYcmd]
-    actions[0].kwargs = {'dbname': None,
+    # act1 == actionSpace
+    actions[0].args = [baseYcmd, iobj]
+    actions[0].kwargs = {'dbname': dbname,
                          'debug': args.debug}
 
-    # act2 == Look for new directories
-    actions[1].args = [iobj, baseYcmd]
-    actions[1].kwargs = {'age': args.rangeNew,
-                         'debug': args.debug}
+    # act2 == commandYvetteSimple (cmd=findnew)
+    actions[1].args = [baseYcmd, args, iobj, 'findnew']
+    actions[1].kwargs = {'debug': args.debug}
+
+    # act3 == commandYvetteSimple (cmd=findold)
+    actions[2].args = [baseYcmd, args, iobj, 'findold']
+    actions[2].kwargs = {'debug': args.debug}
 
     return actions
 
@@ -101,7 +116,10 @@ if __name__ == "__main__":
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
     idict, args, runner = wadsworth.buttle.beginButtling(procname=mynameis,
-                                                         logfile=True)
+                                                         logfile=False)
+
+    # Debugging hack
+    args.debug = True
 
     # Set up the desired actions in the main loop, using a helpful class
     #   to pass things to each function/process more clearly

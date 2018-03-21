@@ -41,6 +41,10 @@ def parseArguments(prog=None):
                         help='Age (days) beyond which directory is cleared',
                         default=30, nargs="?")
 
+    parser.add_argument('--oldest', type=int,
+                        help='Age (days) beyond which to ignore directories',
+                        default=7300, nargs="?")
+
     parser.add_argument('-l', '--log', metavar='/path/to/file.log', type=str,
                         help='File for logging of information/status messages',
                         default='/tmp/wadsworth.log', nargs='?')
