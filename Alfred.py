@@ -35,7 +35,7 @@ def defineActions():
     #   Note that we need to also update things per-instrument when
     #   inside the main loop via updateArguments()...it's just helpful to
     #   do the definitions out here for the constants and for clarity.
-    act1 = utils.common.processDescription(func=yvetteR.actionPing,
+    act1 = utils.common.processDescription(func=alfred.tasks.actionPing,
                                            timedelay=3.,
                                            maxtime=120,
                                            needSSH=False,

@@ -25,133 +25,70 @@ import datetime as dt
 from .. import utils
 
 
-def actionSSHBase(eSSH, iobj, baseYcmd, func, *args, **kwargs):
-    """
-    """
-    pass
+def rStringVerify(baseYcmd, ldir):
+    fcmd = "%s --verify %s " % (baseYcmd, ldir)
+    return fcmd
 
 
-def actionBase(iobj, baseYCmd, func, *args, **kwargs):
-    """
-    """
-    pass
-
-
-def actionLook(eSSH, iobj, baseYcmd, age=2, debug=False):
-    """Look for directories matching a specified format younger than X days old.
-
-    Uses a `Paramiko <http://docs.paramiko.org/en/latest/>`_ SSH
-    connection to execute commands to a :obj:`dataservants.yvette` instance
-    running on a remote target machine.
-
-    The main function called on the remote side is
-    :func:`dataservants.utils.files.getDirListing`.
-
-    Args:
-        eSSH (:class:`dataservants.utils.ssh.SSHHandler`)
-            Class describing parameters needed to open SSH connection to
-            instantiated class's host.
-        iobj (:class:`dataservants.utils.common.InstrumentHost`)
-            Class containing instrument machine target information
-            populated via :func:`dataservants.utils.confparsers.parseInstConf`.
-        baseYcmd (:obj:`str`)
-            String describing how to properly start Yvette on the target.
-            Should include any necessary EXPORT statements before calling
-            python to take care of any environment problems.
-        age (:obj:`int`, optional)
-            Age in days to consider a directory 'new' and return its path.
-            Defaults to 2.
-        debug (:obj:`bool`)
-            Bool to trigger additional debugging outputs. Defaults to False.
-
-    Returns:
-        fnd (:obj:`dict`)
-            Dictionary of results, containing a single key :obj:`DirsNew`
-            linked to a list of directories newer/younger than :obj:`age`.
-
-            .. code-block:: python
-
-                fnd = {"DirsNew":
-                       ["/mnt/lemi/lois/20180305a",
-                        "/mnt/lemi/lois/20180306a"]}
-    """
+def rStringLookNew(baseYcmd, bdir, dirmask, newage=2):
     fcmd = "%s -l %s -r %s --rangeNew %d" % (baseYcmd,
-                                             iobj.srcdir,
-                                             iobj.dirmask,
-                                             age)
-    nd = eSSH.sendCommand(fcmd, debug=debug)
+                                             bdir,
+                                             dirmask,
+                                             newage)
+    return fcmd
 
+
+def rStringLookOld(baseYcmd, bdir, dirmask, newage=2, oldage=365):
+    fcmd = "%s -o %s -r %s --rangeNew %d --rangeOld %d" % (baseYcmd,
+                                                           bdir,
+                                                           dirmask,
+                                                           newage, oldage)
+    return fcmd
+
+
+def rStringSpace(baseYcmd, mdir):
+    fcmd = "%s -f %s" % (baseYcmd, mdir)
+    return fcmd
+
+
+def rStringStats(baseYcmd):
+    fcmd = "%s --cpumem" % (baseYcmd)
+    return fcmd
+
+
+def commandYvetteSimple(eSSH, baseYcmd, iobj, cmd, debug=False):
+    """
+    A simplifier to cut down on copy-and-paste-itis for commands that
+    don't need extra processing to store results
+
+        In this case, the return value from Yvette will look like this:
+        .. code-block:: python
+
+            fnd = {"DirsNew":
+                    ["/mnt/lemi/lois/20180305a",
+                    "/mnt/lemi/lois/20180306a"]}
+    """
+    # Make comparisons a bit easier
+    cmd = cmd.lower()
+
+    # Command menu
+    if cmd == 'findnew':
+        fcmd = rStringLookNew(baseYcmd, iobj.srcdir, iobj.dirmask,
+                              newage=iobj.rangeNew)
+    elif cmd == 'findold':
+        fcmd = rStringLookOld(baseYcmd, iobj.srcdir, iobj.dirmask,
+                              newage=iobj.rangeNew, oldage=iobj.rangeOld)
+    elif cmd == 'verify':
+        fcmd = rStringVerify(baseYcmd, iobj.srcdir)
+    else:
+        print("Command unknown! Ignoring.")
+        return None
+
+    # If we got here, the command is valid so we'll send it
+    nd = eSSH.sendCommand(fcmd, debug=debug)
     fnd = decodeAnswer(nd)
 
     return fnd
-
-
-def actionPing(iobj, dbname=None, debug=False):
-    """Ping a remote machine and record its response.
-
-    Pings a remote machine, recording its average response time if that
-    time is within the number of seconds indicated by timeout.
-
-    The main function called on the remote side is
-    :func:`dataservants.utils.pingaling.ping`.
-
-    Args:
-        iobj (:class:`dataservants.utils.common.InstrumentHost`)
-            Class containing instrument machine target information
-            populated via :func:`dataservants.utils.confparsers.parseInstConf`.
-        dbname (:obj:`str`, optional)
-            InfluxDB database name in which to write the results. Defaults to
-            None, in which case the InfluxDB packet is constructed but
-            not written anywhere.
-        debug (:obj:`bool`)
-            Bool to trigger additional debugging outputs. Defaults to False.
-
-    Returns:
-        packet (:obj:`list` of :obj:`dicts`)
-            Dictionary in the style of an InfluxDB data packet, containing
-            measurement name, timestamp, tag(s), and the actual values.
-            The packet's main key is :obj:`PingResults` and the values
-            are in milliseconds (ms) for 'ping' and integer for 'dropped'.
-
-            .. code-block:: python
-
-                packet = [{'measurement': 'PingResults',
-                           'tags': {'host': 'rc2'},
-                           'time': datetime.datetime(2018, 3, 6,
-                                                     21, 51, 49, 972034),
-                           'fields': {'ping': 2.7909278869628906,
-                                      'dropped': 0}}]
-    """
-    # In case of emergency
-    superdebug = False
-
-    # Timeouts and stuff are handled elsewhere in here
-    #   BUT! timeout must be an int >= 1 (second)
-    pings, drops = utils.pingaling.ping(iobj.host,
-                                        port=iobj.port,
-                                        timeout=3)
-    ts = dt.datetime.utcnow()
-    meas = ['PingResults']
-    tags = {'host': iobj.host}
-    # InfluxDB can only store one datatype per field, so no NaN or null
-    if np.isnan(pings) is True:
-        pings = -9999.
-    fs = {'ping': pings, 'dropped': drops}
-    # Construct our packet
-    packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                               ts=ts,
-                                               tags=tags,
-                                               fields=fs)
-
-    if superdebug is True:
-        print(packet)
-    if packet != []:
-        if dbname is not None:
-            # Actually write to the database to store for plotting
-            dbase = utils.database.influxobj(dbname, connect=True)
-            dbase.writeToDB(packet)
-            dbase.closeDB()
-    return packet
 
 
 def actionSpace(eSSH, iobj, baseYcmd, dbname=None, debug=False):
@@ -206,7 +143,7 @@ def actionSpace(eSSH, iobj, baseYcmd, dbname=None, debug=False):
     # In case of emergency
     superdebug = False
 
-    fcmd = "%s -f %s" % (baseYcmd, iobj.srcdir)
+    fcmd = rStringSpace(baseYcmd, iobj.srcdir)
     fs = eSSH.sendCommand(fcmd)
     # Timestamp of when this all (just) occured
     ts = dt.datetime.utcnow()
@@ -313,7 +250,7 @@ def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
     # In case of emergency
     superdebug = False
 
-    fcmd = "%s --cpumem" % (baseYcmd)
+    fcmd = rStringStats(baseYcmd)
     fs = eSSH.sendCommand(fcmd, debug=debug)
     # Timestamp of when this all (just) occured
     ts = dt.datetime.utcnow()
