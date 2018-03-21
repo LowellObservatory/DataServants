@@ -72,12 +72,12 @@ def updateArguments(actions, iobj, args, dbname=None):
                          'debug': args.debug}
 
     # act2 == check free space
-    actions[1].args = [iobj, baseYcmd]
+    actions[1].args = [baseYcmd, iobj]
     actions[1].kwargs = {'dbname': dbname,
                          'debug': args.debug}
 
     # act3 == check target CPU/RAM stats
-    actions[2].args = [iobj, baseYcmd]
+    actions[2].args = [baseYcmd, iobj]
     actions[2].kwargs = {'dbname': dbname,
                          'debug': args.debug}
 
