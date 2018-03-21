@@ -65,8 +65,8 @@ def commandYvetteSimple(eSSH, baseYcmd, args, iobj, cmd, debug=False):
         .. code-block:: python
 
             fnd = {"DirsNew":
-                    ["/mnt/lemi/lois/20180305a",
-                    "/mnt/lemi/lois/20180306a"]}
+                    (2, ["/mnt/lemi/lois/20180305a",
+                    "/mnt/lemi/lois/20180306a"])}
     """
     # Make comparisons a bit easier
     cmd = cmd.lower()
