@@ -8,9 +8,7 @@
 #
 #  @author: rhamilton
 
-"""One line description of module.
-
-Further description.
+"""Tasks that Alfred nominally does that don't involve Yvette at all.
 """
 
 from __future__ import division, print_function, absolute_import
