@@ -28,6 +28,7 @@ def defineActions():
     """
     # Renaming import to keep line length sensible
     yvetteR = yvette.remote
+    alfredT = alfred.tasks
 
     # Set up the desired actions using a helpful class to pass things
     #   to each function/process more clearly.
@@ -35,7 +36,7 @@ def defineActions():
     #   Note that we need to also update things per-instrument when
     #   inside the main loop via updateArguments()...it's just helpful to
     #   do the definitions out here for the constants and for clarity.
-    act1 = utils.common.processDescription(func=alfred.tasks.actionPing,
+    act1 = utils.common.processDescription(func=alfredT.actionPing,
                                            timedelay=3.,
                                            maxtime=120,
                                            needSSH=False,
