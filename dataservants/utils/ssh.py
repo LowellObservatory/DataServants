@@ -98,7 +98,7 @@ class SSHWrapper():
                 self.ssh = None
                 print("SSH connection close failed? WTF?")
 
-    def sendCommand(self, command, timeout=10., debug=False):
+    def sendCommand(self, command, timeout=1000., debug=False):
         """
         """
         # Use this to directly print out stdout/stderr
@@ -109,36 +109,22 @@ class SSHWrapper():
             try:
                 with multialarm.Timeout(id_="SSHCmd", seconds=timeout):
                     stdin, stdout, stderr = self.ssh.exec_command(command)
-                    # No inputs allowed
+                    # Close stdin since we're not using it
                     stdin.close()
 
-                    # Prepare the return buffers and define how many bytes
-                    #   at a time we'll try to digest waiting for the
-                    #   buffers to reach EOF
+                    # Just use the channel object in a simple way.
+                    #   Went through many itterations with buffered reads,
+                    #   all of which failed eventually in some obscure way.
+                    #   This is way easier for now and this should be visited
+                    #   if things start to drop out in the future.
                     stdout_data = []
-                    stderr_data = []
-                    nbytes = 1024.
+                    for line in stdout:
+                        stdout_data.append(line)
 
-                    while not stdout.channel.exit_status_ready():
-                        ans = stdout.channel.recv(nbytes)
-                        stdout_data.append(str(ans, "utf8"))
-
-                    # Get the exit status
-                    ses = stdout.channel.exit_status
-                    # Collapse into just a string
                     stdout_data = "".join(stdout_data)
+                    stderr_data = []
+                    ses = stdout.channel.exit_status
 
-                    while not stderr.channel.exit_status_ready():
-                        err = stderr.channel.recv_stderr(nbytes)
-                        stderr_data.append(str(err, "utf8"))
-                    stderr_data = "".join(stderr_data)
-
-                    if superdebug is True:
-                        print("exit status:", ses)
-                        print("stdout:")
-                        print(stdout_data)
-                        print("stderr:")
-                        print(stderr_data)
             except multialarm.TimeoutError as err:
                 if err.id_ == "SSHCmd":
                     print("SSH Command Timed Out!")
