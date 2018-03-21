@@ -39,10 +39,10 @@ def rStringLookNew(baseYcmd, bdir, dirmask, newage=2):
 
 
 def rStringLookOld(baseYcmd, bdir, dirmask, newage=2, oldage=365):
-    fcmd = "%s -o %s -r %s --rangeNew %d --rangeOld %d" % (baseYcmd,
-                                                           bdir,
-                                                           dirmask,
-                                                           newage, oldage)
+    fcmd = "%s -o %s -r %s --rangeOld %d --oldest %d" % (baseYcmd,
+                                                         bdir,
+                                                         dirmask,
+                                                         newage, oldage)
     return fcmd
 
 
