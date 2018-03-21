@@ -118,12 +118,18 @@ class SSHWrapper():
                     #   This is way easier for now and this should be visited
                     #   if things start to drop out in the future.
                     stdout_data = []
+                    # If stuff gets put onto stderr, it could block...I think.
                     for line in stdout:
+                        if superdebug is True:
+                            print(line)
                         stdout_data.append(line)
 
                     stdout_data = "".join(stdout_data)
                     stderr_data = []
                     ses = stdout.channel.exit_status
+
+                    stdout.close()
+                    stderr.close()
 
             except multialarm.TimeoutError as err:
                 if err.id_ == "SSHCmd":

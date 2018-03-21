@@ -222,7 +222,7 @@ def beginTidying(noprint=False):
                                                   comptype='older',
                                                   debug=args.debug)
 
-                rjson.update({"DirsOld": (len(odirs), odirs})
+                rjson.update({"DirsOld": (len(odirs), odirs)})
 
             # Check for EXCLUSIONARY actions (there can be only one)
             if args.clean is True:
