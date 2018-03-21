@@ -190,7 +190,7 @@ def actionSpace(eSSH, baseYcmd, iobj, dbname=None, debug=False):
     return packet
 
 
-def actionStats(eSSH, iobj, baseYcmd, dbname=None, debug=False):
+def actionStats(eSSH, baseYcmd, iobj, dbname=None, debug=False):
     """Check CPU and RAM information on the remote machine.
 
     Uses a `Paramiko <http://docs.paramiko.org/en/latest/>`_ SSH

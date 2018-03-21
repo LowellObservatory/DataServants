@@ -412,8 +412,8 @@ def instAction(each):
     return ans, estop
 
 
-def instLooper(idict, runner, args, actions, updateArguments, dbname=None,
-               alarmtime=600):
+def instLooper(idict, runner, args, actions, updateArguments,
+               dbname=None, alarmtime=600):
     """
     Could bump the instrument loop out and back to the main calling function
     if we want to do stuff per-instrument rather than on all the instruments'
