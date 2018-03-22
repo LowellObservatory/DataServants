@@ -47,7 +47,7 @@ class SSHWrapper():
         #   BUT, that timeout is pretty janky and doesn't always
         #   work or even timeout properly so that's why we have
         #   a multialarm.Timeout wrapper on everything here below
-        sshitimeout = 5
+        sshitimeout = 10
 
         # Counter and flag related to retries
         ctries = 0
@@ -98,7 +98,7 @@ class SSHWrapper():
                 self.ssh = None
                 print("SSH connection close failed? WTF?")
 
-    def sendCommand(self, command, timeout=1000., debug=False):
+    def sendCommand(self, command, timeout=30., debug=False):
         """
         """
         # Use this to directly print out stdout/stderr
