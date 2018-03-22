@@ -89,6 +89,8 @@ class SSHWrapper():
                     time.sleep(3)
 
     def closeConnection(self, timeout=3):
+        """
+        """
         try:
             with multialarm.Timeout(id_="SSHClose", seconds=timeout):
                 if self.ssh is not None:
@@ -97,6 +99,44 @@ class SSHWrapper():
             if err.id_ == "SSHClose":
                 self.ssh = None
                 print("SSH connection close failed? WTF?")
+
+    def openSFTP(self, timeout=30.):
+        """
+        """
+        try:
+            with multialarm.Timeout(id_="SFTPOpen", seconds=timeout):
+                if self.ssh is not None:
+                    self.sftp = self.ssh.open_sftp()
+        except multialarm.TimeoutError as err:
+            if err.id_ == "SFTPOpen":
+                self.sftp = None
+                print("Could not open SFTP connection")
+
+    def closeSFTP(self, timeout=30.):
+        """
+        """
+        try:
+            with multialarm.Timeout(id_="SFTPClose", seconds=timeout):
+                if self.sftp is not None:
+                    self.sftp.close()
+                    self.sftp = None
+        except multialarm.TimeoutError as err:
+            if err.id_ == "SFTPClose":
+                self.sftp = None
+                print("Could not close SFTP connection")
+
+    def getFile(self, lfile, rfile, timeout=120.):
+        """
+        """
+        try:
+            with multialarm.Timeout(id_="SFTPXfer", seconds=timeout):
+                if self.sftp is not None:
+                    # Transfer the file from the remote to local locations
+                    self.sftp.get(rfile, lfile)
+        except multialarm.TimeoutError as err:
+            if err.id_ == "SFTPXfer":
+                self.sftp = None
+                print("File transfer took too long!")
 
     def sendCommand(self, command, timeout=30., debug=False):
         """
