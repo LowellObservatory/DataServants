@@ -25,6 +25,30 @@ from collections import OrderedDict
 from .. import utils
 
 
+def MegaMaid(args, loc):
+    """
+    Create a whole buttload of data manifests, one by one.
+
+    This wraps up a lot of individual stuff into one easy-to-call function.
+    """
+    oldies = utils.files.getDirListing(loc, dirmask=args.dirmask,
+                                       window=args.rangeOld,
+                                       oldest=args.oldest,
+                                       debug=args.debug)
+
+    for odir in oldies:
+        hfname = args.dir + "/AListofHashes." + args.hashtype
+        hashes = makeManifest(odir, htype=args.hashtype,
+                              filetype=args.filetype,
+                              debug=args.debug)
+        status = utils.hashes.writeHashFile(hashes, hfname, debug=args.debug)
+        if args.debug is True:
+            if status is True:
+                print("Wrote %s" % (hfname))
+            else:
+                print("Failed to write %s!" % (hfname))
+
+
 def getListFilesSizes(mdir, filetype="*.fits", debug=False):
     """Get a list of directories and the size of each file matching filetype.
 
@@ -228,7 +252,8 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
             List of files in the given directory ``mdir`` that do not match
             the hashfile found in that same ``mdir``
     """
-    ff, sizes = getListFilesSizes(mdir, filetype=filetype, debug=debug)
+    # ff, sizes = getListFilesSizes(mdir, filetype=filetype, debug=debug)
+    ff, _ = getListFilesSizes(mdir, filetype=filetype, debug=debug)
 
     # Read in the existing hash file
     hfname = mdir + "/AListofHashes." + htype
