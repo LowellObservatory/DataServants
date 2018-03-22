@@ -239,6 +239,15 @@ def beginTidying(noprint=False):
                 rjson.update({"HashChecks": {"MissingFiles": broken[0],
                                              "UnhashedFiles": broken[1],
                                              "DifferentFiles": broken[2]}})
+
+            if args.MegaMaid is True:
+                res = filehashing.MegaMaid(vdir, dirmask=args.dirmask,
+                                           filetype=args.filetype,
+                                           youngest=args.rangeOld,
+                                           oldest=args.oldest,
+                                           htype=args.htype,
+                                           debug=args.debug)
+                rjson.update({"MegaMaid": res})
         else:
             print("%s doesn't exist or isnt' readable" % (args.dir))
 

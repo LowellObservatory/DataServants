@@ -110,6 +110,12 @@ def setup_arguments(prog=None):
                         help=argp.SUPPRESS,
                         default=False)
 
+    # For creating large numbers of manifests
+    grp3 = parser.add_mutually_exclusive_group(required=False)
+    grp3.add_argument('--MegaMaid', action="store_true",
+                      help=argp.SUPPRESS,
+                      default=False)
+
     args = parser.parse_args()
 
     return parser, args

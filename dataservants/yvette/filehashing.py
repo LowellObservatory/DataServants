@@ -25,28 +25,38 @@ from collections import OrderedDict
 from .. import utils
 
 
-def MegaMaid(args, loc):
+def MegaMaid(loc, dirmask="[0-9]{8}.*", filetype="*.fits",
+             youngest=20, oldest=7300, htype='xx64', debug=False):
     """
     Create a whole buttload of data manifests, one by one.
 
     This wraps up a lot of individual stuff into one easy-to-call function.
     """
-    oldies = utils.files.getDirListing(loc, dirmask=args.dirmask,
-                                       window=args.rangeOld,
-                                       oldest=args.oldest,
-                                       debug=args.debug)
+    oldies = utils.files.getDirListing(loc, dirmask=dirmask,
+                                       window=youngest,
+                                       oldest=oldest,
+                                       comptype='older',
+                                       debug=debug)
+
+    results = {}
 
     for odir in oldies:
-        hfname = args.dir + "/AListofHashes." + args.hashtype
-        hashes = makeManifest(odir, htype=args.hashtype,
-                              filetype=args.filetype,
-                              debug=args.debug)
-        status = utils.hashes.writeHashFile(hashes, hfname, debug=args.debug)
-        if args.debug is True:
-            if status is True:
-                print("Wrote %s" % (hfname))
-            else:
-                print("Failed to write %s!" % (hfname))
+        hfname = loc + "/AListofHashes." + htype
+        hashes = makeManifest(odir, htype=htype,
+                              filetype=filetype,
+                              debug=debug)
+        if hashes is not None:
+            status = utils.hashes.writeHashFile(hashes, hfname,
+                                                debug=debug)
+        else:
+            status = False
+
+        cres = {hfname: status}
+        results.update(cres)
+        if debug is True:
+            print(cres)
+
+    return results
 
 
 def getListFilesSizes(mdir, filetype="*.fits", debug=False):
