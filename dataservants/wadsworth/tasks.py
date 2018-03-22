@@ -16,8 +16,43 @@ to some extra processing logic to make sure things are all ok.
 
 from __future__ import division, print_function, absolute_import
 
-import sys
+from .. import utils
+from .. import yvette
 
 
-def func1(args):
+def getFile(eSSH, remote, local):
     pass
+
+
+def cleanRemote(eSSH, baseYcmd, args, iobj, lpath):
+    """
+    """
+    # Rename to control line length
+    yvetteR = yvette.remote
+
+    # Get the list of "old" files
+    getOld = utils.common.processDescription(func=yvetteR.commandYvetteSimple,
+                                             timedelay=3.,
+                                             maxtime=120,
+                                             needSSH=True,
+                                             args=[baseYcmd, args,
+                                                   iobj, 'findold'],
+                                             kwargs={'debug': args.debug})
+    # Actually call the function
+    ans, _ = utils.common.instAction(getOld)
+
+    # Define the verification function and arguments, with a quick hack first
+    oiobjsrc = iobj.srcdir
+    verify = utils.common.processDescription(func=yvetteR.commandYvetteSimple,
+                                             timedelay=3.,
+                                             maxtime=120,
+                                             needSSH=True,
+                                             args=[baseYcmd, args,
+                                                   iobj, 'verify'],
+                                             kwargs={'debug': args.debug})
+
+    # Make Yvette verify these directories on her side
+    for each in ans:
+        iobj.srcdir = each
+        vans, _ = utils.common.instAction(verify)
+        print(vans)
