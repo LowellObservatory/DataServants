@@ -41,7 +41,7 @@ def MegaMaid(loc, dirmask="[0-9]{8}.*", filetype="*.fits",
     results = {}
 
     for odir in oldies:
-        hfname = loc + "/AListofHashes." + htype
+        hfname = odir + "/AListofHashes." + htype
         hashes = makeManifest(odir, htype=htype,
                               filetype=filetype,
                               debug=debug)

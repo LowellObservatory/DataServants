@@ -241,11 +241,11 @@ def beginTidying(noprint=False):
                                              "DifferentFiles": broken[2]}})
 
             if args.MegaMaid is True:
-                res = filehashing.MegaMaid(vdir, dirmask=args.dirmask,
+                res = filehashing.MegaMaid(vdir, dirmask=args.regexp,
                                            filetype=args.filetype,
                                            youngest=args.rangeOld,
                                            oldest=args.oldest,
-                                           htype=args.htype,
+                                           htype=args.hashtype,
                                            debug=args.debug)
                 rjson.update({"MegaMaid": res})
         else:
