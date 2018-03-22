@@ -48,9 +48,7 @@ def defineActions():
                                            args=[],
                                            kwargs={})
 
-    # It's not a typo here to repeat act2 twice; it's true function is
-    #   controlled via the arguments we set shortly before calling
-    act3 = utils.common.processDescription(func=yvetteR.commandYvetteSimple,
+    act3 = utils.common.processDescription(func=wadsworth.tasks.cleanRemote,
                                            timedelay=3.,
                                            maxtime=120,
                                            needSSH=True,
@@ -77,8 +75,8 @@ def updateArguments(actions, iobj, args, dbname=None):
     actions[1].kwargs = {'debug': args.debug}
 
     # act3 == commandYvetteSimple (cmd=findold)
-    actions[2].args = [baseYcmd, args, iobj, 'findold']
-    actions[2].kwargs = {'debug': args.debug}
+    actions[2].args = [baseYcmd, args, iobj]
+    actions[2].kwargs = {}
 
     return actions
 
@@ -91,7 +89,7 @@ if __name__ == "__main__":
     pidpath = '/tmp/'
 
     # InfluxDB database name to store stuff in
-    dbname = 'LIGInstruments'
+    dbname = None
 
     # Note: We need to prepend the PATH setting here because some hosts
     #   (all recent OSes, really) have a more stringent SSHd config

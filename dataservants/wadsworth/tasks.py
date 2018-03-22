@@ -24,7 +24,7 @@ def getFile(eSSH, remote, local):
     pass
 
 
-def cleanRemote(eSSH, baseYcmd, args, iobj, lpath):
+def cleanRemote(eSSH, baseYcmd, args, iobj):
     """
     """
     # Rename to control line length
@@ -35,11 +35,12 @@ def cleanRemote(eSSH, baseYcmd, args, iobj, lpath):
                                              timedelay=3.,
                                              maxtime=120,
                                              needSSH=True,
-                                             args=[baseYcmd, args,
+                                             args=[eSSH, baseYcmd, args,
                                                    iobj, 'findold'],
                                              kwargs={'debug': args.debug})
     # Actually call the function
     ans, _ = utils.common.instAction(getOld)
+    print(ans)
 
     # Define the verification function and arguments, with a quick hack first
     oiobjsrc = iobj.srcdir
@@ -47,12 +48,13 @@ def cleanRemote(eSSH, baseYcmd, args, iobj, lpath):
                                              timedelay=3.,
                                              maxtime=120,
                                              needSSH=True,
-                                             args=[baseYcmd, args,
+                                             args=[eSSH, baseYcmd, args,
                                                    iobj, 'verify'],
                                              kwargs={'debug': args.debug})
 
     # Make Yvette verify these directories on her side
-    for each in ans:
+    for each in ans['DirsOld'][1]:
         iobj.srcdir = each
+        print("Getting Yvette to verify %s on %s" % (each, iobj.host))
         vans, _ = utils.common.instAction(verify)
         print(vans)
