@@ -39,7 +39,7 @@ def parseArguments(prog=None):
 
     parser.add_argument('--rangeOld', type=int,
                         help='Age (days) beyond which directory is cleared',
-                        default=30, nargs="?")
+                        default=21, nargs="?")
 
     parser.add_argument('--oldest', type=int,
                         help='Age (days) beyond which to ignore directories',

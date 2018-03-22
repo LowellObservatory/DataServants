@@ -457,7 +457,7 @@ def instLooper(idict, runner, args, actions, updateArguments,
                         eSSH = None
 
                     if args.debug is True:
-                        print("\nCalling %s" % (str(each.func)))
+                        print("Calling %s" % (str(each.func)))
 
                     # Perform the action
                     ans, estop = instAction(each)
