@@ -35,6 +35,7 @@ def defineActions():
     #   inside the main loop via updateArguments()...it's just helpful to
     #   do the definitions out here for the constants and for clarity.
     act1 = utils.common.processDescription(func=yvetteR.actionSpace,
+                                           name='CheckFreeSpace',
                                            timedelay=3.,
                                            maxtime=120,
                                            needSSH=True,
@@ -42,6 +43,7 @@ def defineActions():
                                            kwargs={})
 
     act2 = utils.common.processDescription(func=yvetteR.commandYvetteSimple,
+                                           name='FindNewDirs',
                                            timedelay=3.,
                                            maxtime=120,
                                            needSSH=True,
@@ -49,8 +51,9 @@ def defineActions():
                                            kwargs={})
 
     act3 = utils.common.processDescription(func=wadsworth.tasks.cleanRemote,
+                                           name='CleanOldData',
                                            timedelay=3.,
-                                           maxtime=120,
+                                           maxtime=600,
                                            needSSH=True,
                                            args=[],
                                            kwargs={})
@@ -105,10 +108,10 @@ if __name__ == "__main__":
     baseYcmd += ' '
 
     # Interval between successive runs of the instrument polling (seconds)
-    bigsleep = 600
+    bigsleep = 60
 
     # Total time for entire set of actions per instrument
-    alarmtime = 600
+    alarmtime = 1000
 
     # idict: dictionary of parsed config file
     # args: parsed options of wadsworth.py
@@ -117,6 +120,9 @@ if __name__ == "__main__":
                                                          logfile=False)
 
     # Debugging hack
+    args.rangeNew = 2
+    args.rangeOld = 3
+    args.oldest = 30
     args.debug = True
 
     # Set up the desired actions in the main loop, using a helpful class
@@ -130,6 +136,7 @@ if __name__ == "__main__":
     mssh = utils.ssh
 
     # Actually define the function calls/references to functions
+    print("Defining all base functions for each instrument...")
     actions = defineActions()
 
     try:

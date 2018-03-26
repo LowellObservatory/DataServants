@@ -69,6 +69,7 @@ class processDescription():
         self.kwargs = {}
 
         for each in kwargs:
+            print("Setting %s to %s" % (each, kwargs[each]))
             setattr(self, each, kwargs[each])
 
 
@@ -384,7 +385,7 @@ def printPreamble(p, idict):
     print("Kill PID %d to stop it." % (p.pid))
 
 
-def instAction(each):
+def instAction(each, outertime=None):
     """
     """
     ans = None
@@ -396,7 +397,9 @@ def instAction(each):
                             **each.kwargs)
             # print(ans)
     except malarms.TimeoutError as e:
+        # SHOULD put this on STDERR so Wadsworth can catch it and see...
         print("Raised TimeOut for " + e.id_)
+        print(e)
         # Need a little extra care here since
         #   TimeOutError could be from InstLoop
         #   *or* each.func, so if we got the
@@ -408,6 +411,10 @@ def instAction(each):
         rnow = dt.datetime.utcnow()
         print("Done with action, %f since start" %
               ((rnow - astart).total_seconds()))
+        if outertime is not None:
+            rnow = dt.datetime.utcnow()
+            print("%f since outer loop start" %
+                  ((rnow - outertime).total_seconds()))
 
     return ans, estop
 
@@ -434,6 +441,8 @@ def instLooper(idict, runner, args, actions, updateArguments,
         try:
             # Arm an alarm that will stop this inner section
             #   in case one instrument starts to hog the show
+            startt = dt.datetime.utcnow()
+
             with malarms.Timeout(id_='InstLoop',
                                  seconds=alarmtime):
                 iobj = idict[inst]
@@ -460,7 +469,7 @@ def instLooper(idict, runner, args, actions, updateArguments,
                         print("Calling %s" % (str(each.func)))
 
                     # Perform the action
-                    ans, estop = instAction(each)
+                    ans, estop = instAction(each, outertime=startt)
                     print(ans)
 
                     # If it actually worked, close the connection
