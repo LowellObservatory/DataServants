@@ -112,7 +112,7 @@ class SSHWrapper():
                 self.sftp = None
                 print("Could not open SFTP connection")
 
-    def closeSFTP(self, timeout=30.):
+    def closeSFTP(self, timeout=3.):
         """
         """
         try:
@@ -138,7 +138,7 @@ class SSHWrapper():
                 self.sftp = None
                 print("File transfer took too long!")
 
-    def sendCommand(self, command, timeout=30., debug=False):
+    def sendCommand(self, command, debug=False):
         """
         """
         # Use this to directly print out stdout/stderr
@@ -146,35 +146,28 @@ class SSHWrapper():
 
         ses, stdout_data, stderr_data = None, None, None
         if(self.ssh):
-            try:
-                with multialarm.Timeout(id_="SSHCmd", seconds=timeout):
-                    stdin, stdout, stderr = self.ssh.exec_command(command)
-                    # Close stdin since we're not using it
-                    stdin.close()
+            stdin, stdout, stderr = self.ssh.exec_command(command)
+            # Close stdin since we're not using it
+            stdin.close()
 
-                    # Just use the channel object in a simple way.
-                    #   Went through many itterations with buffered reads,
-                    #   all of which failed eventually in some obscure way.
-                    #   This is way easier for now and this should be visited
-                    #   if things start to drop out in the future.
-                    stdout_data = []
-                    # If stuff gets put onto stderr, it could block...I think.
-                    for line in stdout:
-                        if superdebug is True:
-                            print(line)
-                        stdout_data.append(line)
+            # Just use the channel object in a simple way.
+            #   Went through many itterations with buffered reads,
+            #   all of which failed eventually in some obscure way.
+            #   This is way easier for now and this should be visited
+            #   if things start to drop out in the future.
+            stdout_data = []
+            # If stuff gets put onto stderr, it could block...I think.
+            for line in stdout:
+                if superdebug is True:
+                    print(line)
+                stdout_data.append(line)
 
-                    stdout_data = "".join(stdout_data)
-                    stderr_data = []
-                    ses = stdout.channel.exit_status
+            stdout_data = "".join(stdout_data)
+            stderr_data = []
+            ses = stdout.channel.exit_status
 
-                    stdout.close()
-                    stderr.close()
-
-            except multialarm.TimeoutError as err:
-                if err.id_ == "SSHCmd":
-                    print("SSH Command Timed Out!")
-                    print(err)
+            stdout.close()
+            stderr.close()
         else:
             print("SSH connection not opened!")
             print("Trying to open it one more time...")
