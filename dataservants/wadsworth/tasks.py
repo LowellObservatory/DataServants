@@ -61,6 +61,7 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
 
     # Actually get the old dir list
     print(getOld.__dict__)
+    print(iobj.__dict__)
     ans, _ = utils.common.instAction(getOld)
     print(ans)
 
@@ -75,3 +76,7 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
         if estop is True:
             print("Timeout/stop reached")
             break
+
+    # Reset the src directory to it's original value! Otherwise the next loop
+    #   will fail miserably and you'll have a bad time
+    iobj.srcdir = oiobjsrc
