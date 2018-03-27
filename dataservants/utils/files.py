@@ -99,6 +99,10 @@ def recursiveSearcher(base, fileext="*.fits"):
     curdata = []
     # The 2nd return value is dirnames but we don't need them so dump to _
     for root, _, filenames in os.walk(str(base)):
+        # Quick hack to make it work with multiple file extensions
+        if type(fileext) == list:
+            pass
+
         for filename in fnmatch.filter(filenames, fileext):
             curdata.append(os.path.join(root, filename))
 
