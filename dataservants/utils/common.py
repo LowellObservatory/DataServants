@@ -215,6 +215,7 @@ class InstrumentHost():
         self.srcdir = ''
         self.destdir = ''
         self.dirmask = ''
+        self.filemask = ''
         self.enabled = False
         self.engEnabled = False
         self.running = False

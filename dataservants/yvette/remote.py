@@ -25,8 +25,9 @@ import datetime as dt
 from .. import utils
 
 
-def rStringVerify(baseYcmd, ldir):
-    fcmd = "%s --verify %s " % (baseYcmd, ldir)
+def rStringVerify(baseYcmd, ldir, filetype):
+    fcmd = "%s --verify %s --filetype %s" % (baseYcmd, ldir, filetype)
+    print(fcmd)
     return fcmd
 
 
@@ -79,7 +80,7 @@ def commandYvetteSimple(eSSH, baseYcmd, args, iobj, cmd, debug=False):
         fcmd = rStringLookOld(baseYcmd, iobj.srcdir, iobj.dirmask,
                               newage=args.rangeOld, oldage=args.oldest)
     elif cmd == 'verify':
-        fcmd = rStringVerify(baseYcmd, iobj.srcdir)
+        fcmd = rStringVerify(baseYcmd, iobj.srcdir, iobj.filemask)
     else:
         print("Command unknown! Ignoring.")
         return None

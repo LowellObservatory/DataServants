@@ -71,6 +71,7 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
     for each in ans['DirsOld'][1]:
         iobj.srcdir = each
         print("Getting Yvette to verify %s on %s" % (each, iobj.host))
+        print(baseYcmd, getOld.args, getOld.kwargs)
         vans, estop = utils.common.instAction(verify, outertime=startt)
         print(vans)
         if estop is True:
