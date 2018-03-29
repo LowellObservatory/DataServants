@@ -133,10 +133,12 @@ class SSHWrapper():
                 if self.sftp is not None:
                     # Transfer the file from the remote to local locations
                     self.sftp.get(rfile, lfile)
+                    return True
         except multialarm.TimeoutError as err:
             if err.id_ == "SFTPXfer":
                 self.sftp = None
                 print("File transfer took too long!")
+                return False
 
     def sendCommand(self, command, debug=False):
         """
