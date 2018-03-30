@@ -45,6 +45,12 @@ def parseArguments(prog=None):
                         help='Age (days) beyond which to ignore directories',
                         default=7300, nargs="?")
 
+    parser.add_argument('--hashtype', type=str,
+                        choices=['xx64', 'md5', 'sha1', 'sha256', 'sha512',
+                                 'sha3_256', 'sha3_512'],
+                        help='Type of hash to use for file integrity checks',
+                        default="xx64")
+
     parser.add_argument('-l', '--log', metavar='/path/to/file.log', type=str,
                         help='File for logging of information/status messages',
                         default='/tmp/wadsworth.log', nargs='?')

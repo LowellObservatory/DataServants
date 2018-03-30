@@ -115,22 +115,28 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
                 #  slash on the end, so we can just basename it
                 rbdir = os.path.basename(each)
                 specificLocalDir = "%s/%s/" % (iobj.destdir, rbdir)
-                sldircheck = utils.files.checkDir(specificLocalDir)
+                sldircheck, sldirrp = utils.files.checkDir(specificLocalDir)
+                print(specificLocalDir, sldircheck)
                 if sldircheck is True:
                     # Open up our SSH file transfer pathway; if it works,
                     #   eSSH.sftp will not be None
                     eSSH.openSFTP()
+                    print("Opened SFTP connection")
                     if eSSH.sftp is not None:
-                        lfile = "%s/%s" % (specificLocalDir, yhfname)
+                        lfile = "%s/%s" % (sldirrp, yhfname)
                         rfile = "%s/%s" % (each, bhfname)
                         status = eSSH.getFile(lfile, rfile)
                         if status is True:
                             # Verify the file we just got against our local one
                             #   by comparing the hashes directly
+                            print("File transfer complete")
+                            print(lfile, rfile)
                             pass
                         if status is False:
                             # This means the file transfer failed for some
                             #   reason (timeout?) so move on somehow
+                            print("File transfer failed!!")
+                            print(lfile, rfile)
                             pass
                 else:
                     # This means the directory doesn't exist locally yet,
