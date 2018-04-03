@@ -73,7 +73,7 @@ def readHashFile(hfname, debug=False, basenamed=False):
     """
     """
     if debug is True:
-        print(hfname)
+        print("Reading %s " % (hfname))
 
     dat = {}
     try:

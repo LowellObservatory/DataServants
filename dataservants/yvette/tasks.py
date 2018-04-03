@@ -75,7 +75,8 @@ def verificationActions(args, hfname, debug=False):
 
     Returns:
         broken (:obj:`list`)
-            A list of 3 elements:
+            A list of 4 elements:
+                0) Number of files matching args.filetype found in directory
                 1) List of files missing in the directory, but are in the
                    hash file
                 2) List of files found in the directory, but are not in the
@@ -88,7 +89,7 @@ def verificationActions(args, hfname, debug=False):
                                      htype=args.hashtype, debug=debug)
 
     # If norepack is False and there's files to repack...then do it
-    if args.norepack is False and broken[1] != []:
+    if args.norepack is False and broken[2] != []:
         hash1 = filehashing.makeManifest(args.dir, filetype=args.filetype,
                                          htype=args.hashtype, debug=debug)
 

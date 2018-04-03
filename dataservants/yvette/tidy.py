@@ -154,9 +154,13 @@ def beginTidying(noprint=False):
             if args.verify is True:
                 broken = tasks.verificationActions(args, hfname,
                                                    debug=args.debug)
-                rjson.update({"HashChecks": {"MissingFiles": broken[0],
-                                             "UnhashedFiles": broken[1],
-                                             "DifferentFiles": broken[2]}})
+                if type(broken) == tuple:
+                    rjson.update({"HashChecks": {"NFilesFound": broken[0],
+                                                 "MissingFiles": broken[1],
+                                                 "UnhashedFiles": broken[2],
+                                                 "DifferentFiles": broken[3]}})
+                else:
+                    rjson.update({"HashChecks": "PROBLEMS"})
 
             if args.MegaMaid is True:
                 res = filehashing.MegaMaid(vdir, dirmask=args.regexp,

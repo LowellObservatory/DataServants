@@ -27,7 +27,6 @@ from .. import utils
 
 def rStringVerify(baseYcmd, ldir, filetype):
     fcmd = "%s --verify %s --filetype %s" % (baseYcmd, ldir, filetype)
-    print(fcmd)
     return fcmd
 
 
@@ -87,6 +86,7 @@ def commandYvetteSimple(eSSH, baseYcmd, args, iobj, cmd, debug=False):
 
     # If we got here, the command is valid so we'll send it
     nd = eSSH.sendCommand(fcmd, debug=debug)
+    print(nd)
     fnd = decodeAnswer(nd)
 
     return fnd

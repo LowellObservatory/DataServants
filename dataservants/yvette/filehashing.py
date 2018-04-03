@@ -159,11 +159,12 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
                                   'bc0c46fff7a10fa5'}
     """
     ff, sizes = getListFilesSizes(mdir, filetype=filetype, debug=debug)
-    tsize = np.sum(sizes)
 
     # If there's no files, there's nothing to do.
     if ff is None:
         return None
+
+    tsize = np.sum(sizes)
 
     if forcerecheck is False:
         # Check to see if any of the files already have a valid hash
@@ -262,8 +263,20 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
             List of files in the given directory ``mdir`` that do not match
             the hashfile found in that same ``mdir``
     """
+    # Set up return values
+    nfound = 0
+    fpmissing = []
+    mismatch = []
+    nohash = []
+
     # ff, sizes = getListFilesSizes(mdir, filetype=filetype, debug=debug)
     ff, _ = getListFilesSizes(mdir, filetype=filetype, debug=debug)
+
+    # Record the number of files found matching given filetype
+    if ff is None:
+        return nfound, fpmissing, nohash, mismatch
+    else:
+        nfound = len(ff)
 
     # Read in the existing hash file
     hfname = mdir + "/AListofHashes." + htype
@@ -292,15 +305,12 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
     #   then get the filename from the hashfile but now is missing
     missing = list(set(existingFiles) - set(inDR))
 
-    fpmissing = []
     # TODO: Clean this up with a fancy list comprehension
     for s in missing:
         for fullpathfile in existingHashes.keys():
             if s in fullpathfile:
                 fpmissing.append(fullpathfile)
 
-    mismatch = []
-    nohash = []
     # Want to verify on basename basis so this can be used between machines
     #   who differ only in mount points/file structure & layout.
     #   At this point existingHashes is keyed with full paths, so repack it
@@ -325,8 +335,9 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
             nohash.append(tf)
 
     if debug is True:
+        print({"NFilesFound": nfound})
         print({"MissingButHashed": fpmissing})
         print({"FoundButUnHashed": nohash})
         print({"FailedHashCheck": mismatch})
 
-    return fpmissing, nohash, mismatch
+    return nfound, fpmissing, nohash, mismatch

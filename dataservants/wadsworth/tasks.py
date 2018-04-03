@@ -39,7 +39,7 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
     yH = yvette.filehashing
     uH = utils.hashes
 
-    print("Defining custom action set for cleaning old files...")
+    print("--> Defining custom action set for cleaning old files...")
 
     # Get the list of "old" files on the instrument host
     getOld = utils.common.processDescription(func=yR.commandYvetteSimple,
@@ -68,7 +68,7 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
     # Now get the full directory listing on Wadsworth's machine
     ldircheck = utils.files.checkDir(iobj.destdir)
     if ldircheck is False:
-        print("Destination directory unreachable! Aborting.")
+        print("--> Destination directory unreachable! Aborting.")
         # return None
 
     # Type of hash file to ultimately look for
@@ -83,12 +83,12 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
 
         # Now to start the checking process, multi-stage
         iobj.srcdir = each
-        print("Getting Yvette to verify %s on %s" % (each, iobj.host))
+        print("--> Getting Yvette to verify %s on %s" % (each, iobj.host))
         # print(baseYcmd, getOld.args, getOld.kwargs)
         vans, estop = utils.common.instAction(verify, outertime=startt)
-        # print(vans)
+        print(vans)
         if estop is True:
-            print("Timeout/stop reached")
+            print("--> Timeout/stop reached")
             break
         # Check the status of each verification output type
         #   vans['HashChecks'] is base dict, which contains these keys:
@@ -110,8 +110,8 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
 
             # If Yvette checks out internally, get her hash file and compare
             #   it to the local files
-            if good is True:
-                print("Remote checks for remote %s pass" % (each))
+            if good is True and vans['HashChecks']['NFilesFound'] != 0:
+                print("--> Remote checks for remote %s pass" % (each))
                 # Try to YOLO it and see if the name of the remote dir exists
                 #  here locally already.  Yvette's list of old dirs has NO
                 #  slash on the end, so we can just basename it
@@ -160,7 +160,7 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
                                 s = uH.writeHashFile(lhash,
                                                      lpfile)
                                 if s is False:
-                                    print("Failed to write hash file %s" %
+                                    print("--> Failed to write hash file %s" %
                                           (lpfile))
                                 else:
                                     # Read the hashes back in, but without the
@@ -181,17 +181,18 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
                                 except KeyError:
                                     # A file doesn't exist locally!
                                     deletable = False
-                                    print(key, "not in local set!")
+                                    print("--> %s not in local set!" % (key))
 
                             if deletable is True:
-                                print("\n\nALL FILES CHECKED GOOD")
-                                print("%s CAN BE DELETED ON %s" % (each,
-                                                                   iobj.host))
+                                print("--> CAN DELETE %s:%s" % (iobj.host,
+                                                                each))
+                            else:
+                                print("--> Retransfer needed!")
 
                         if status is False:
                             # This means the file transfer failed for some
                             #   reason (timeout?) so move on somehow
-                            print("File transfer failed!!")
+                            print("--> File transfer failed!!")
                             print(lfile, rfile)
                             pass
                 else:
@@ -199,6 +200,10 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
                     #   so we'll need to transfer it over and then get it next
                     #   time for comparison.
                     pass
+            else:
+                if vans['HashChecks']['DifferentFiles'] == 0:
+                    print("--> No files matching %s" % (iobj.filemask))
+                pass
 
     # Now that we're all done with this directory:
     #   Reset the src directory to it's original value!
