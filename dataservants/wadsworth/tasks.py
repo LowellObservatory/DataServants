@@ -84,9 +84,9 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
         # Now to start the checking process, multi-stage
         iobj.srcdir = each
         print("Getting Yvette to verify %s on %s" % (each, iobj.host))
-        print(baseYcmd, getOld.args, getOld.kwargs)
+        # print(baseYcmd, getOld.args, getOld.kwargs)
         vans, estop = utils.common.instAction(verify, outertime=startt)
-        print(vans)
+        # print(vans)
         if estop is True:
             print("Timeout/stop reached")
             break
@@ -159,24 +159,31 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
                                 # print("Writing hashes to %s" % (rfile))
                                 s = uH.writeHashFile(lhash,
                                                      lpfile)
-                                # Read the hashes back in, but without the
-                                #   path information so it's easier to compare
-                                lhash = uH.readHashFile(lpfile,
-                                                        basenamed=True,
-                                                        debug=args.debug)
+                                if s is False:
+                                    print("Failed to write hash file %s" %
+                                          (lpfile))
+                                else:
+                                    # Read the hashes back in, but without the
+                                    #   path information so it's easier later
+                                    lhash = uH.readHashFile(lpfile,
+                                                            basenamed=True,
+                                                            debug=args.debug)
 
                             # Compare the remote ones against our local ones
-                            allGood = True
+                            deletable = True
                             for key in rhash.keys():
                                 try:
                                     comp = rhash[key] == lhash[key]
+                                    if comp is False:
+                                        # A file failed its hash check!
+                                        deletable = False
                                     # print("File %s is %s" % (key, comp))
                                 except KeyError:
-                                    comparison = False
+                                    # A file doesn't exist locally!
+                                    deletable = False
                                     print(key, "not in local set!")
-                                    # RETRANSFER TRIGGER
-                                    allGood = False
-                            if allGood is True:
+
+                            if deletable is True:
                                 print("\n\nALL FILES CHECKED GOOD")
                                 print("%s CAN BE DELETED ON %s" % (each,
                                                                    iobj.host))
