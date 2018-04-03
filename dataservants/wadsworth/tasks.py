@@ -35,12 +35,14 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
     startt = dt.datetime.utcnow()
 
     # Rename to control line length
-    yvetteR = yvette.remote
+    yR = yvette.remote
+    yH = yvette.filehashing
+    uH = utils.hashes
 
     print("Defining custom action set for cleaning old files...")
 
     # Get the list of "old" files on the instrument host
-    getOld = utils.common.processDescription(func=yvetteR.commandYvetteSimple,
+    getOld = utils.common.processDescription(func=yR.commandYvetteSimple,
                                              name='GetOldDirs',
                                              timedelay=3.,
                                              maxtime=60.,
@@ -51,7 +53,7 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
 
     # Define the verification function and arguments, with a quick hack first
     oiobjsrc = iobj.srcdir
-    verify = utils.common.processDescription(func=yvetteR.commandYvetteSimple,
+    verify = utils.common.processDescription(func=yR.commandYvetteSimple,
                                              name='Verify',
                                              timedelay=3.,
                                              maxtime=300.,
@@ -116,22 +118,69 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
                 rbdir = os.path.basename(each)
                 specificLocalDir = "%s/%s/" % (iobj.destdir, rbdir)
                 sldircheck, sldirrp = utils.files.checkDir(specificLocalDir)
-                print(specificLocalDir, sldircheck)
+                # print(specificLocalDir, sldircheck)
                 if sldircheck is True:
                     # Open up our SSH file transfer pathway; if it works,
                     #   eSSH.sftp will not be None
                     eSSH.openSFTP()
-                    print("Opened SFTP connection")
+                    # print("Opened SFTP connection")
                     if eSSH.sftp is not None:
+                        # This where we'll store Yvette's file locally
                         lfile = "%s/%s" % (sldirrp, yhfname)
+                        # This is where Yvette's file is on her system
                         rfile = "%s/%s" % (each, bhfname)
+                        # This is the file we made locally
+                        lpfile = "%s/%s" % (sldirrp, bhfname)
+
+                        # Now actually get the remote file
                         status = eSSH.getFile(lfile, rfile)
+
                         if status is True:
                             # Verify the file we just got against our local one
                             #   by comparing the hashes directly
-                            print("File transfer complete")
-                            print(lfile, rfile)
-                            pass
+                            # print("File transfer complete")
+                            # print(lfile, rfile)
+                            # These are the hashes from our file from Yvette
+                            rhash = uH.readHashFile(lfile,
+                                                    basenamed=True,
+                                                    debug=args.debug)
+                            # These are the hashes that we made locally
+                            lhash = uH.readHashFile(lpfile,
+                                                    basenamed=True,
+                                                    debug=args.debug)
+                            # print(lhash)
+                            # If lhashes == {}} then we haven't made them yet
+                            #   ... so do that and write the file
+                            if lhash == {}:
+                                lhash = yH.makeManifest(sldirrp,
+                                                        htype=args.hashtype,
+                                                        filetype=iobj.filemask,
+                                                        debug=args.debug)
+                                # print("Writing hashes to %s" % (rfile))
+                                s = uH.writeHashFile(lhash,
+                                                     lpfile)
+                                # Read the hashes back in, but without the
+                                #   path information so it's easier to compare
+                                lhash = uH.readHashFile(lpfile,
+                                                        basenamed=True,
+                                                        debug=args.debug)
+
+                            # Compare the remote ones against our local ones
+                            allGood = True
+                            for key in rhash.keys():
+                                try:
+                                    comp = rhash[key] == lhash[key]
+                                    # print("File %s is %s" % (key, comp))
+                                except KeyError:
+                                    comparison = False
+                                    print(key, "not in local set!")
+                                    # RETRANSFER TRIGGER
+                                    allGood = False
+                            if allGood is True:
+                                print("\n\nALL FILES CHECKED GOOD")
+                                print("%s CAN BE DELETED ON %s" % (each,
+                                                                   iobj.host))
+
                         if status is False:
                             # This means the file transfer failed for some
                             #   reason (timeout?) so move on somehow

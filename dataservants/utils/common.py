@@ -69,7 +69,7 @@ class processDescription():
         self.kwargs = {}
 
         for each in kwargs:
-            print("Setting %s to %s" % (each, kwargs[each]))
+            # print("Setting %s to %s" % (each, kwargs[each]))
             setattr(self, each, kwargs[each])
 
 
