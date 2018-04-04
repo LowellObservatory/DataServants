@@ -96,15 +96,15 @@ def recursiveSearcher(base, fileext="*.fits"):
     recursively search through the directories underneath and return the
     list of files that match the fileext.
     """
+    # Quick hack to make it work with multiple file extensions
+    allexts = fileext.split(",")
+
     curdata = []
     # The 2nd return value is dirnames but we don't need them so dump to _
     for root, _, filenames in os.walk(str(base)):
-        # Quick hack to make it work with multiple file extensions
-        if type(fileext) == list:
-            pass
-
-        for filename in fnmatch.filter(filenames, fileext):
-            curdata.append(os.path.join(root, filename))
+        for ext in allexts:
+            for filename in fnmatch.filter(filenames, ext):
+                curdata.append(os.path.join(root, filename))
 
     # It'll be sorted by name, but it's better than nothing
     return sorted(curdata)
