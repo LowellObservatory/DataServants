@@ -101,10 +101,9 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                   dbname=None, debug=False):
     """
     """
+    print(procName)
     fcmd = rStringCheckProcess(baseYcmd, name=procName)
     fs = eSSH.sendCommand(fcmd)
-    print(fs)
-    print("\n")
     # Timestamp of when this all (just) occured
     ts = dt.datetime.utcnow()
 
