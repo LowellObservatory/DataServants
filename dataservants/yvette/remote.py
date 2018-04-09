@@ -103,11 +103,14 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
     """
     fcmd = rStringCheckProcess(baseYcmd, name=procName)
     fs = eSSH.sendCommand(fcmd)
+    print(fs)
+    print("\n")
     # Timestamp of when this all (just) occured
     ts = dt.datetime.utcnow()
 
     # Turn Yvette's JSON answer into an object
     fsa = decodeAnswer(fs, debug=debug)
+    print(fsa)
 
     # Now make the packet given the deserialized json answer
     meas = ['ProcessStats']
@@ -141,7 +144,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                         binLOIS.update({pk: pid[pk]})
                     except KeyError as err:
                         print(str(err))
-                binLOIS.update({'age': pid['createtime'] - fsa['boottime']})
+                binLOIS.update({'age': ts.timestamp() - pid['createtime']})
                 gf.update({'binLOIS': binLOIS})
             elif pid['exe'] == '/bin/bash':
                 for pk in pdesired:
@@ -149,7 +152,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                         scriptLOIS.update({pk: pid[pk]})
                     except KeyError as err:
                         print(str(err))
-                scriptLOIS.update({'age': pid['createtime'] - fsa['boottime']})
+                scriptLOIS.update({'age': ts.timestamp() - pid['createtime']})
                 gf.update({'scriptLOIS': scriptLOIS})
             else:
                 for pk in pdesired:
@@ -157,7 +160,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                         generic.update({pk: pid[pk]})
                     except KeyError as err:
                         print(str(err))
-                generic.update({'age': pid['createtime'] - fsa['boottime']})
+                generic.update({'age': ts.timestamp() - pid['createtime']})
                 gf.update({'genericProc': generic})
 
         # Make the packet
