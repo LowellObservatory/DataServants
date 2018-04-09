@@ -140,7 +140,10 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
         generic = {}
 
         if fsa['ProcessStats']['PIDS'] is not None:
-            for pid in fsa['ProcessStats']['PIDS']:
+            for npid in fsa['ProcessStats']['PIDS']:
+                # Grab the actual dict values for the numerical PID key
+                pid = fsa['ProcessStats']['PIDS'][npid]
+                # CUSTOM
                 if pid['exe'].startswith('/opt/LOIS'):
                     for pk in pdesired:
                         try:
@@ -149,6 +152,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                             print(str(err))
                     binLOIS.update({'age': tsu - pid['createtime']})
                     gf.update({'binLOIS': binLOIS})
+                # CUSTOM
                 elif pid['exe'] == '/bin/bash':
                     for pk in pdesired:
                         try:
@@ -157,6 +161,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                             print(str(err))
                     scriptLOIS.update({'age': tsu - pid['createtime']})
                     gf.update({'scriptLOIS': scriptLOIS})
+                # Should work for any process?
                 else:
                     for pk in pdesired:
                         try:
