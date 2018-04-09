@@ -14,6 +14,52 @@ import os
 import psutil
 
 
+def find_procs_by_name(name):
+    "Return a list of processes matching 'name'."
+    ls = []
+    for p in psutil.process_iter(attrs=["name", "exe", "cmdline"]):
+        if name == p.info['name'] or \
+                p.info['exe'] and os.path.basename(p.info['exe']) == name or \
+                p.info['cmdline'] and p.info['cmdline'][0] == name:
+            ls.append(p)
+    return ls
+
+
+def checkProcess(name='lois'):
+    """
+    """
+    fpdict = {}
+    piddict = {}
+
+    boottime = psutil.boot_time()
+    host = os.uname()[1]
+    fpdict.update({'boottime': boottime})
+    fpdict.update({'host': host})
+
+    fprocs = find_procs_by_name(name)
+    for p in fprocs:
+        # Make sure this process still is what we think and it didn't die
+        #   by the time we get down here to check on stuff.
+        if p.is_running() is True:
+            pd = p.as_dict()
+            rd = {'cmdline': pd['cmdline'],
+                  'createtime': pd['create_time'],
+                  'exe': pd['exe'],
+                  'name': pd['name'],
+                  'num_fds': pd['num_fds'],
+                  'num_threads': pd['num_threads'],
+                  'ppid': pd['ppid'],
+                  'status': pd['status'],
+                  'terminal': pd['terminal'],
+                  'username': pd['username']}
+            piddict.update({p.pid: rd})
+
+    if piddict != {}:
+        fpdict.update({"PIDS": piddict})
+
+    return fpdict
+
+
 def checkLoadAvgs():
     """
     """

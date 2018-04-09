@@ -78,6 +78,10 @@ def setup_arguments(prog=None):
                         help='Look for data directories older than rangeOld',
                         default=False)
 
+    parser.add_argument('--checkProcess', type=str,
+                        help='Return stats for given process name',
+                        default='lois')
+
     # The actual actions are defined to be mutually exclusive, meaning
     #   only ONE of them will act per call to Yvette.
     #
