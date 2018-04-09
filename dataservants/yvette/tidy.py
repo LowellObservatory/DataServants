@@ -121,6 +121,10 @@ def beginTidying(noprint=False):
             rjson.update({"MachineCPU": cpus, "MachineMem": mems,
                           "MachineLoads": loads})
 
+        if args.checkProcess is not None:
+            pstats = utils.cpumem.checkProcess(name=args.checkProcess)
+            rjson.update({"ProcessStats": pstats})
+
         if dirstatus is True:
             # Check for non-exclusionary actions
             if args.look is True:

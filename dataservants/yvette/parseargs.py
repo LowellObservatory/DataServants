@@ -79,8 +79,7 @@ def setup_arguments(prog=None):
                         default=False)
 
     parser.add_argument('--checkProcess', type=str,
-                        help='Return stats for given process name',
-                        default='lois')
+                        help='Return stats for given process name')
 
     # The actual actions are defined to be mutually exclusive, meaning
     #   only ONE of them will act per call to Yvette.
