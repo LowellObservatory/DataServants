@@ -183,12 +183,12 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
         packet = []
 
     print(packet)
-    # if packet != []:
-    #     if dbname is not None:
-    #         # Actually write to the database to store for plotting
-    #         dbase = utils.database.influxobj(dbname, connect=True)
-    #         dbase.writeToDB(packet)
-    #         dbase.closeDB()
+    if packet != []:
+        if dbname is not None:
+            # Actually write to the database to store for plotting
+            dbase = utils.database.influxobj(dbname, connect=True)
+            dbase.writeToDB(packet)
+            dbase.closeDB()
     return packet
 
 
