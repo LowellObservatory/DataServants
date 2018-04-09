@@ -37,6 +37,7 @@ def checkProcess(name='lois'):
     fpdict.update({'host': host})
 
     fprocs = find_procs_by_name(name)
+    print(fprocs)
     for p in fprocs:
         # Make sure this process still is what we think and it didn't die
         #   by the time we get down here to check on stuff.
@@ -54,7 +55,8 @@ def checkProcess(name='lois'):
                   'username': pd['username']}
             piddict.update({p.pid: rd})
 
-    if piddict != {}:
+    # Use this to help signal to other processes that nothing was found
+    if piddict == {}:
         piddict = None
 
     fpdict.update({"PIDS": piddict})
