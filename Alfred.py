@@ -95,7 +95,7 @@ def updateArguments(actions, iobj, args, dbname=None):
 
     # act4 == Check on process health
     actions[3].args = [baseYcmd, iobj]
-    actions[3].kwargs = {'procName': args.checkProcess,
+    actions[3].kwargs = {'procName': iobj.procmon,
                          'dbname': dbname,
                          'debug': args.debug}
 
