@@ -119,6 +119,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
     desired = ['boottime', 'host']
     pdesired = ['createtime', 'cmdline', 'num_threads',
                 'status', 'terminal']
+
     gf = {}
     if fsa != {}:
         for each in desired:
@@ -131,6 +132,8 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
         # There should be two processes for LOIS; try to sort which is which
         binLOIS = {}
         scriptLOIS = {}
+        generic = {}
+
         for pid in fsa['ProcessStats']['PIDS']:
             if pid['exe'].startswith('/opt/LOIS'):
                 for pk in pdesired:
@@ -139,6 +142,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                     except KeyError as err:
                         print(str(err))
                 binLOIS.update({'age': pid['createtime'] - fsa['boottime']})
+                gf.update({'binLOIS': binLOIS})
             elif pid['exe'] == '/bin/bash':
                 for pk in pdesired:
                     try:
@@ -146,6 +150,15 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                     except KeyError as err:
                         print(str(err))
                 scriptLOIS.update({'age': pid['createtime'] - fsa['boottime']})
+                gf.update({'scriptLOIS': scriptLOIS})
+            else:
+                for pk in pdesired:
+                    try:
+                        generic.update({pk: pid[pk]})
+                    except KeyError as err:
+                        print(str(err))
+                generic.update({'age': pid['createtime'] - fsa['boottime']})
+                gf.update({'genericProc': generic})
 
         # Make the packet
         packet = utils.packetizer.makeInfluxPacket(meas=meas,
