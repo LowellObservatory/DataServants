@@ -46,6 +46,11 @@ def rStringLookOld(baseYcmd, bdir, dirmask, newage=2, oldage=365):
     return fcmd
 
 
+def rStringCheckProcess(baseYcmd, name='lois'):
+    fcmd = "%s --checkProcess %s" % (baseYcmd, name)
+    return fcmd
+
+
 def rStringSpace(baseYcmd, mdir):
     fcmd = "%s -f %s" % (baseYcmd, mdir)
     return fcmd
@@ -90,6 +95,74 @@ def commandYvetteSimple(eSSH, baseYcmd, args, iobj, cmd, debug=False):
     fnd = decodeAnswer(nd)
 
     return fnd
+
+
+def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
+                  dbname=None, debug=False):
+    """
+    """
+    fcmd = rStringCheckProcess(baseYcmd, name=procName)
+    fs = eSSH.sendCommand(fcmd)
+    # Timestamp of when this all (just) occured
+    ts = dt.datetime.utcnow()
+
+    # Turn Yvette's JSON answer into an object
+    fsa = decodeAnswer(fs, debug=debug)
+
+    # Now make the packet given the deserialized json answer
+    meas = ['ProcessStats']
+    tags = {'host': iobj.host}
+
+    # Fields from Yvette's answer that we want to record
+    #   Looks a bit more complicated since it's a dict that gives
+    #   databasekey: YvetteAnswerKey
+    desired = ['boottime', 'host']
+    pdesired = ['createtime', 'cmdline', 'num_threads',
+                'status', 'terminal']
+    gf = {}
+    if fsa != {}:
+        for each in desired:
+            try:
+                gf.update({each: fsa['ProcessStats'][each]})
+            except KeyError:
+                pass
+
+        # Entirely custom here. Couldn't think of a way to generalize.
+        # There should be two processes for LOIS; try to sort which is which
+        binLOIS = {}
+        scriptLOIS = {}
+        for pid in fsa['ProcessStats']['PIDS']:
+            if pid['exe'].startswith('/opt/LOIS'):
+                for pk in pdesired:
+                    try:
+                        binLOIS.update({pk: pid[pk]})
+                    except KeyError as err:
+                        print(str(err))
+                binLOIS.update({'age': pid['createtime'] - fsa['boottime']})
+            elif pid['exe'] == '/bin/bash':
+                for pk in pdesired:
+                    try:
+                        scriptLOIS.update({pk: pid[pk]})
+                    except KeyError as err:
+                        print(str(err))
+                scriptLOIS.update({'age': pid['createtime'] - fsa['boottime']})
+
+        # Make the packet
+        packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                   ts=ts,
+                                                   tags=tags,
+                                                   fields=gf)
+    else:
+        packet = []
+
+    print(packet)
+    # if packet != []:
+    #     if dbname is not None:
+    #         # Actually write to the database to store for plotting
+    #         dbase = utils.database.influxobj(dbname, connect=True)
+    #         dbase.writeToDB(packet)
+    #         dbase.closeDB()
+    return packet
 
 
 def actionSpace(eSSH, baseYcmd, iobj, dbname=None, debug=False):

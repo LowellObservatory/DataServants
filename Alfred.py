@@ -37,6 +37,7 @@ def defineActions():
     #   inside the main loop via updateArguments()...it's just helpful to
     #   do the definitions out here for the constants and for clarity.
     act1 = utils.common.processDescription(func=alfredT.actionPing,
+                                           name='CheckPing',
                                            timedelay=3.,
                                            maxtime=120,
                                            needSSH=False,
@@ -44,6 +45,7 @@ def defineActions():
                                            kwargs={})
 
     act2 = utils.common.processDescription(func=yvetteR.actionSpace,
+                                           name='CheckFreeSpace',
                                            timedelay=3.,
                                            maxtime=120,
                                            needSSH=True,
@@ -51,12 +53,22 @@ def defineActions():
                                            kwargs={})
 
     act3 = utils.common.processDescription(func=yvetteR.actionStats,
+                                           name='CheckStats',
                                            timedelay=3.,
                                            maxtime=120,
                                            needSSH=True,
                                            args=[],
                                            kwargs={})
-    actions = [act1, act2, act3]
+
+    act4 = utils.common.processDescription(func=yvetteR.actionProcess,
+                                           name='CheckProcess',
+                                           timedelay=3.,
+                                           maxtime=120,
+                                           needSSH=True,
+                                           args=[],
+                                           kwargs={})
+
+    actions = [act1, act2, act3, act4]
 
     return actions
 
@@ -79,6 +91,12 @@ def updateArguments(actions, iobj, args, dbname=None):
     # act3 == check target CPU/RAM stats
     actions[2].args = [baseYcmd, iobj]
     actions[2].kwargs = {'dbname': dbname,
+                         'debug': args.debug}
+
+    # act4 == Check on process health
+    actions[3].args = [baseYcmd, iobj]
+    actions[3].kwargs = {'procName': args.checkProcess,
+                         'dbname': dbname,
                          'debug': args.debug}
 
     return actions

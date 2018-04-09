@@ -77,7 +77,7 @@ def updateArguments(actions, iobj, args, dbname=None):
     actions[1].args = [baseYcmd, args, iobj, 'findnew']
     actions[1].kwargs = {'debug': args.debug}
 
-    # act3 == commandYvetteSimple (cmd=findold)
+    # act3 == cleanRemote
     actions[2].args = [baseYcmd, args, iobj]
     actions[2].kwargs = {}
 

@@ -55,7 +55,9 @@ def checkProcess(name='lois'):
             piddict.update({p.pid: rd})
 
     if piddict != {}:
-        fpdict.update({"PIDS": piddict})
+        piddict = None
+
+    fpdict.update({"PIDS": piddict})
 
     return fpdict
 
