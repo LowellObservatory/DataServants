@@ -178,6 +178,9 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                                                        fields=gf)
         else:
             packet = []
+    else:
+        # Need to roll the logic up better
+        packet = []
 
     print(packet)
     # if packet != []:
