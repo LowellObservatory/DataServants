@@ -108,6 +108,9 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
     # Timestamp of when this all (just) occured
     ts = dt.datetime.utcnow()
 
+    # Only works in Python >= 3.3!! But it's f'ing awesome
+    tsu = ts.timestamp()
+
     # Turn Yvette's JSON answer into an object
     fsa = decodeAnswer(fs, debug=debug)
     print(fsa)
@@ -137,39 +140,40 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
         scriptLOIS = {}
         generic = {}
 
-        for pid in fsa['ProcessStats']['PIDS']:
-            if pid['exe'].startswith('/opt/LOIS'):
-                for pk in pdesired:
-                    try:
-                        binLOIS.update({pk: pid[pk]})
-                    except KeyError as err:
-                        print(str(err))
-                binLOIS.update({'age': ts.timestamp() - pid['createtime']})
-                gf.update({'binLOIS': binLOIS})
-            elif pid['exe'] == '/bin/bash':
-                for pk in pdesired:
-                    try:
-                        scriptLOIS.update({pk: pid[pk]})
-                    except KeyError as err:
-                        print(str(err))
-                scriptLOIS.update({'age': ts.timestamp() - pid['createtime']})
-                gf.update({'scriptLOIS': scriptLOIS})
-            else:
-                for pk in pdesired:
-                    try:
-                        generic.update({pk: pid[pk]})
-                    except KeyError as err:
-                        print(str(err))
-                generic.update({'age': ts.timestamp() - pid['createtime']})
-                gf.update({'genericProc': generic})
+        if fsa['ProcessStats']['PIDS'] is not None:
+            for pid in fsa['ProcessStats']['PIDS']:
+                if pid['exe'].startswith('/opt/LOIS'):
+                    for pk in pdesired:
+                        try:
+                            binLOIS.update({pk: pid[pk]})
+                        except KeyError as err:
+                            print(str(err))
+                    binLOIS.update({'age': tsu - pid['createtime']})
+                    gf.update({'binLOIS': binLOIS})
+                elif pid['exe'] == '/bin/bash':
+                    for pk in pdesired:
+                        try:
+                            scriptLOIS.update({pk: pid[pk]})
+                        except KeyError as err:
+                            print(str(err))
+                    scriptLOIS.update({'age': tsu - pid['createtime']})
+                    gf.update({'scriptLOIS': scriptLOIS})
+                else:
+                    for pk in pdesired:
+                        try:
+                            generic.update({pk: pid[pk]})
+                        except KeyError as err:
+                            print(str(err))
+                    generic.update({'age': tsu - pid['createtime']})
+                    gf.update({'genericProc': generic})
 
-        # Make the packet
-        packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                   ts=ts,
-                                                   tags=tags,
-                                                   fields=gf)
-    else:
-        packet = []
+            # Make the packet
+            packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                       ts=ts,
+                                                       tags=tags,
+                                                       fields=gf)
+        else:
+            packet = []
 
     print(packet)
     # if packet != []:
