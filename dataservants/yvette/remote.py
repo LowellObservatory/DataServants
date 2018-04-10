@@ -154,7 +154,9 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                 else:
                     ptype = "generic"
 
-                ptags = {tags, {"type": ptype}}
+                # Need to do this because dicts are mutable
+                ptags = tags.copy()
+                ptags.update({"type": ptype})
 
                 # Make the packet
                 packet = utils.packetizer.makeInfluxPacket(meas=meas,
