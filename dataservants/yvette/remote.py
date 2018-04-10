@@ -133,62 +133,51 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
             except KeyError:
                 pass
 
-        # Entirely custom here. Couldn't think of a way to generalize.
-        # There should be two processes for LOIS; try to sort which is which
-        binLOIS = {}
-        scriptLOIS = {}
-        generic = {}
-
         if fsa['ProcessStats']['PIDS'] is not None:
             for npid in fsa['ProcessStats']['PIDS']:
+                proc = {}
                 # Grab the actual dict values for the numerical PID key
                 pid = fsa['ProcessStats']['PIDS'][npid]
+                # Now fill up a packet with the good stuff
+                for pk in pdesired:
+                    try:
+                        proc.update({pk, pid[pk]})
+                    except KeyError:
+                        proc.update({pk, None})
+                proc.update({'age': tsu - pid['createtime']})
                 # CUSTOM
                 if pid['exe'].startswith('/opt/LOIS'):
-                    for pk in pdesired:
-                        try:
-                            binLOIS.update({pk: pid[pk]})
-                        except KeyError as err:
-                            print(str(err))
-                    binLOIS.update({'age': tsu - pid['createtime']})
-                    gf.update({'binLOIS': binLOIS})
+                    ptype = "binLOIS"
                 # CUSTOM
                 elif pid['exe'] == '/bin/bash':
-                    for pk in pdesired:
-                        try:
-                            scriptLOIS.update({pk: pid[pk]})
-                        except KeyError as err:
-                            print(str(err))
-                    scriptLOIS.update({'age': tsu - pid['createtime']})
-                    gf.update({'scriptLOIS': scriptLOIS})
-                # Should work for any process?
+                    ptype = "scriptLOIS"
                 else:
-                    for pk in pdesired:
-                        try:
-                            generic.update({pk: pid[pk]})
-                        except KeyError as err:
-                            print(str(err))
-                    generic.update({'age': tsu - pid['createtime']})
-                    gf.update({'genericProc': generic})
+                    ptype = "generic"
 
-            # Make the packet
-            packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                       ts=ts,
-                                                       tags=tags,
-                                                       fields=gf)
+                ptags = {tags, {"type": ptype}}
+
+                # Make the packet
+                packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                           ts=ts,
+                                                           tags=ptags,
+                                                           fields=proc)
+                # Store the packet
+                if dbname is not None:
+                    dbase = utils.database.influxobj(dbname, connect=True)
+                    dbase.writeToDB(packet)
+                    dbase.closeDB()
+
+                # Print the packet
+                print(packet)
+
+                # Save the packet
+                gf.update({ptype: proc})
         else:
             packet = []
     else:
         # Need to roll the logic up better
         packet = []
 
-    print(packet)
-    # if packet != []:
-    #     if dbname is not None:
-    #         # Actually write to the database to store for plotting
-    #         dbase = utils.database.influxobj(dbname, connect=True)
-    #         dbase.writeToDB(packet)
-    #         dbase.closeDB()
     return packet
 
 
