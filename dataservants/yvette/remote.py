@@ -142,7 +142,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                 for pk in pdesired:
                     try:
                         # Need to flatten some fools first
-                        if type(pid[pk] == list):
+                        if type(pid[pk]) == list:
                             store = " ".join(pid[pk])
                         else:
                             store = pid[pk]
