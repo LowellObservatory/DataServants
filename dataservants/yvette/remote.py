@@ -141,9 +141,9 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                 # Now fill up a packet with the good stuff
                 for pk in pdesired:
                     try:
-                        proc.update({pk, pid[pk]})
+                        proc.update({pk: pid[pk]})
                     except KeyError:
-                        proc.update({pk, None})
+                        proc.update({pk: None})
                 proc.update({'age': tsu - pid['createtime']})
                 # CUSTOM
                 if pid['exe'].startswith('/opt/LOIS'):
