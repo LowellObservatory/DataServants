@@ -141,7 +141,12 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                 # Now fill up a packet with the good stuff
                 for pk in pdesired:
                     try:
-                        proc.update({pk: pid[pk]})
+                        # Need to flatten some fools first
+                        if type(pid[pk] == list):
+                            store = " ".join(pid[pk])
+                        else:
+                            store = pid[pk]
+                        proc.update({pk: store})
                     except KeyError:
                         proc.update({pk: None})
                 proc.update({'age': tsu - pid['createtime']})
