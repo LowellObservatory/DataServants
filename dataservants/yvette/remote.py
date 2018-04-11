@@ -101,7 +101,6 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                   dbname=None, debug=False):
     """
     """
-    print(procName)
     fcmd = rStringCheckProcess(baseYcmd, name=procName)
     fs = eSSH.sendCommand(fcmd)
     # Timestamp of when this all (just) occured
@@ -112,7 +111,6 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
 
     # Turn Yvette's JSON answer into an object
     fsa = decodeAnswer(fs, debug=debug)
-    print(fsa)
 
     # Now make the packet given the deserialized json answer
     meas = ['ProcessStats']
@@ -123,15 +121,21 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
     #   databasekey: YvetteAnswerKey
     desired = ['boottime', 'host']
     pdesired = ['createtime', 'cmdline', 'num_threads',
-                'status', 'terminal']
+                'status', 'pid', 'ppid', 'terminal']
 
     gf = {}
     if fsa != {}:
+        # These should always be in there, no matter what
         for each in desired:
             try:
                 gf.update({each: fsa['ProcessStats'][each]})
             except KeyError:
                 pass
+
+        # Check for a failed search
+        if hasattr(fsa['ProcessStats']['PIDS'], 'ProcessNotFound'):
+            # Write an empty packet so Grafana gets the hint
+            failed = True
 
         if fsa['ProcessStats']['PIDS'] is not None:
             for npid in fsa['ProcessStats']['PIDS']:
@@ -159,6 +163,10 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                 else:
                     ptype = "generic"
 
+                # Manually put in the timestamp to display elsewhere
+                #   without jumping through dumb hoops
+                proc.update({"timestamp": tsu})
+
                 # Need to do this because dicts are mutable
                 ptags = tags.copy()
                 ptags.update({"type": ptype})
@@ -174,14 +182,14 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                     dbase.writeToDB(packet)
                     dbase.closeDB()
 
-                # Print the packet
-                print(packet)
-
                 # Save the packet
                 gf.update({ptype: proc})
         else:
+            # If we were looking for a process (procName != None), we didn't
+            #   find it if we're down here.  Construct a packet to show that
             packet = []
     else:
+        # If we're here
         # Need to roll the logic up better
         packet = []
 

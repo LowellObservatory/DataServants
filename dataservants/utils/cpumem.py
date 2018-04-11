@@ -36,26 +36,30 @@ def checkProcess(name='lois'):
     fpdict.update({'boottime': boottime})
     fpdict.update({'host': host})
 
-    fprocs = find_procs_by_name(name)
-    for p in fprocs:
-        # Make sure this process still is what we think and it didn't die
-        #   by the time we get down here to check on stuff.
-        if p.is_running() is True:
-            pd = p.as_dict()
-            rd = {'cmdline': pd['cmdline'],
-                  'createtime': pd['create_time'],
-                  'exe': pd['exe'],
-                  'name': pd['name'],
-                  'num_fds': pd['num_fds'],
-                  'num_threads': pd['num_threads'],
-                  'ppid': pd['ppid'],
-                  'status': pd['status'],
-                  'terminal': pd['terminal'],
-                  'username': pd['username']}
-            piddict.update({p.pid: rd})
-
-    # Use this to help signal to other processes that nothing was found
-    if piddict == {}:
+    if name is not None:
+        fprocs = find_procs_by_name(name)
+        for p in fprocs:
+            # Make sure this process still is what we think and it didn't die
+            #   by the time we get down here to check on stuff.
+            if p.is_running() is True:
+                pd = p.as_dict()
+                rd = {'cmdline': pd['cmdline'],
+                      'createtime': pd['create_time'],
+                      'exe': pd['exe'],
+                      'name': pd['name'],
+                      'num_fds': pd['num_fds'],
+                      'num_threads': pd['num_threads'],
+                      'pid': pd['pid'],
+                      'ppid': pd['ppid'],
+                      'status': pd['status'],
+                      'terminal': pd['terminal'],
+                      'username': pd['username']}
+                piddict.update({p.pid: rd})
+        if piddict == {}:
+            # This means we didn't find anything, but tried, so panic
+            piddict = {"ProcessNotFound": True}
+    else:
+        # If we didn't give a name, then we couldn't have failed. Perfection.
         piddict = None
 
     fpdict.update({"PIDS": piddict})
