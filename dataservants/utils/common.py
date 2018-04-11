@@ -231,6 +231,14 @@ class InstrumentHost():
                          (key.lower() == 'timeout'):
                         # Skip the keys that are self-defined in the class
                         pass
+                    elif key.lower() == 'procmon':
+                        if conf[key].lower() == 'none':
+                            # SPECIAL handling to capture "None" -> None
+                            #  Could do some extra split() here to allow
+                            #  multiple process names...
+                            setattr(self, key, None)
+                        else:
+                            setattr(self, key, conf[key])
                     else:
                         setattr(self, key, conf[key])
                 except KeyError as err:
