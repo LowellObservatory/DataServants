@@ -131,17 +131,17 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                 gf.update({each: fsa['ProcessStats'][each]})
             except KeyError:
                 pass
+        # Check to see if we failed
+        # Line length control
+        psp = fsa['ProcessStats']['PIDS']
 
-        # Check for a failed search
-        if hasattr(fsa['ProcessStats']['PIDS'], 'ProcessNotFound'):
-            # Write an empty packet so Grafana gets the hint
-            failed = True
-
-        if fsa['ProcessStats']['PIDS'] is not None:
-            for npid in fsa['ProcessStats']['PIDS']:
+        # Remember that psp is a dict! hasattr() won't work
+        searchstat = 'ProcessNotFound' in psp
+        if psp is not None and searchstat is False:
+            for npid in psp:
                 proc = {}
                 # Grab the actual dict values for the numerical PID key
-                pid = fsa['ProcessStats']['PIDS'][npid]
+                pid = psp[npid]
                 # Now fill up a packet with the good stuff
                 for pk in pdesired:
                     try:
@@ -165,7 +165,9 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
 
                 # Manually put in the timestamp to display elsewhere
                 #   without jumping through dumb hoops
-                proc.update({"timestamp": tsu})
+                # But make a string that Grafana can display easily
+                gts = ts.strftime("%Y-%m-%d %H:%M:%S.%fZ")
+                proc.update({"timestamp": gts})
 
                 # Need to do this because dicts are mutable
                 ptags = tags.copy()
@@ -185,8 +187,8 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                 # Save the packet
                 gf.update({ptype: proc})
         else:
-            # If we were looking for a process (procName != None), we didn't
-            #   find it if we're down here.  Construct a packet to show that
+            # If we were looking for a process (procName != None),
+            #   we didn't find it. Sadness.
             packet = []
     else:
         # If we're here
@@ -362,6 +364,9 @@ def actionStats(eSSH, baseYcmd, iobj, dbname=None, debug=False):
 
     # Turn Yvette's JSON answer into an object
     fsa = decodeAnswer(fs, debug=debug)
+    if superdebug is True:
+        print(fs)
+        print(fsa)
 
     # Now make the packet given the deserialized json answer
     meas = ['MachineStats']
@@ -440,7 +445,9 @@ def decodeAnswer(ans, debug=False):
             isn't an empty str.
     """
     final = {}
-    if ans[0] == 0:
+    # Sometimes servers just don't give an exit status because they're bastards
+    #   so paramiko will just assign -1 to show that. S t u p i d.
+    if ans[0] == 0 or ans[0] == -1:
         if ans[1] != '':
             final = json.loads(ans[1])
             if debug is True:
