@@ -36,6 +36,12 @@ def checkProcess(name='lois'):
     fpdict.update({'boottime': boottime})
     fpdict.update({'host': host})
 
+    # Check to see if the name is [N,n]one indicating we really didn't want
+    #   to search for anything. Can't depend on NoneType since it could
+    #   be a remote request from Wadsworth or Alfred.
+    if name.lower() == 'none':
+        name = None
+
     if name is not None:
         fprocs = find_procs_by_name(name)
         for p in fprocs:

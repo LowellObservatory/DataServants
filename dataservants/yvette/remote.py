@@ -136,7 +136,13 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
         psp = fsa['ProcessStats']['PIDS']
 
         # Remember that psp is a dict! hasattr() won't work
-        searchstat = 'ProcessNotFound' in psp
+        #   Also need a try in case psp is really None (indicating no search)
+        try:
+            searchstat = 'ProcessNotFound' in psp
+        except TypeError:
+            searchstat = True
+
+        # Only do this if we really have a result
         if psp is not None and searchstat is False:
             for npid in psp:
                 proc = {}

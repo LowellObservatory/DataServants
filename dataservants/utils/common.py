@@ -247,7 +247,8 @@ class InstrumentHost():
                     else:
                         key = err.args[0]
                         setattr(self, key, None)
-                print("\t%s = %s" % (key, getattr(self, key)))
+                print("\t%s = %s (%s)" % (key, getattr(self, key),
+                                          type(getattr(self, key))))
 
     def addPass(self, password=None, debug=False):
         """Add in password information from a separate file for ``user``.
