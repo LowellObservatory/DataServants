@@ -34,7 +34,7 @@ def checkProcess(name='lois'):
     boottime = psutil.boot_time()
     host = os.uname()[1]
     fpdict.update({'boottime': boottime})
-    fpdict.update({'host': host})
+    fpdict.update({'hostname': host})
 
     # Check to see if the name is [N,n]one indicating we really didn't want
     #   to search for anything. Can't depend on NoneType since it could

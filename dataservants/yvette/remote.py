@@ -116,14 +116,21 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
     meas = ['ProcessStats']
     tags = {'host': iobj.host}
 
+    # Define some extra tags that we use to show overall status in Grafana.
+    #   Can't depend on presence of packet in the db because the query
+    #   interval depends a little bit on current time and it's easy to get
+    #   false positives in the dashboard. CUSTOM.
+    etags = ['binLOIS', 'scriptLOIS', 'generic']
+
     # Fields from Yvette's answer that we want to record
     #   Looks a bit more complicated since it's a dict that gives
     #   databasekey: YvetteAnswerKey
-    desired = ['boottime', 'host']
+    desired = ['boottime', 'hostname']
     pdesired = ['createtime', 'cmdline', 'num_threads',
                 'status', 'pid', 'ppid', 'terminal']
 
     gf = {}
+    packets = []
     if fsa != {}:
         # These should always be in there, no matter what
         for each in desired:
@@ -131,7 +138,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                 gf.update({each: fsa['ProcessStats'][each]})
             except KeyError:
                 pass
-        # Check to see if we failed
+
         # Line length control
         psp = fsa['ProcessStats']['PIDS']
 
@@ -144,8 +151,8 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
 
         # Only do this if we really have a result
         if psp is not None and searchstat is False:
+            packet = []
             for npid in psp:
-                proc = {}
                 # Grab the actual dict values for the numerical PID key
                 pid = psp[npid]
                 # Now fill up a packet with the good stuff
@@ -156,52 +163,57 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                             store = " ".join(pid[pk])
                         else:
                             store = pid[pk]
-                        proc.update({pk: store})
+                        gf.update({pk: store})
                     except KeyError:
-                        proc.update({pk: None})
-                proc.update({'age': tsu - pid['createtime']})
+                        gf.update({pk: None})
+                gf.update({'age': tsu - pid['createtime']})
                 # CUSTOM
                 if pid['exe'].startswith('/opt/LOIS'):
                     ptype = "binLOIS"
+                    pstatus = "enabled"
                 # CUSTOM
                 elif pid['exe'] == '/bin/bash':
                     ptype = "scriptLOIS"
+                    pstatus = "enabled"
                 else:
                     ptype = "generic"
+                    pstatus = "enabled"
 
                 # Manually put in the timestamp to display elsewhere
                 #   without jumping through dumb hoops
                 # But make a string that Grafana can display easily
-                gts = ts.strftime("%Y-%m-%d %H:%M:%S.%fZ")
-                proc.update({"timestamp": gts})
+                gts = ts.strftime("%Y-%m-%d %H:%M:%S.%f")
+                gf.update({"UTClastchecked": gts})
 
                 # Need to do this because dicts are mutable
                 ptags = tags.copy()
                 ptags.update({"type": ptype})
 
+                print("HERE YOU SOB")
+                print(gf)
+
                 # Make the packet
                 packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                            ts=ts,
                                                            tags=ptags,
-                                                           fields=proc)
+                                                           fields=gf)
+                print("GODDAMMIT")
+                print(packet)
+
                 # Store the packet
                 if dbname is not None:
                     dbase = utils.database.influxobj(dbname, connect=True)
                     dbase.writeToDB(packet)
                     dbase.closeDB()
 
-                # Save the packet
-                gf.update({ptype: proc})
+                # THIS COULD FAIL AND BE WEIRD IF writeToDB ISN'T FIXED
+                packets.append(packet)
         else:
             # If we were looking for a process (procName != None),
             #   we didn't find it. Sadness.
-            packet = []
-    else:
-        # If we're here
-        # Need to roll the logic up better
-        packet = []
+            packets.append([])
 
-    return packet
+    return packets
 
 
 def actionSpace(eSSH, baseYcmd, iobj, dbname=None, debug=False):
