@@ -106,9 +106,6 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
     # Timestamp of when this all (just) occured
     ts = dt.datetime.utcnow()
 
-    # Only works in Python >= 3.3!! But it's f'ing awesome
-    tsu = ts.timestamp()
-
     # Turn Yvette's JSON answer into an object
     fsa = decodeAnswer(fs, debug=debug)
 
@@ -126,7 +123,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
     #   Looks a bit more complicated since it's a dict that gives
     #   databasekey: YvetteAnswerKey
     desired = ['boottime', 'hostname']
-    pdesired = ['createtime', 'cmdline', 'num_threads',
+    pdesired = ['age', 'createtime', 'cmdline', 'num_threads',
                 'status', 'pid', 'ppid', 'terminal']
 
     gf = {}
@@ -149,69 +146,66 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
         except TypeError:
             searchstat = True
 
-        # Only do this if we really have a result
-        if psp is not None and searchstat is False:
-            packet = []
-            for npid in psp:
-                # Grab the actual dict values for the numerical PID key
-                pid = psp[npid]
-                # Now fill up a packet with the good stuff
-                for pk in pdesired:
-                    try:
-                        # Need to flatten some fools first
-                        if type(pid[pk]) == list:
-                            store = " ".join(pid[pk])
-                        else:
-                            store = pid[pk]
-                        gf.update({pk: store})
-                    except KeyError:
-                        gf.update({pk: None})
-                gf.update({'age': tsu - pid['createtime']})
-                # CUSTOM
-                if pid['exe'].startswith('/opt/LOIS'):
-                    ptype = "binLOIS"
-                    pstatus = "enabled"
-                # CUSTOM
-                elif pid['exe'] == '/bin/bash':
-                    ptype = "scriptLOIS"
-                    pstatus = "enabled"
-                else:
-                    ptype = "generic"
-                    pstatus = "enabled"
-
-                # Manually put in the timestamp to display elsewhere
-                #   without jumping through dumb hoops
-                # But make a string that Grafana can display easily
-                gts = ts.strftime("%Y-%m-%d %H:%M:%S.%f")
-                gf.update({"UTClastchecked": gts})
-
-                # Need to do this because dicts are mutable
-                ptags = tags.copy()
-                ptags.update({"type": ptype})
-
-                print("HERE YOU SOB")
-                print(gf)
-
-                # Make the packet
-                packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                           ts=ts,
-                                                           tags=ptags,
-                                                           fields=gf)
-                print("GODDAMMIT")
-                print(packet)
-
-                # Store the packet
-                if dbname is not None:
-                    dbase = utils.database.influxobj(dbname, connect=True)
-                    dbase.writeToDB(packet)
-                    dbase.closeDB()
-
-                # THIS COULD FAIL AND BE WEIRD IF writeToDB ISN'T FIXED
-                packets.append(packet)
-        else:
+        # psp == None means we didn't want to search for anything
+        if psp is None:
+            gf.update({"enabled": False})
             # If we were looking for a process (procName != None),
             #   we didn't find it. Sadness.
             packets.append([])
+        else:
+            # searchstat == False means the process wasn't found at all
+            if searchstat is False:
+                packet = []
+                for npid in psp:
+                    # Grab the actual dict values for the numerical PID key
+                    pid = psp[npid]
+                    # Now fill up a packet with the good stuff
+                    for pk in pdesired:
+                        try:
+                            # Need to flatten some fools first
+                            if type(pid[pk]) == list:
+                                store = " ".join(pid[pk])
+                            else:
+                                store = pid[pk]
+                            gf.update({pk: store})
+                        except KeyError:
+                            gf.update({pk: None})
+
+                    # CUSTOM
+                    if pid['exe'].startswith('/opt/LOIS'):
+                        ptype = "binLOIS"
+                        pstatus = "enabled"
+                    # CUSTOM
+                    elif pid['exe'] == '/bin/bash':
+                        ptype = "scriptLOIS"
+                        pstatus = "enabled"
+                    else:
+                        ptype = "generic"
+                        pstatus = "enabled"
+
+                    # Manually put in the timestamp to display elsewhere
+                    #   without jumping through dumb hoops
+                    # But make a string that Grafana can display easily
+                    gts = ts.strftime("%Y-%m-%d %H:%M:%S.%f")
+                    gf.update({"UTClastchecked": gts})
+
+                    # Need to do this because dicts are mutable
+                    ptags = tags.copy()
+                    ptags.update({"type": ptype})
+
+                    # Make the packet
+                    packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                               ts=ts,
+                                                               tags=ptags,
+                                                               fields=gf)
+                    # Store the packet
+                    if dbname is not None:
+                        dbase = utils.database.influxobj(dbname, connect=True)
+                        dbase.writeToDB(packet)
+                        dbase.closeDB()
+
+                    # THIS COULD FAIL AND BE WEIRD IF writeToDB ISN'T FIXED
+                    packets.append(packet)
 
     return packets
 
