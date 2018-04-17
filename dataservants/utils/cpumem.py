@@ -12,18 +12,23 @@ from __future__ import division, print_function, absolute_import
 
 import os
 import psutil
+import datetime as dt
 
 
-def find_procs_by_name(name):
+def find_procs_by_name(name,
+                       ignore=['yvette.py', 'alfred.py', 'wadsworth.py']):
     """
     Return a list of processes matching 'name'.
+
+    Ignores processes with ignore in them to keep it from finding the
+    searching process, which would be silly.
     """
     ls = []
     for p in psutil.process_iter(attrs=["name", "exe", "cmdline"]):
         skip = False
         try:
             _name = p.info['name']
-            cmdline = p.info['cmdline']
+            cmd = p.info['cmdline']
             exe = _name = p.info['exe']
             exe = p.exe()
         except (psutil.AccessDenied, psutil.ZombieProcess):
@@ -33,12 +38,21 @@ def find_procs_by_name(name):
             skip = True
             continue
 
-        if cmdline is None:
+        if cmd is None:
             skip = True
 
         if skip is False:
+            # Layer 1 check
             chk = False
-            chk = name in [os.path.basename(each) for each in cmdline]
+            chk = name in [os.path.basename(each) for each in cmd]
+
+            # Layer 2 checks
+            chk2 = False
+            for ig in ignore:
+                chk2 = ig in [os.path.basename(each.lower()) for each in cmd]
+                if chk2 is True:
+                    chk = False
+
             if name == _name or\
                chk is True or\
                os.path.basename(exe) == name:
@@ -63,6 +77,8 @@ def checkProcess(name='lois'):
     if name.lower() == 'none':
         name = None
 
+    tsu = dt.datetime.utcnow().timestamp()
+
     if name is not None:
         fprocs = find_procs_by_name(name)
         for p in fprocs:
@@ -72,6 +88,7 @@ def checkProcess(name='lois'):
                 pd = p.as_dict()
                 rd = {'cmdline': pd['cmdline'],
                       'createtime': pd['create_time'],
+                      'age': tsu - pd['create_time'],
                       'exe': pd['exe'],
                       'name': pd['name'],
                       'num_fds': pd['num_fds'],
