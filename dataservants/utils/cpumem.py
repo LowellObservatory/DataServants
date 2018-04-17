@@ -15,13 +15,34 @@ import psutil
 
 
 def find_procs_by_name(name):
-    "Return a list of processes matching 'name'."
+    """
+    Return a list of processes matching 'name'.
+    """
     ls = []
     for p in psutil.process_iter(attrs=["name", "exe", "cmdline"]):
-        if name == p.info['name'] or \
-                p.info['exe'] and os.path.basename(p.info['exe']) == name or \
-                p.info['cmdline'] and p.info['cmdline'][0] == name:
-            ls.append(p)
+        skip = False
+        try:
+            _name = p.info['name']
+            cmdline = p.info['cmdline']
+            exe = _name = p.info['exe']
+            exe = p.exe()
+        except (psutil.AccessDenied, psutil.ZombieProcess):
+            skip = True
+            pass
+        except psutil.NoSuchProcess:
+            skip = True
+            continue
+
+        if cmdline is None:
+            skip = True
+
+        if skip is False:
+            chk = False
+            chk = name in [os.path.basename(each) for each in cmdline]
+            if name == _name or\
+               chk is True or\
+               os.path.basename(exe) == name:
+                ls.append(p)
     return ls
 
 
