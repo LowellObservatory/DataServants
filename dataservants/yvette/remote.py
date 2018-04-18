@@ -101,8 +101,13 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                   dbname=None, debug=False):
     """
     """
+    # A place to store any/all packets that are made here, to be returned
+    packets = []
+
+    # Get the command string that Yvette will understand and then send it
     fcmd = rStringCheckProcess(baseYcmd, name=procName)
     fs = eSSH.sendCommand(fcmd)
+
     # Timestamp of when this all (just) occured
     ts = dt.datetime.utcnow()
 
@@ -119,40 +124,72 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
     #   false positives in the dashboard. CUSTOM.
     etags = ['binLOIS', 'scriptLOIS', 'generic']
 
-    # Fields from Yvette's answer that we want to record
-    #   Looks a bit more complicated since it's a dict that gives
-    #   databasekey: YvetteAnswerKey
+    # Fields from Yvette's answer that we want to record as a status packet.
     desired = ['boottime', 'hostname']
+
+    # Make and store the status packet; this is so we know whether something
+    #   is disabled, and know that the search actually occured.
+    #   Basically a heartbeat.
+    spa = {}
+    if fsa != {}:
+        # Line length control
+        psp = fsa['ProcessStats']['PIDS']
+
+        # These should always be in there, no matter what
+        for each in desired:
+            try:
+                if each == "boottime":
+                    spa.update({each: fsa['ProcessStats'][each]*1e3})
+                else:
+                    spa.update({each: fsa['ProcessStats'][each]})
+            except KeyError:
+                pass
+
+        # psp == None means we didn't want to search for anything
+        if psp is None:
+            spa.update({"SearchEnabled": False})
+        else:
+            spa.update({"SearchEnabled": True})
+
+        # Manually put in the timestamp to display elsewhere
+        #   without jumping through dumb hoops
+        # But make a string that Grafana can display easily (in ms)
+        gts = int(ts.timestamp()*1e3)
+        spa.update({"lastchecked": gts})
+
+        ptags = tags.copy()
+        ptags.update({'type': 'status'})
+        # Write a packet that we didn't even try and the status
+        #   panel associated with this can be set to 'disabled'
+        # Make the packet
+        packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                   ts=ts,
+                                                   tags=ptags,
+                                                   fields=spa)
+        # Store the packet
+        if dbname is not None:
+            dbase = utils.database.influxobj(dbname, connect=True)
+            dbase.writeToDB(packet)
+            dbase.closeDB()
+
+        packets.append(packet)
+
+    # Now for the actual process information, if there is any;
+    #   FOR THE LOVE OF THE FLYING SPAGHETTI MONSTER MAKE SURE THESE MATCH
     pdesired = ['age', 'createtime', 'cmdline', 'num_threads',
                 'status', 'pid', 'ppid', 'terminal']
+    pdesiredfmt = [float, float, str, int,
+                   str, int, int, str]
 
     gf = {}
     packets = []
     if fsa != {}:
-        # These should always be in there, no matter what
-        for each in desired:
-            try:
-                gf.update({each: fsa['ProcessStats'][each]})
-            except KeyError:
-                pass
-
-        # Line length control
-        psp = fsa['ProcessStats']['PIDS']
-
-        # Remember that psp is a dict! hasattr() won't work
-        #   Also need a try in case psp is really None (indicating no search)
-        try:
-            searchstat = 'ProcessNotFound' in psp
-        except TypeError:
-            searchstat = True
-
         # psp == None means we didn't want to search for anything
-        if psp is None:
-            gf.update({"enabled": False})
-            # If we were looking for a process (procName != None),
-            #   we didn't find it. Sadness.
-            packets.append([])
-        else:
+        if psp is not None:
+            # Check to see if we failed to find the process:
+            #   Remember that psp is a dict! hasattr() won't work.
+            searchstat = 'ProcessNotFound' in psp
+
             # searchstat == False means the process wasn't found at all
             if searchstat is False:
                 packet = []
@@ -182,12 +219,6 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                     else:
                         ptype = "generic"
                         pstatus = "enabled"
-
-                    # Manually put in the timestamp to display elsewhere
-                    #   without jumping through dumb hoops
-                    # But make a string that Grafana can display easily
-                    gts = ts.strftime("%Y-%m-%d %H:%M:%S.%f")
-                    gf.update({"UTClastchecked": gts})
 
                     # Need to do this because dicts are mutable
                     ptags = tags.copy()
