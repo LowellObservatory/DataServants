@@ -14,7 +14,7 @@ import sys
 import datetime as dt
 
 
-def makeInfluxPacket(meas='', ts=dt.datetime.now(), tags={}, fields={},
+def makeInfluxPacket(meas='', ts=dt.datetime.utcnow(), tags={}, fields={},
                      debug=False):
     """
     Makes an InfluxDB styled packet given the measurement name, metadata tags,
