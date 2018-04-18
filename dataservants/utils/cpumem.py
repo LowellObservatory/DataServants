@@ -77,6 +77,7 @@ def checkProcess(name='lois'):
     if name.lower() == 'none':
         name = None
 
+    ts = dt.datetime.now().timestamp()
     tsu = dt.datetime.utcnow().timestamp()
 
     if name is not None:
@@ -88,7 +89,12 @@ def checkProcess(name='lois'):
                 pd = p.as_dict()
                 rd = {'cmdline': pd['cmdline'],
                       'createtime': pd['create_time'],
-                      'age': tsu - pd['create_time'],
+                      # THIS IS PRETTY WEIRD.
+                      #   Docs say that 'create_time' is in UTC...BUT
+                      #   tsu - pd['create_time']
+                      #   is OFF by the UTC offset. WTF.
+                      # Using local time to compensate for now.
+                      'age': ts - pd['create_time'],
                       'exe': pd['exe'],
                       'name': pd['name'],
                       'num_fds': pd['num_fds'],
