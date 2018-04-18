@@ -75,6 +75,9 @@ archiving.conf
 # Ignore rando code dirs
 .vscode
 
+# Stupid OS X shit
+*.DS_Store
+
 # Some old stuff that doesn't need control but I want to keep locally
 /servants/old/
 /servants/unsorted/
