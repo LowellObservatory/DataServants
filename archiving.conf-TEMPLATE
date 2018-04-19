@@ -5,9 +5,11 @@ port=22
 user=user1
 srcdir=/data/path/on/host1/
 dirmask=[0-9]{8}.*
+filemask=*.fits
 destdir=/destination/path/on/local/
 enabled=True
 engEnabled=True
+
 
 [key2]
 name=name2
@@ -16,6 +18,7 @@ port=22
 user=user2
 srcdir=/data/path/on/host2/
 dirmask=[0-9]{8}.*
+filemask=*.fit,*.fits
 destdir=/destination/path/on/local/
 enabled=True
 engEnabled=True
