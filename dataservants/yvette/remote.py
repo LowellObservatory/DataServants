@@ -157,6 +157,15 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
         gts = int(ts.timestamp()*1e3)
         spa.update({"lastchecked": gts})
 
+        # Check to see if we failed to find the process:
+        #   Remember that psp is a dict! hasattr() won't work.
+        if psp is not None:
+            searchstat = 'ProcessNotFound' in psp
+            if searchstat is False:
+                spa.update({"ProcessNotFound": False})
+            else:
+                spa.update({"ProcessNotFound": True})
+
         ptags = tags.copy()
         ptags.update({'type': 'status'})
         # Write a packet that we didn't even try and the status
@@ -186,10 +195,6 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
     if fsa != {}:
         # psp == None means we didn't want to search for anything
         if psp is not None:
-            # Check to see if we failed to find the process:
-            #   Remember that psp is a dict! hasattr() won't work.
-            searchstat = 'ProcessNotFound' in psp
-
             # searchstat == False means the process wasn't found at all
             if searchstat is False:
                 packet = []
