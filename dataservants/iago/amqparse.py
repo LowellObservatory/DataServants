@@ -152,6 +152,9 @@ def parserLPI(ts, msg, dbname=None):
 
         # Actually commit the packet
         dbase = utils.database.influxobj(dbname, connect=True)
+        # No arguments here means a default of 6 weeks of data held
+        dbase.alterRetention()
+
         dbase.writeToDB(packet)
         dbase.closeDB()
 
@@ -202,6 +205,9 @@ def parserPDU(ts, msg, dbname=None):
 
             # Actually commit the packet
             dbase = utils.database.influxobj(dbname, connect=True)
+            # No arguments here means a default of 6 weeks of data held
+            dbase.alterRetention()
+
             dbase.writeToDB(packet)
             dbase.closeDB()
 

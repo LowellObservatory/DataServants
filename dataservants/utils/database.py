@@ -42,6 +42,14 @@ class influxobj():
         else:
             self.client = None
 
+    def alterRetention(self, pname='Hold6w', duration='6w'):
+        """
+        """
+        if influxdb is not None:
+            self.client.alter_retention_policy(pname,
+                                               duration=duration,
+                                               default=True)
+
     def openDB(self):
         """
         """
@@ -112,27 +120,3 @@ class influxobj():
                     self.client.drop_database(self.dbase)
                 except Exception as err:
                     print(str(err))
-
-
-def example():
-    """
-    """
-    dbname = 'beeeeees'
-    json_body = [{"measurement": "cpu_load_short",
-                  "tags": {"host": "server01",
-                           "region": "us-west"
-                           },
-                  "time": dt.datetime.now(),
-                  "fields": {"value": np.random.normal(loc=1.0)}
-                  }
-                 ]
-
-    # Calling with connect=True establishes the connection, which
-    #   populates influxobj.client with the right stuff
-    ifo = influxobj(dbname, connect=True)
-    ifo.writeToDB(json_body)
-
-    result = ifo.query('select value from cpu_load_short;')
-    print("Result: {0}".format(result))
-
-    ifo.closeDB()
