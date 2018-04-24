@@ -62,21 +62,25 @@ if __name__ == "__main__":
             for each in idict:
                 it = idict[each]
                 if it.type.lower() == "activemq":
-                    if conn is None:
-                        print("Connection not established; connecting now...")
-                        # Establish connections and subscriptions w/our helper
-                        conn = iago.amqparse.amqHelper(it.host,
-                                                       it.topics,
-                                                       dbname=it.influxdbname,
-                                                       user=None,
-                                                       passw=None,
-                                                       port=61613,
-                                                       connect=True)
-                    else:
-                        print("Connection up; going back to sleep")
+                    # Establish connections and subscriptions w/our helper
+                    conn = iago.amqparse.amqHelper(it.host,
+                                                   it.topics,
+                                                   dbname=it.influxdbname,
+                                                   user=None,
+                                                   passw=None,
+                                                   port=61613,
+                                                   connect=True)
 
             # Semi-infinite loop
             while runner.halt is False:
+
+                # Double check that the connection is still up
+                if conn.conn is None:
+                    print("No connection! Retrying...")
+                    conn.connect()
+                else:
+                    print("Connection still valid")
+
                 # Consider taking a big nap
                 if runner.halt is False:
                     print("Starting a big sleep")
