@@ -72,6 +72,8 @@ instruments.conf
 alfred.conf
 archiving.conf
 iago.conf
+ActiveMQProducer.py
+TopicSnooper.py
 
 # Ignore rando code dirs
 .vscode
