@@ -42,10 +42,13 @@ if __name__ == "__main__":
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
     idict, args, runner = iago.squawk.beginSquawking(procname=mynameis,
-                                                     logfile=True)
+                                                     logfile=False)
 
     # Quick renaming to keep line length under control
     malarms = utils.multialarm
+
+    # ActiveMQ connection checker
+    conn = None
 
     try:
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
@@ -53,12 +56,28 @@ if __name__ == "__main__":
             #   (helpful to find starts/restarts when scanning thru logs)
             utils.common.printPreamble(p, idict)
 
+            # One by one, set up the messager connections.
+            #   THIS OF COURSE implies that the connections are done elsewhere
+            #   in Iago's codepath; specifically iago.amqparse (etc.)
+            for each in idict:
+                it = idict[each]
+                if it.type.lower() == "activemq":
+                    if conn is None:
+                        print("Connection not established; connecting now...")
+                        # Establish connections and subscriptions w/our helper
+                        conn = iago.amqparse.amqHelper(it.host,
+                                                       it.topics,
+                                                       dbname=it.influxdbname,
+                                                       user=None,
+                                                       passw=None,
+                                                       port=61613,
+                                                       connect=True)
+                    else:
+                        print("Connection up; going back to sleep")
+
             # Semi-infinite loop
             while runner.halt is False:
-
-                # Do stuff here
-
-                # After all the instruments are done, take a big nap
+                # Consider taking a big nap
                 if runner.halt is False:
                     print("Starting a big sleep")
                     # Sleep for bigsleep, but in small chunks to check abort
@@ -69,6 +88,9 @@ if __name__ == "__main__":
 
             # The above loop is exited when someone sends SIGTERM
             print("PID %d is now out of here!" % (p.pid))
+
+            # Disconnect from the ActiveMQ broker
+            conn.disconnect()
 
             # The PID file will have already been either deleted/overwritten by
             #   another function/process by this point, so just give back the

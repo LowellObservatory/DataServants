@@ -206,7 +206,7 @@ class InstrumentHost():
                 one remote host won't block indefinitely.
     """
     def __init__(self, conf=None, parseHardFail=True):
-        # This should mirror what's in the configuration file
+        # This should mirror what's in ALL of the differnt .conf files.
         # Assign them first just to make sure they always exist
         self.name = ''
         self.host = ''
@@ -217,6 +217,9 @@ class InstrumentHost():
         self.dirmask = ''
         self.filemask = ''
         self.procmon = ''
+        self.type = ''
+        self.topics = ''
+        self.influxdbname = ''
         self.enabled = False
         self.engEnabled = False
         self.running = False
@@ -231,7 +234,8 @@ class InstrumentHost():
                          (key.lower() == 'timeout'):
                         # Skip the keys that are self-defined in the class
                         pass
-                    elif key.lower() == 'procmon':
+                    elif (key.lower() == 'procmon') or \
+                         (key.lower() == 'influxdbname'):
                         if conf[key].lower() == 'none':
                             # SPECIAL handling to capture "None" -> None
                             #  Could do some extra split() here to allow
@@ -239,6 +243,8 @@ class InstrumentHost():
                             setattr(self, key, None)
                         else:
                             setattr(self, key, conf[key])
+                    elif key.lower() == "topics":
+                        setattr(self, key, conf[key].split(","))
                     else:
                         setattr(self, key, conf[key])
                 except KeyError as err:

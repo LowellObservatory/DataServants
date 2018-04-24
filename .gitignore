@@ -71,6 +71,7 @@ passwords.conf
 instruments.conf
 alfred.conf
 archiving.conf
+iago.conf
 
 # Ignore rando code dirs
 .vscode

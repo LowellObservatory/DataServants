@@ -47,7 +47,9 @@ def parseInstConf(filename, debug=False, parseHardFail=True):
     # Making a dict of *just* the active instruments
     idict = OrderedDict()
     for inst in inlist:
-        if inst.enabled is True:
+        # Need to add None as well to help for the case where I forget
+        #   to put an 'enabled' line in a new flavor of conf file...
+        if inst.enabled is True or inst.enabled is None:
             idict.update({inst.name: inst})
 
     return idict

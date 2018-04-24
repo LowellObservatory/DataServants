@@ -34,7 +34,7 @@ def parseArguments(prog=None):
 
     parser.add_argument('-l', '--log', metavar='/path/to/file.log', type=str,
                         help='File for logging of information/status messages',
-                        default='/tmp/alfred.log', nargs='?')
+                        default='/tmp/iago.log', nargs='?')
 
     parser.add_argument('-k', '--kill', action='store_true',
                         help='Kill an already running instance of Alfred',
