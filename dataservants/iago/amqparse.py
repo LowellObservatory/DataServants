@@ -83,7 +83,7 @@ class subscriber(ConnectionListener):
         if tname == 'joePduResult':
             parserPDU(headers['timestamp'], body, dbname=self.influxdbname)
         if tname == 'lightPathInformation':
-            pass
+            parserLPI(headers['timestamp'], body, dbname=self.influxdbname)
         else:
             # Intended to be the endpoint of the auto-XML influx publisher
             pass
@@ -101,48 +101,53 @@ def parserLPI(ts, msg, dbname=None):
     value = msg.split("=")[1]
     covers, coords = False, False
 
-    if key.lower() == 'mirrorcovermode' or key.lower == 'instrumentCoverState':
+    if key.lower() == 'mirrorcovermode' or \
+       key.lower() == 'instrumentcoverstate':
         if value.lower() == "open":
             value = 1
         else:
             value = 0
 
         # Reformat the key to be nicer
-        if key.lower == 'mirrorcovermode':
+        if key.lower() == 'mirrorcovermode':
             key = "MirrorCover"
         else:
             key = "InstrumentCover"
 
         # Cheaty flag for later
         covers = True
-    elif key.lower == "foldMirrorsStageCoordindates":
+    elif key.lower() == "foldmirrorsdtagecoordindates":
         f1, f2, f3, f4 = value.split(",")
         f1 = float(f1)
         f2 = float(f2)
         f3 = float(f3)
         f4 = float(f4)
         coords = True
-    elif key.lower == "instrumentCoverStageCoordindate":
+    elif key.lower() == "instrumentcoverstagecoordindate":
         i1 = float(value)
         coords = True
+    else:
+        # If it's not one of these, just cheat and pass
+        dbname = None
 
     if dbname is not None:
-        meas = "LightPath"
+        meas = ["LightPath"]
         if covers is True:
-            tags = "Covers"
-            fields = {key: value}
+            tags = {"Covers": key}
+            fields = {"State": value}
         elif coords is True:
-            tags = "Coordinates"
             # Figure out which coordinates we're storing
             try:
                 # If this exists, if'll just pass by
                 i1
-                fields = {"InstCovCoord": i1}
+                fields = {"CoverCoord": i1}
+                tags = {"Coordinates": "InstCover"}
             except NameError:
-                fields = {"CubeMirrorCoord1": f1}
-                fields.update({"CubeMirrorCoord2": f2})
-                fields.update({"CubeMirrorCoord3": f3})
-                fields.update({"CubeMirrorCoord4": f4})
+                fields = {"Mirror1": f1}
+                fields.update({"Mirror2": f2})
+                fields.update({"Mirror3": f3})
+                fields.update({"Mirror4": f4})
+                tags = {"Coordinates": "CubeMirrors"}
 
         # Note: passing ts=None lets python Influx do the timestamp for you.
         packet = utils.packetizer.makeInfluxPacket(meas=meas,
@@ -188,13 +193,12 @@ def parserPDU(ts, msg, dbname=None):
 
         if dbname is not None:
             # Make the InfluxDB style packet
-            meas = "PDUStates"
+            meas = ["PDUStates"]
             # The "tag" is the pdu's hostname since there are multiple
-            tag = host
-            oname = "Outlet%d" % str(outnumb)
-            fields = {oname: outstat}
-            labname = "Outlet%dLabel" % str(outnumb)
-            fields.update({labname: label})
+            tag = {"Name": host, "OutletNumber": int(outnumb)}
+
+            fields = {"State": outstat}
+            fields.update({"Label": label})
 
             # Make and store the influx packet
             # Note: passing ts=None lets python Influx do the timestamp for you
@@ -202,6 +206,8 @@ def parserPDU(ts, msg, dbname=None):
                                                        ts=None,
                                                        tags=tag,
                                                        fields=fields)
+
+            print(packet)
 
             # Actually commit the packet
             dbase = utils.database.influxobj(dbname, connect=True)
@@ -211,7 +217,7 @@ def parserPDU(ts, msg, dbname=None):
             dbase.writeToDB(packet)
             dbase.closeDB()
 
-            print(meas, tag, oname, fields)
+            print(meas, tag, fields)
 
 
 def connAMQ(default_host, topics, dbname=None, user=None, passw=None):

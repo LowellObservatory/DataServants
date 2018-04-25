@@ -46,9 +46,15 @@ class influxobj():
         """
         """
         if influxdb is not None:
-            self.client.alter_retention_policy(pname,
-                                               duration=duration,
-                                               default=True)
+            try:
+                self.client.alter_retention_policy(pname,
+                                                   duration=duration,
+                                                   default=True)
+            except influxdb.exceptions.InfluxDBClientError:
+                self.client.create_retention_policy(pname,
+                                                    duration,
+                                                    1,
+                                                    default=True)
 
     def openDB(self):
         """
