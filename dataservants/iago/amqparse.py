@@ -241,6 +241,8 @@ def connAMQ(default_host, topics, dbname=None, user=None, passw=None):
 
         for i, activeTopic in enumerate(topics):
             print("Subscribing to %s" % (activeTopic))
+            # Let's be good citizens and unsubscribe any stale ones first
+            conn.unsubscribe(baseid + i)
             conn.subscribe("/topic/" + activeTopic, baseid+i)
     except Exception as err:
         print(str(err))
