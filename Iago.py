@@ -61,6 +61,7 @@ if __name__ == "__main__":
             #   in Iago's codepath; specifically iago.amqparse (etc.)
             for each in idict:
                 it = idict[each]
+                first = False
                 if it.type.lower() == "activemq":
                     # Establish connections and subscriptions w/our helper
                     conn = iago.amqparse.amqHelper(it.host,
@@ -70,6 +71,7 @@ if __name__ == "__main__":
                                                    passw=None,
                                                    port=61613,
                                                    connect=True)
+                    first = True
 
             # Semi-infinite loop
             while runner.halt is False:
@@ -79,7 +81,8 @@ if __name__ == "__main__":
                 if conn.conn is None:
                     print("No connection at all! Retrying...")
                     conn.connect()
-                elif conn.conn.transport.connected is False:
+                elif conn.conn.transport.connected is False and first is False:
+                    # Added the "first" flag to take care of a weird bug
                     print("Connection died! Reestablishing...")
                     conn.connect()
                 else:
