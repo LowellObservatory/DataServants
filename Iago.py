@@ -75,8 +75,12 @@ if __name__ == "__main__":
             while runner.halt is False:
 
                 # Double check that the connection is still up
+                #   NOTE: conn.connect() handles ConnectionError exceptions
                 if conn.conn is None:
-                    print("No connection! Retrying...")
+                    print("No connection at all! Retrying...")
+                    conn.connect()
+                elif conn.conn.transport.connected is False:
+                    print("Connection died! Reestablishing...")
                     conn.connect()
                 else:
                     print("Connection still valid")

@@ -20,6 +20,7 @@ from dateutil import tz
 import xmltodict as xmld
 
 import stomp
+from stomp.exception import StompException
 from stomp.listener import ConnectionListener
 
 from .. import utils
@@ -277,7 +278,7 @@ class amqHelper():
             for i, activeTopic in enumerate(self.topics):
                 print("Subscribing to %s" % (activeTopic))
                 self.conn.subscribe("/topic/" + activeTopic, baseid+i)
-        except Exception as err:
+        except StompException as err:
             self.conn = None
             print(str(err))
 
