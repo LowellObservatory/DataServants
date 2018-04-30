@@ -102,7 +102,7 @@ def beginSquawking(procname='iago', logfile=True):
                 # Returning STDOUT and STDERR to the console/whatever
                 utils.common.nicerExit()
             else:
-                print("LOOK AT ME I'M THE VALET NOW")
+                print("LOOK AT ME I'M THE PARROT NOW")
                 print("%d second pause to allow the other process to exit." %
                       (killSleep))
                 time.sleep(killSleep)
