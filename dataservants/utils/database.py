@@ -45,7 +45,7 @@ class influxobj():
     def alterRetention(self, pname='Hold6w', duration='6w'):
         """
         """
-        if influxdb is not None:
+        if influxdb is not None and self.client is not None:
             try:
                 self.client.alter_retention_policy(pname,
                                                    duration=duration,
@@ -71,9 +71,10 @@ class influxobj():
                 self.client.create_database(self.dbase)
             except Exception as err:
                 self.client = None
-                print(str(err))
+                print("Could not open database %s:\n%s" % (self.dbase,
+                                                           str(err)))
         else:
-            print("InfluxDB-python not found!")
+            print("InfluxDB-python not found or server not running!")
 
     def writeToDB(self, vals, debug=False):
         """
