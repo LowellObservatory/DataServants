@@ -13,7 +13,7 @@
 Further description.
 """
 
-
+import os
 import time
 import datetime as dt
 from dateutil import tz
@@ -82,26 +82,117 @@ class subscriber(ConnectionListener):
         # Now send the packet to the right place for processing.
         #   These need special parsing because they're just straight text
         if tname == 'joePduResult':
-            parserPDU(headers['timestamp'], body, dbname=self.influxdbname)
-        if tname == 'lightPathInformation':
-            parserLPI(headers['timestamp'], body, dbname=self.influxdbname)
+            parserPDU(headers, body, dbname=self.influxdbname)
+        elif tname == 'lightPathInformation':
+            parserLPI(headers, body, dbname=self.influxdbname)
+        elif tname.endswith("loisLog"):
+            parserLOlogs(headers, body, dbname=self.influxdbname)
         else:
             # Intended to be the endpoint of the auto-XML influx publisher
             pass
 
 
-def parseLOISlogs(ts, msg, dbname=None):
+def parserLOlogs(hed, msg, dbname=None):
     """
-    '22:26:55 Level_5:CCD sensor adus temp1 2248 temp2 3329 set1 2249 heat1 2016'
-    '22:26:55 Level_4:CCD Heater Values:1.21 0.00'
     '22:26:55 Level_4:CCD Temp:-110.06 18.54 Setpoints:-109.95 0.00 '
     '22:26:55 Level_4:Telescope threads have been reactivated'
     """
-    if msg.lower()[8:].startswith("Level_5:CCD sensor adus"):
+    ts = hed['timestamp']
+    topic = os.path.basename(hed['destination'])
+
+    # print(ts, msg)
+    # Some time shenanigans; the LOIS log doesn't include date but
+    #   we can assume it's referencing UT time on the same day.
+    #   I suppose that there could be some ambiguity right at UT midnight
+    #   ... but oh well.
+    now = dt.datetime.utcnow()
+    ltime = msg[0:8].split(":")
+    now = now.replace(hour=int(ltime[0]), minute=int(ltime[1]),
+                      second=int(ltime[2]), microsecond=0)
+
+    lts = now.strftime("%Y-%m-%dT%H:%M:%S.%f")
+    # Get just the log level
+    loglevel = msg.split(" ")[1].split(":")[0]
+    # Now get the message, putting back together anything split by ":"
+    #   this is so we can operate fully on the full message string
+    logmsg = " ".join(msg.split(":")[3:]).strip()
+
+    print("%s from %s:" % (lts, topic))
+
+    # Set the stage for our eventual influxdb packet
+    meas = ['InstrumentTelemetry']
+    tags = {'name': topic.split(".")[1]}
+
+    if loglevel == "Level_5" or loglevel == "Level_4":
+        fields = None
+        if logmsg.startswith("CCD sensor adus"):
+            # print("Parsing: %s" % (logmsg))
+            # CCD sensor adus temp1 2248 temp2 3329 set1 2249 heat1 2016'
+            adutemp1 = int(logmsg.split(" ")[4])
+            adutemp2 = int(logmsg.split(" ")[6])
+            aduset1 = int(logmsg.split(" ")[8])
+            aduheat1 = int(logmsg.split(" ")[10])
+
+            fields = {"aduT1": adutemp1}
+            fields.update({"aduT2": adutemp2})
+            fields.update({"aduT2": adutemp2})
+            fields.update({"aduS1": aduset1})
+            fields.update({"aduH1": aduheat1})
+
+            print(adutemp1, adutemp2, aduset1, aduheat1)
+        elif logmsg.startswith("CCD Heater"):
+            # NOTE! This one will have had a ":" removed by the
+            #   logmsg creation line above, so you can just split normally
+            # print("Parsing: %s" % (logmsg))
+            # CCD Heater Values:1.21 0.00
+            heat1 = float(logmsg.split(" ")[3])
+            heat2 = float(logmsg.split(" ")[4])
+
+            fields = {"H1": heat1}
+            fields.update({"H2": heat2})
+
+            # print(heat1, heat2)
+        elif logmsg.startswith("CCD Temp"):
+            # Same as "CCD Heater" in that ":" have been removed by this point
+            # print("Parsing: %s" % (logmsg))
+            # CCD Temp -110.06 18.54 Setpoints -109.95 0.00 '
+            temp1 = float(logmsg.split(" ")[2])
+            temp2 = float(logmsg.split(" ")[3])
+            set1 = float(logmsg.split(" ")[5])
+            set2 = float(logmsg.split(" ")[6])
+
+            fields = {"T1": temp1}
+            fields.update({"T2": temp2})
+            fields.update({"S1": set1})
+            fields.update({"S2": set2})
+
+            # print(temp1, temp2, set1, set2)
+        else:
+            fields = None
+            # print(loglevel, logmsg)
+
+        # Make the InfluxDB packet and store it, skipping if fields is None
+        if fields is not None:
+            # Note: passing ts=None lets python Influx do the timestamp for you
+            packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                       ts=None,
+                                                       tags=tags,
+                                                       fields=fields)
+
+            print(packet)
+
+            # Actually commit the packet
+            dbase = utils.database.influxobj(dbname, connect=True)
+            # No arguments here means a default of 6 weeks of data held
+            dbase.alterRetention()
+
+            dbase.writeToDB(packet)
+            dbase.closeDB()
+    else:
         pass
 
 
-def parserLPI(ts, msg, dbname=None):
+def parserLPI(hed, msg, dbname=None):
     """
     'mirrorCoverMode=Open'
     'instrumentCoverState=OPEN'
@@ -109,6 +200,8 @@ def parserLPI(ts, msg, dbname=None):
     'foldMirrorsState=HOME,HOME,HOME,HOME'
     'foldMirrorsStageCoordindates=+0.00,+0.00,+0.00,+0.00'
     """
+    ts = hed['timestamp']
+
     key = msg.split("=")[0]
     value = msg.split("=")[1]
     covers, coords = False, False
@@ -178,11 +271,13 @@ def parserLPI(ts, msg, dbname=None):
         print(meas, tags, fields)
 
 
-def parserPDU(ts, msg, dbname=None):
+def parserPDU(hed, msg, dbname=None):
     """
     'gwavespdu2.lowell.edu:23 IPC ONLINE!'
     'gwavespdu2.lowell.edu:23 OUTLET 2 ON ( UNIT#0 J2 )NIH-TEMP'
     """
+    ts = hed['timestamp']
+
     # Cut the hostname down to something more managable
     hostname = msg.split(" ")[0]
     host = hostname.split(":")[0].split(".")[0]
