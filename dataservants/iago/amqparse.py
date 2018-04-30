@@ -90,6 +90,17 @@ class subscriber(ConnectionListener):
             pass
 
 
+def parseLOISlogs(ts, msg, dbname=None):
+    """
+    '22:26:55 Level_5:CCD sensor adus temp1 2248 temp2 3329 set1 2249 heat1 2016'
+    '22:26:55 Level_4:CCD Heater Values:1.21 0.00'
+    '22:26:55 Level_4:CCD Temp:-110.06 18.54 Setpoints:-109.95 0.00 '
+    '22:26:55 Level_4:Telescope threads have been reactivated'
+    """
+    if msg.lower()[8:].startswith("Level_5:CCD sensor adus"):
+        pass
+
+
 def parserLPI(ts, msg, dbname=None):
     """
     'mirrorCoverMode=Open'
