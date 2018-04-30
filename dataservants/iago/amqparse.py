@@ -165,6 +165,7 @@ def parserLOlogs(hed, msg, dbname=None):
             fields.update({"T2": temp2})
             fields.update({"S1": set1})
             fields.update({"S2": set2})
+            fields.update({"T1S1delta": temp1-set1})
 
             # print(temp1, temp2, set1, set2)
         else:
