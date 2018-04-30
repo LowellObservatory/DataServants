@@ -14,7 +14,7 @@ import argparse as argp
 
 
 def parseArguments(prog=None):
-    """Setup command line arguments that Alfred will use.
+    """Setup command line arguments that Iago will use.
     """
     fclass = argp.ArgumentDefaultsHelpFormatter
 
@@ -37,7 +37,7 @@ def parseArguments(prog=None):
                         default='/tmp/iago.log', nargs='?')
 
     parser.add_argument('-k', '--kill', action='store_true',
-                        help='Kill an already running instance of Alfred',
+                        help='Kill an already running instance of Iago',
                         default=False)
 
     # Note: Need to specify dest= here since there are multiple long options
