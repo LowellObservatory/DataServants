@@ -117,7 +117,7 @@ def parserLOlogs(hed, msg, dbname=None):
     #   this is so we can operate fully on the full message string
     logmsg = " ".join(msg.split(":")[3:]).strip()
 
-    print("%s from %s:" % (lts, topic))
+    # print("%s from %s:" % (lts, topic))
 
     # Set the stage for our eventual influxdb packet
     meas = ['InstrumentTelemetry']
@@ -139,7 +139,7 @@ def parserLOlogs(hed, msg, dbname=None):
             fields.update({"aduS1": aduset1})
             fields.update({"aduH1": aduheat1})
 
-            print(adutemp1, adutemp2, aduset1, aduheat1)
+            # print(adutemp1, adutemp2, aduset1, aduheat1)
         elif logmsg.startswith("CCD Heater"):
             # NOTE! This one will have had a ":" removed by the
             #   logmsg creation line above, so you can just split normally
