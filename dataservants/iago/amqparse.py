@@ -26,6 +26,87 @@ from stomp.listener import ConnectionListener
 from .. import utils
 
 
+class amqHelper():
+    def __init__(self, default_host, topics,
+                 dbname=None, user=None, passw=None, port=61613,
+                 baseid=8675309, connect=True):
+        self.host = default_host
+        self.port = port
+        self.topics = topics
+        self.baseid = baseid
+        self.dbname = dbname
+        self.user = user
+        self.password = passw
+
+        if connect is True:
+            self.connect(baseid=self.baseid)
+
+    def connect(self, baseid=8675309):
+        # TODO:
+        #   Put a timer on connection
+        try:
+            print("Connecting to %s" % (self.host))
+            self.conn = stomp.Connection([(self.host, self.port)])
+
+            self.conn.set_listener('HamSpy', subscriber(dbname=self.dbname))
+            self.conn.start()
+            self.conn.connect()
+
+            for i, activeTopic in enumerate(self.topics):
+                print("Subscribing to %s" % (activeTopic))
+                self.conn.subscribe("/topic/" + activeTopic, baseid+i)
+        except StompException as err:
+            self.conn = None
+            print(str(err))
+
+    def disconnect(self):
+        if self.conn is not None:
+            self.conn.disconnect()
+            print("Disconnected from %s" % (self.host))
+
+
+class subscriber(ConnectionListener):
+    def __init__(self, dbname=None):
+        # Adding an extra argument to the subclass
+        self.influxdbname = dbname
+
+    # Subclassing stomp.listener.ConnectionListener
+    def on_message(self, headers, body):
+        tname = headers['destination'].split('/')[-1]
+        try:
+            xml = xmld.parse(body)
+            # If we want to have the XML as a string:
+            # res = {tname: [headers, dumpPacket(xml)]}
+            # If we want to have the XML as an object:
+            res = {tname: [headers, xml]}
+        except xmld.expat.ExpatError:
+            # This means that XML wasn't found, so it's likely just a string
+            #   packet with little/no structure. Attach the subscription name
+            #   as a tag so someone else can deal with the thing
+            res = {tname: [headers, body]}
+        except Exception as err:
+            # This means that there was some kind of transport error
+            #   or it couldn't figure out the encoding for some reason.
+            #   Scream into the log but keep moving
+            print("="*42)
+            print(headers)
+            print(body)
+            print(str(err))
+            print("="*42)
+
+        # Now send the packet to the right place for processing.
+        #   These need special parsing because they're just straight text
+        if tname == 'joePduResult':
+            parserPDU(headers, body, dbname=self.influxdbname)
+        elif tname == 'lightPathInformation':
+            parserLPI(headers, body, dbname=self.influxdbname)
+        elif tname.endswith("loisLog"):
+            parserLOlogs(headers, body, dbname=self.influxdbname)
+        else:
+            # Intended to be the endpoint of the auto-XML influx publisher
+            pass
+
+
 def packetVintage(ts, nowUTC):
     """
     Given an XML packet's timestamp, return how old it is compared to when
@@ -57,39 +138,6 @@ def dumpPacket(pxml):
     pretty = xmld.unparse(pxml, pretty=True)
 
     return pretty
-
-
-class subscriber(ConnectionListener):
-    def __init__(self, dbname=None):
-        # Adding an extra argument to the subclass
-        self.influxdbname = dbname
-
-    # Subclassing stomp.listener.ConnectionListener
-    def on_message(self, headers, body):
-        tname = headers['destination'].split('/')[-1]
-        try:
-            xml = xmld.parse(body)
-            # If we want to have the XML as a string:
-            # res = {tname: [headers, dumpPacket(xml)]}
-            # If we want to have the XML as an object:
-            res = {tname: [headers, xml]}
-        except xmld.expat.ExpatError:
-            # This means that XML wasn't found, so it's likely just a string
-            #   packet with little/no structure. Attach the subscription name
-            #   as a tag so someone else can deal with the thing
-            res = {tname: [headers, body]}
-
-        # Now send the packet to the right place for processing.
-        #   These need special parsing because they're just straight text
-        if tname == 'joePduResult':
-            parserPDU(headers, body, dbname=self.influxdbname)
-        elif tname == 'lightPathInformation':
-            parserLPI(headers, body, dbname=self.influxdbname)
-        elif tname.endswith("loisLog"):
-            parserLOlogs(headers, body, dbname=self.influxdbname)
-        else:
-            # Intended to be the endpoint of the auto-XML influx publisher
-            pass
 
 
 def parserLOlogs(hed, msg, dbname=None):
@@ -326,72 +374,3 @@ def parserPDU(hed, msg, dbname=None):
             dbase.closeDB()
 
             print(meas, tag, fields)
-
-
-def connAMQ(default_host, topics, dbname=None, user=None, passw=None):
-    """
-    """
-    # To identify our subscriptions
-    baseid = 8675309
-
-    # TODO:
-    #   Put a timer on connection
-    #   Make this into a class?
-
-    try:
-        print("Connecting to %s" % (default_host))
-        conn = stomp.Connection([(default_host, 61613)])
-
-        conn.set_listener('HamSpy', subscriber(dbname=dbname))
-        conn.start()
-        conn.connect()
-
-        for i, activeTopic in enumerate(topics):
-            print("Subscribing to %s" % (activeTopic))
-            # Let's be good citizens and unsubscribe any stale ones first
-            conn.unsubscribe(baseid + i)
-            conn.subscribe("/topic/" + activeTopic, baseid+i)
-    except Exception as err:
-        print(str(err))
-    finally:
-        conn.disconnect()
-        print("Disconnected from %s" % (default_host))
-
-
-class amqHelper():
-    def __init__(self, default_host, topics,
-                 dbname=None, user=None, passw=None, port=61613,
-                 baseid=8675309, connect=True):
-        self.host = default_host
-        self.port = port
-        self.topics = topics
-        self.baseid = baseid
-        self.dbname = dbname
-        self.user = user
-        self.password = passw
-
-        if connect is True:
-            self.connect(baseid=self.baseid)
-
-    def connect(self, baseid=8675309):
-        # TODO:
-        #   Put a timer on connection
-        try:
-            print("Connecting to %s" % (self.host))
-            self.conn = stomp.Connection([(self.host, self.port)])
-
-            self.conn.set_listener('HamSpy', subscriber(dbname=self.dbname))
-            self.conn.start()
-            self.conn.connect()
-
-            for i, activeTopic in enumerate(self.topics):
-                print("Subscribing to %s" % (activeTopic))
-                self.conn.subscribe("/topic/" + activeTopic, baseid+i)
-        except StompException as err:
-            self.conn = None
-            print(str(err))
-
-    def disconnect(self):
-        if self.conn is not None:
-            self.conn.disconnect()
-            print("Disconnected from %s" % (self.host))
