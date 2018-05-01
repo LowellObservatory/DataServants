@@ -88,6 +88,7 @@ class subscriber(ConnectionListener):
             # This means that there was some kind of transport error
             #   or it couldn't figure out the encoding for some reason.
             #   Scream into the log but keep moving
+            # NOTE: Might need to set auto_decode=False in the connection...
             print("="*42)
             print(headers)
             print(body)
