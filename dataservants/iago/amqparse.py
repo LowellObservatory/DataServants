@@ -72,6 +72,7 @@ class subscriber(ConnectionListener):
 
     # Subclassing stomp.listener.ConnectionListener
     def on_message(self, headers, body):
+        badMsg = False
         tname = headers['destination'].split('/')[-1]
         try:
             xml = xmld.parse(body)
@@ -94,18 +95,20 @@ class subscriber(ConnectionListener):
             print(body)
             print(str(err))
             print("="*42)
+            badMsg = True
 
         # Now send the packet to the right place for processing.
         #   These need special parsing because they're just straight text
-        if tname == 'joePduResult':
-            parserPDU(headers, body, dbname=self.influxdbname)
-        elif tname == 'lightPathInformation':
-            parserLPI(headers, body, dbname=self.influxdbname)
-        elif tname.endswith("loisLog"):
-            parserLOlogs(headers, body, dbname=self.influxdbname)
-        else:
-            # Intended to be the endpoint of the auto-XML influx publisher
-            pass
+        if badMsg is False:
+            if tname == 'joePduResult':
+                parserPDU(headers, body, dbname=self.influxdbname)
+            elif tname == 'lightPathInformation':
+                parserLPI(headers, body, dbname=self.influxdbname)
+            elif tname.endswith("loisLog"):
+                parserLOlogs(headers, body, dbname=self.influxdbname)
+            else:
+                # Intended to be the endpoint of the auto-XML influx publisher
+                pass
 
 
 def packetVintage(ts, nowUTC):
