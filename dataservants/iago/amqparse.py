@@ -100,15 +100,25 @@ class subscriber(ConnectionListener):
         # Now send the packet to the right place for processing.
         #   These need special parsing because they're just straight text
         if badMsg is False:
-            if tname == 'joePduResult':
-                parserPDU(headers, body, dbname=self.influxdbname)
-            elif tname == 'lightPathInformation':
-                parserLPI(headers, body, dbname=self.influxdbname)
-            elif tname.endswith("loisLog"):
-                parserLOlogs(headers, body, dbname=self.influxdbname)
-            else:
-                # Intended to be the endpoint of the auto-XML influx publisher
-                pass
+            try:
+                if tname == 'joePduResult':
+                    parserPDU(headers, body, dbname=self.influxdbname)
+                elif tname == 'lightPathInformation':
+                    parserLPI(headers, body, dbname=self.influxdbname)
+                elif tname.endswith("loisLog"):
+                    parserLOlogs(headers, body, dbname=self.influxdbname)
+                else:
+                    # Intended to be the endpoint of the auto-XML publisher
+                    pass
+            except Exception as err:
+                # This is a catch-all to help find parsing errors that need
+                #   to be fixed since they're not caught in a parser* func.
+                print("="*11)
+                print("WTF!!!")
+                print(str(err))
+                print(headers)
+                print(body)
+                print("="*11)
 
 
 def packetVintage(ts, nowUTC):
@@ -159,6 +169,13 @@ def parserLOlogs(hed, msg, dbname=None):
     #   ... but oh well.
     now = dt.datetime.utcnow()
     ltime = msg[0:8].split(":")
+    # Bail early since this indicates it's not really a log line but
+    #   some other type of message (like a LOIS startup or something)
+    if len(ltime) != 3:
+        print("Unknown log line!")
+        print(msg)
+        return
+
     now = now.replace(hour=int(ltime[0]), minute=int(ltime[1]),
                       second=int(ltime[2]), microsecond=0)
 
