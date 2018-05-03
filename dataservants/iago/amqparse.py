@@ -46,7 +46,8 @@ class amqHelper():
         #   Put a timer on connection
         try:
             print("Connecting to %s" % (self.host))
-            self.conn = stomp.Connection([(self.host, self.port)])
+            self.conn = stomp.Connection([(self.host, self.port)],
+                                         auto_decode=False)
 
             self.conn.set_listener('HamSpy', subscriber(dbname=self.dbname))
             self.conn.start()
