@@ -392,7 +392,7 @@ def parserLPI(hed, msg, dbname=None):
         dbase.writeToDB(packet)
         dbase.closeDB()
 
-        print(meas, tags, fields)
+        print(packet)
 
 
 def parserPDU(hed, msg, dbname=None):
@@ -447,5 +447,3 @@ def parserPDU(hed, msg, dbname=None):
 
             dbase.writeToDB(packet)
             dbase.closeDB()
-
-            print(meas, tag, fields)
