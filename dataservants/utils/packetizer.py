@@ -23,11 +23,12 @@ def makeInfluxPacket(meas='', ts=dt.datetime.utcnow(), tags={}, fields={},
     packet = {}
     for m in meas:
         packet.update({'measurement': m})
-        if type(tags) != dict:
-            print("ERROR! tags must be of type dict.")
-            sys.exit(-1)
-        else:
-            packet.update({'tags': tags})
+        if tags is not None:
+            if type(tags) != dict:
+                print("ERROR! tags must be of type dict.")
+                sys.exit(-1)
+            else:
+                packet.update({'tags': tags})
 
         if type(ts) == dt.datetime:
             # InfluxDB wants timestamps in nanoseconds from Epoch (1970/01/01)
