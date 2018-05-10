@@ -11,6 +11,7 @@
 from __future__ import division, print_function, absolute_import
 
 import sys
+import json
 import numpy as np
 import datetime as dt
 
@@ -88,24 +89,29 @@ class influxobj():
         """
         # Make sure we're actually connected first
         if self.client is not None:
-            # Actually try to write some points, it'll barf if the database
-            #   doesn't actually exist yet so create it if needed
+            res = False
             try:
                 if debug is True:
                     print("Trying to write_points")
-                self.client.write_points(vals)
+                res = self.client.write_points(vals)
             except ConnectionError as err:
                 print("Fatal Connection Error!")
                 print("Is InfluxDB running?")
-                sys.exit(-1)
+                # sys.exit(-1)
             except InfluxDBClientError as err:
-                if debug is True:
-                    print("Failed to write_points")
-                print(str(err))
-                sys.exit(-1)
+                print("ERROR: write_points to InfluxDB Failed!")
+                # If we're here, bad things happened with the database.
+                try:
+                    econd = json.loads(err.content)
+                except Exception as errp:
+                    print(str(errp))
+                    print("Unparsable error condition from Influx :(")
+                if err.code == 400:
+                    print(econd['error'])
+            if res is False:
+                print("INFLUXDB ERROR")
         else:
             print("Error: InfluxDBClient not connected!")
-            sys.exit(-1)
 
     def closeDB(self):
         """
