@@ -104,9 +104,11 @@ class influxobj():
                 try:
                     econd = json.loads(err.content)
                     print(econd['error'])
+                    print(vals)
                 except Exception as errp:
                     print(str(err))
                     print(str(errp))
+                    print(vals)
                     print("Unparsable error condition from Influx :(")
             if res is False:
                 print("INFLUXDB ERROR")
