@@ -23,6 +23,8 @@ import stomp
 from stomp.exception import StompException
 from stomp.listener import ConnectionListener
 
+import xmlschema as xmls
+
 from .. import utils
 
 
@@ -170,42 +172,46 @@ def dumpPacket(pxml):
 def parserFlatPacket(hed, msg, dbname=None):
     """
     """
+    print(msg)
     # This is really the topic name, so we'll make that the measurement name
     #   for the sake of clarity. It NEEDS to be a list until I fix packetizer!
     meas = [os.path.basename(hed['destination'])]
-    try:
-        xmlp = xmld.parse(msg, process_namespaces=True)
-        keys = xmlp.keys()
 
-        fields = {}
-        # Search each root tag (should only really be one)
-        for each in keys:
-            # Turn each tag into a field for influx
-            for it in xmlp[each].items():
-                # These are tuples, which makes it easy
-                try:
-                    fields.update({it[0]: float(it[1])})
-                except ValueError:
-                    # This means it wasn't a number, so store it as-is (str)
-                    fields.update({it[0]: it[1]})
-        if fields is not None:
-            # Note: passing ts=None lets python Influx do the timestamp for you
-            packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                       ts=None,
-                                                       tags=None,
-                                                       fields=fields)
+    # Define the schema we'll use to convert datatypes
+    schema = xmls.XMLSchema('xmlschemas/' + meas[0] + '.xsd')
 
-            print(packet)
+    # In this house, we only store valid packets!
+    good = schema.is_valid(msg)
+    if good is True:
+        try:
+            xmlp = schema.to_dict(msg, decimal_type=float, validation='lax')
+            keys = xmlp.keys()
 
-            # Actually commit the packet
-            dbase = utils.database.influxobj(dbname, connect=True)
-            # No arguments here means a default of 6 weeks of data held
-            dbase.alterRetention()
+            fields = {}
+            # Store each key:value pairing
+            for each in keys:
+                val = xmlp[each]
+                fields.update({each: val})
 
-            dbase.writeToDB(packet)
-            dbase.closeDB()
-    except Exception as err:
-        print(str(err))
+            if fields is not None:
+                # Note: passing ts=None lets python Influx do the timestamp
+                packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                           ts=None,
+                                                           tags=None,
+                                                           fields=fields)
+
+                print(packet)
+
+                # Actually commit the packet
+                dbase = utils.database.influxobj(dbname, connect=True)
+                # No arguments here means a default of 6 weeks of data held
+                dbase.alterRetention()
+
+                dbase.writeToDB(packet, debug=True)
+                dbase.closeDB()
+        except xmls.XMLSchemaDecodeError as err:
+            print(err.message.strip())
+            print(err.reason.strip())
 
 
 def parserLOlogs(hed, msg, dbname=None):

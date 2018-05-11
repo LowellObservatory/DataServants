@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema targetNamespace="" elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:element name="TCSTelemetry">
+        <xsd:complexType mixed="true">
+            <xsd:sequence>
+                <xsd:element name="TimeStamp" minOccurs="0" type="xsd:long"/>
+                <xsd:element name="TCSLST" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="TCSUTC" minOccurs="0" type="xsd:dateTime"/>
+                <xsd:element name="DemandRa" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="DemandDec" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="CurrentHourAngle" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="TCSCurrentZenithDistance" minOccurs="0" type="xsd:decimal"/>
+                <xsd:element name="TCSCurrentAzimuth" minOccurs="0" type="xsd:decimal"/>
+                <xsd:element name="TCSCurrentElev" minOccurs="0" type="xsd:decimal"/>
+                <xsd:element name="MountGuideMode" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="ScienceTargetName" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="m1CoverState" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="MountDomeAzimuthDifference" minOccurs="0" type="xsd:decimal"/>
+                <xsd:element name="DomeOccultationWarning" minOccurs="0" type="xsd:boolean"/>
+                <xsd:element name="CurrentParAngle" minOccurs="0" type="xsd:decimal"/>
+                <xsd:element name="TCSCurrentRotatorPA" minOccurs="0" type="xsd:decimal"/>
+                <xsd:element name="TCSCurrentRotatorIAA" minOccurs="0" type="xsd:decimal"/>
+                <xsd:element name="TCSCurrentRotatorIPA" minOccurs="0" type="xsd:decimal"/>
+                <xsd:element name="RotatorFrame" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="TargetFrame" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="equinox" minOccurs="0" type="xsd:decimal"/>
+                <xsd:element name="TCSState" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="TCSHealth" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="TCSHeartBeat" minOccurs="0" type="xsd:int"/>
+                <xsd:element name="TCSAccessMode" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="InPosition" minOccurs="0" type="xsd:boolean"/>
+                <xsd:element name="MountTemperature" minOccurs="0" type="xsd:decimal"/>
+                <xsd:element name="CLSLowBankState" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="DSSPositionStatus" minOccurs="0" type="xsd:normalizedString"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>
