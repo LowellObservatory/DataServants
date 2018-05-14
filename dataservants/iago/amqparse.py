@@ -88,6 +88,8 @@ class amqHelper():
         # Note: If it doesn't start with /topic/ it'll fail silently!
         if not dest.startswith('/topic/'):
             topic = '/topic/' + dest
+        else:
+            topic = dest
 
         if self.conn is not None:
             self.conn.send(destination=topic, body=message,
