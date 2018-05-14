@@ -1,0 +1,8 @@
+[activemq]
+name=MyActiveMQBroker
+type=ActiveMQ
+host=localhost
+port=61613
+topics=topic1,topic2,topic3
+influxdbname=DBName
+enabled=True
