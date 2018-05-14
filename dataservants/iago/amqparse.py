@@ -52,20 +52,21 @@ class amqHelper():
                                          auto_decode=False)
 
             self.conn.set_listener('HamSpy', subscriber(dbname=self.dbname))
-            self.conn.start()
             self.conn.connect()
 
             for i, activeTopic in enumerate(self.topics):
                 print("Subscribing to %s" % (activeTopic))
                 self.conn.subscribe("/topic/" + activeTopic, baseid+i)
-        except StompException as err:
+        except stomp.exception.NotConnectedException as err:
             self.conn = None
-            print(str(err))
-
-    def disconnect(self):
-        if self.conn is not None:
-            self.conn.disconnect()
-            print("Disconnected from %s" % (self.host))
+            print("STOMP.py not connected!")
+        except stomp.exception.ConnectFailedException as err:
+            self.conn = None
+            print("STOMP.py connection failed!")
+        except stomp.exception.StompException as err:
+            self.conn = None
+            print("STOMP.py exception!")
+            print(str(type(err)))
 
 
 class subscriber(ConnectionListener):
