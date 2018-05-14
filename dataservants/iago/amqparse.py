@@ -50,8 +50,12 @@ class amqHelper():
             print("Connecting to %s" % (self.host))
             self.conn = stomp.Connection([(self.host, self.port)],
                                          auto_decode=False)
-
+            # Note that self.conn is now type stomp.connect.StompConnectionXX
+            #   where XX is either 10, 11, or 12 indicating STOMP version
             self.conn.set_listener('HamSpy', subscriber(dbname=self.dbname))
+
+            # For STOMP.py versions >= 4.1.20, .start() does nothing.
+            self.conn.start()
             self.conn.connect()
 
             for i, activeTopic in enumerate(self.topics):
@@ -67,6 +71,11 @@ class amqHelper():
             self.conn = None
             print("STOMP.py exception!")
             print(str(type(err)))
+
+    def disconnect(self):
+        if self.conn is not None:
+            self.conn.disconnect()
+            print("Disconnected from %s" % (self.host))
 
 
 class subscriber(ConnectionListener):

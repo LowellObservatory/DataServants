@@ -88,6 +88,10 @@ if __name__ == "__main__":
                 else:
                     print("Connection still valid")
 
+                # If we're here, we made it once thru. The above comparison
+                #   will fail without this and we'll never reconnect!
+                first = False
+
                 # Consider taking a big nap
                 if runner.halt is False:
                     print("Starting a big sleep")
