@@ -77,6 +77,25 @@ class amqHelper():
             self.conn.disconnect()
             print("Disconnected from %s" % (self.host))
 
+    def publish(self, dest, message, mtype='text', debug=True):
+        """
+        TODO:
+        What are the accepted values for 'amq-msg-type' and
+        do we need to worry at all about them?
+        No clue currently.
+        """
+
+        # Note: If it doesn't start with /topic/ it'll fail silently!
+        if not dest.startswith('/topic/'):
+            topic = '/topic/' + dest
+
+        if self.conn is not None:
+            self.conn.send(destination=topic, body=message,
+                           headers={'amq-msg-type': 'text'})
+        info = "\nMessage sent to {} on topic {}:\n{}\n"
+        if debug is True:
+            print(info.format(self.host, topic, message))
+
 
 class subscriber(ConnectionListener):
     def __init__(self, dbname=None):
