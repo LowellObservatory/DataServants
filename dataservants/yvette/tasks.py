@@ -15,7 +15,7 @@ Further description.
 
 from __future__ import division, print_function, absolute_import
 
-from .. import utils
+from ligmos import utils
 from . import tasks
 from . import parseargs
 from . import filehashing

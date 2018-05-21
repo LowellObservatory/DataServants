@@ -16,7 +16,7 @@ import time
 import signal
 import datetime as dt
 
-from dataservants import utils
+from ligmos import utils
 from dataservants import alfred
 from dataservants import yvette
 

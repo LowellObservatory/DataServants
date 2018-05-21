@@ -27,7 +27,7 @@ try:
 except ImportError:
     xxhash = None
 
-from .. import utils
+from ligmos import utils
 from . import tasks
 from . import parseargs
 from . import filehashing

@@ -17,7 +17,7 @@ import signal
 
 from pid import PidFile, PidFileError
 
-from dataservants import utils
+from ligmos import utils
 from dataservants import wadsworth
 from dataservants import yvette
 

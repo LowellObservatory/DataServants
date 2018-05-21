@@ -22,7 +22,7 @@ import json
 import numpy as np
 import datetime as dt
 
-from .. import utils
+from ligmos import utils
 
 
 def rStringVerify(baseYcmd, ldir, filetype):

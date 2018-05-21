@@ -22,7 +22,7 @@ import numpy as np
 import datetime as dt
 from collections import OrderedDict
 
-from .. import utils
+from ligmos import utils
 
 
 def MegaMaid(loc, dirmask="[0-9]{8}.*", filetype="*.fits",

@@ -25,7 +25,7 @@ from stomp.listener import ConnectionListener
 
 import xmlschema as xmls
 
-from .. import utils
+from ligmos import utils
 
 
 class amqHelper():

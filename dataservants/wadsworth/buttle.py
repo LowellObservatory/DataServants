@@ -24,7 +24,7 @@ import time
 import signal
 
 from . import parseargs
-from .. import utils
+from ligmos import utils
 
 
 def beginButtling(procname='wadsworth', logfile=True):

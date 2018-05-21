@@ -16,8 +16,8 @@ import time
 import signal
 import datetime as dt
 
+from ligmos import utils
 from dataservants import iago
-from dataservants import utils
 
 from pid import PidFile, PidFileError
 

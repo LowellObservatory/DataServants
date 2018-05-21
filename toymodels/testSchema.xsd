@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema targetNamespace="" elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:element name="TCSTelemetry">
+        <xsd:complexType mixed="true">
+            <xsd:sequence>
+                <xsd:element name="TimeStamp" minOccurs="0" type="xsd:long"/>
+                <xsd:element name="ScienceTargetName" minOccurs="0" type="xsd:normalizedString"/>
+                <xsd:element name="MountDomeAzimuthDifference" minOccurs="0" type="xsd:decimal"/>
+                <xsd:element name="DomeOccultationWarning" minOccurs="0" type="xsd:boolean"/>
+                <xsd:element name="MountTemperature" minOccurs="0" type="xsd:decimal"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>
