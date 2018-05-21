@@ -31,7 +31,7 @@ from ligmos import utils
 class amqHelper():
     def __init__(self, default_host, topics,
                  dbname=None, user=None, passw=None, port=61613,
-                 baseid=8675309, connect=True):
+                 baseid=8675309, connect=True, listener=None):
         self.host = default_host
         self.port = port
         self.topics = topics
@@ -41,9 +41,9 @@ class amqHelper():
         self.password = passw
 
         if connect is True:
-            self.connect(baseid=self.baseid)
+            self.connect(baseid=self.baseid, listener=listener)
 
-    def connect(self, baseid=8675309):
+    def connect(self, baseid=8675309, listener=None):
         # TODO:
         #   Put a timer on connection
         try:
@@ -52,7 +52,10 @@ class amqHelper():
                                          auto_decode=False)
             # Note that self.conn is now type stomp.connect.StompConnectionXX
             #   where XX is either 10, 11, or 12 indicating STOMP version
-            self.conn.set_listener('HamSpy', subscriber(dbname=self.dbname))
+            if listener is not None:
+                # NOTE: listener must be a valid ConnectionListener type!!
+                self.conn.set_listener('LIGmosSpy',
+                                       listener)
 
             # For STOMP.py versions >= 4.1.20, .start() does nothing.
             self.conn.start()

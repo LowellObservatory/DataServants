@@ -63,14 +63,20 @@ if __name__ == "__main__":
                 it = idict[each]
                 first = False
                 if it.type.lower() == "activemq":
+                    # Register the custom listener class that Iago has.
+                    #   This will be the thing that parses packets depending
+                    #   on their topic name and does the hard stuff!!
+                    crackers = iago.amqparse.subscriber(dbname=it.influxdbname)
+
                     # Establish connections and subscriptions w/our helper
-                    conn = iago.amqparse.amqHelper(it.host,
-                                                   it.topics,
-                                                   dbname=it.influxdbname,
-                                                   user=None,
-                                                   passw=None,
-                                                   port=61613,
-                                                   connect=True)
+                    conn = utils.amq.amqHelper(it.host,
+                                               it.topics,
+                                               dbname=it.influxdbname,
+                                               user=None,
+                                               passw=None,
+                                               port=61613,
+                                               connect=True,
+                                               listener=crackers)
                     first = True
 
             # Semi-infinite loop
