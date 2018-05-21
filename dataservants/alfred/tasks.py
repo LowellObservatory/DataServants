@@ -16,7 +16,7 @@ from __future__ import division, print_function, absolute_import
 import numpy as np
 import datetime as dt
 
-from .. import utils
+from ligmos import utils
 
 
 def actionPing(iobj, dbname=None, debug=False):

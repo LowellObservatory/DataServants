@@ -25,7 +25,7 @@ import signal
 
 from pid import PidFile, PidFileError
 
-from .. import utils
+from ligmos import utils
 from . import parseargs
 
 
