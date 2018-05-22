@@ -137,8 +137,13 @@ def parserFlatPacket(hed, msg, dbname=None):
     #   for the sake of clarity. It NEEDS to be a list until I fix packetizer!
     meas = [os.path.basename(hed['destination'])]
 
-    # Define the schema we'll use to convert datatypes
-    schema = xmls.XMLSchema('xmlschemas/' + meas[0] + '.xsd')
+    # Define the schema we'll use to convert datatypes using the ligmos helper
+    schema = utils.amq.checkSchema(meas[0])
+
+    # Bail if there's a schema not found; needs expansion here
+    if schema is None:
+        print("No schema found for topic %s!" % (meas[0]))
+        return None
 
     # In this house, we only store valid packets!
     good = schema.is_valid(msg)
