@@ -84,7 +84,9 @@ class subscriber(ConnectionListener):
                     parserFlatPacket(headers, body, dbname=self.influxdbname)
                 else:
                     # Intended to be the endpoint of the auto-XML publisher
-                    pass
+                    print(headers)
+                    print(body)
+                    print(res)
             except Exception as err:
                 # This is a catch-all to help find parsing errors that need
                 #   to be fixed since they're not caught in a parser* func.
