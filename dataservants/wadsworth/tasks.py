@@ -56,7 +56,7 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
     verify = utils.common.processDescription(func=yR.commandYvetteSimple,
                                              name='Verify',
                                              timedelay=3.,
-                                             maxtime=300.,
+                                             maxtime=625.,
                                              needSSH=True,
                                              args=[eSSH, baseYcmd, args,
                                                    iobj, 'verify'],
