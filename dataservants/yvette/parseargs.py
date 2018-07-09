@@ -45,7 +45,7 @@ def setup_arguments(prog=None):
 
     parser.add_argument('--rangeOld', type=int,
                         help='Age (days) beyond which directory is "old"',
-                        default=21, nargs="?")
+                        default=14, nargs="?")
 
     parser.add_argument('--oldest', type=int,
                         help='Age (days) beyond which to ignore directories',
