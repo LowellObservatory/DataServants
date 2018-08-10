@@ -17,6 +17,7 @@ import signal
 import datetime as dt
 
 from ligmos import utils
+from ligmos import workers
 from dataservants import iago
 
 from pid import PidFile, PidFileError
@@ -29,8 +30,12 @@ if __name__ == "__main__":
         mynameis = mynameis[:-3]
     pidpath = '/tmp/'
 
-    # InfluxDB database name to store stuff in
-    dbname = 'LIGInstruments'
+    # Define the default files we'll use
+    conf = './iago.conf'
+    passes = './passwords.conf'
+    logfile = '/tmp/iago.log'
+    desc = "Iago: The ActiveMQ Parrot"
+    eargs = iago.parseargs
 
     # Interval between successive runs of the polling loop (seconds)
     bigsleep = 600
@@ -38,11 +43,23 @@ if __name__ == "__main__":
     # Total time for entire set of actions per instrument
     alarmtime = 600
 
+    # Quick renaming to keep line length under control
+    malarms = utils.multialarm
+    ip = utils.packetizer
+    ic = utils.common.snoopTarget
+    udb = utils.database
+    amqp = iago.amqparse
+
     # idict: dictionary of parsed config file
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
-    idict, args, runner = iago.squawk.beginSquawking(procname=mynameis,
-                                                     logfile=True)
+    idict, cblk, args, runner = workers.workerSetup.toServeMan(mynameis, conf,
+                                                               passes,
+                                                               logfile,
+                                                               desc=desc,
+                                                               extraargs=eargs,
+                                                               conftype=ic,
+                                                               logfile=True)
 
     # Quick renaming to keep line length under control
     malarms = utils.multialarm
@@ -62,19 +79,20 @@ if __name__ == "__main__":
             for each in idict:
                 it = idict[each]
                 first = False
-                if it.type.lower() == "activemq":
+                if cblk.brokertype.lower() == "activemq":
                     # Register the custom listener class that Iago has.
                     #   This will be the thing that parses packets depending
                     #   on their topic name and does the hard stuff!!
-                    crackers = iago.amqparse.subscriber(dbname=it.influxdbname)
+                    crackers = amqp.subscriber(dbname=cblk.influxdbname)
 
                     # Establish connections and subscriptions w/our helper
-                    conn = utils.amq.amqHelper(it.host,
+                    # TODO: Figure out how to fold in broker passwords
+                    conn = utils.amq.amqHelper(cblk.brokerhost,
                                                it.topics,
-                                               dbname=it.influxdbname,
-                                               user=None,
+                                               dbname=cblk.influxdbname,
+                                               user=cblk.brokeruser,
                                                passw=None,
-                                               port=61613,
+                                               port=cblk.brokerport,
                                                connect=True,
                                                listener=crackers)
                     first = True
