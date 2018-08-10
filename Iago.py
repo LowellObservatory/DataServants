@@ -35,7 +35,7 @@ if __name__ == "__main__":
     passes = './passwords.conf'
     logfile = '/tmp/iago.log'
     desc = "Iago: The ActiveMQ Parrot"
-    eargs = iago.parseargs
+    eargs = iago.parseargs.extraArguments
 
     # Interval between successive runs of the polling loop (seconds)
     bigsleep = 600
