@@ -399,7 +399,7 @@ def parserPDU(hed, msg, dbname=None):
             # Make the InfluxDB style packet
             meas = ["PDUStates"]
             # The "tag" is the pdu's hostname since there are multiple
-            tag = {"Name": host, "OutletNumber": int(outnumb), 
+            tag = {"Name": host, "OutletNumber": int(outnumb),
                    "Label": label}
 
             fields = {"State": outstat}
