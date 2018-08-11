@@ -73,29 +73,40 @@ if __name__ == "__main__":
             #   (helpful to find starts/restarts when scanning thru logs)
             utils.common.printPreamble(p, idict)
 
+            if cblk.dbtype.lower() == 'influxdb':
+                # Create an influxdb object that can be spread around to
+                #   connect and commit packets when they're created.
+                #   Leave it disconnected initially.
+                # TODO: Figure out how to fold in database passwords
+                idb = utils.database.influxobj(cblk.dbname,
+                                               host=cblk.dbhost,
+                                               port=cblk.dbport,
+                                               user=cblk.dbuser,
+                                               pw=None,
+                                               connect=False)
+
+            if cblk.brokertype.lower() == "activemq":
+                # Register the custom listener class that Iago has.
+                #   This will be the thing that parses packets depending
+                #   on their topic name and does the hard stuff!!
+                crackers = amqp.subscriber(dbconn=idb)
+
+                # Establish connections and subscriptions w/our helper
+                # TODO: Figure out how to fold in broker passwords
+                print("Connecting to %s" % (cblk.brokerhost))
+                conn = utils.amq.amqHelper(cblk.brokerhost,
+                                           it.topics,
+                                           user=cblk.brokeruser,
+                                           passw=None,
+                                           port=cblk.brokerport,
+                                           connect=True,
+                                           listener=crackers)
+
             # One by one, set up the messager connections.
             #   THIS OF COURSE implies that the connections are done elsewhere
             #   in Iago's codepath; specifically iago.amqparse (etc.)
             for each in idict:
                 it = idict[each]
-                first = False
-                if cblk.brokertype.lower() == "activemq":
-                    # Register the custom listener class that Iago has.
-                    #   This will be the thing that parses packets depending
-                    #   on their topic name and does the hard stuff!!
-                    crackers = amqp.subscriber(dbname=cblk.influxdbname)
-
-                    # Establish connections and subscriptions w/our helper
-                    # TODO: Figure out how to fold in broker passwords
-                    conn = utils.amq.amqHelper(cblk.brokerhost,
-                                               it.topics,
-                                               dbname=cblk.influxdbname,
-                                               user=cblk.brokeruser,
-                                               passw=None,
-                                               port=cblk.brokerport,
-                                               connect=True,
-                                               listener=crackers)
-                    first = True
 
             # Semi-infinite loop
             while runner.halt is False:
@@ -105,7 +116,7 @@ if __name__ == "__main__":
                 if conn.conn is None:
                     print("No connection at all! Retrying...")
                     conn.connect()
-                elif conn.conn.transport.connected is False and first is False:
+                elif conn.conn.transport.connected is False:
                     # Added the "first" flag to take care of a weird bug
                     print("Connection died! Reestablishing...")
                     conn.connect()

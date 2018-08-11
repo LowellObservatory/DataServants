@@ -29,9 +29,9 @@ from ligmos import utils
 
 
 class subscriber(ConnectionListener):
-    def __init__(self, dbname=None):
+    def __init__(self, dbconn=None):
         # Adding an extra argument to the subclass
-        self.influxdbname = dbname
+        self.dbconn = dbconn
 
     # Subclassing stomp.listener.ConnectionListener
     def on_message(self, headers, body):
@@ -75,13 +75,13 @@ class subscriber(ConnectionListener):
         if badMsg is False:
             try:
                 if tname == 'joePduResult':
-                    parserPDU(headers, body, dbname=self.influxdbname)
+                    parserPDU(headers, body, db=self.dbconn)
                 elif tname == 'lightPathInformation':
-                    parserLPI(headers, body, dbname=self.influxdbname)
+                    parserLPI(headers, body, db=self.dbconn)
                 elif tname.endswith("loisLog"):
-                    parserLOlogs(headers, body, dbname=self.influxdbname)
+                    parserLOlogs(headers, body, db=self.dbconn)
                 elif tname == 'tcs.loisTelemetry':
-                    parserFlatPacket(headers, body, dbname=self.influxdbname)
+                    parserFlatPacket(headers, body, db=self.dbconn)
                 else:
                     # Intended to be the endpoint of the auto-XML publisher
                     print(headers)
@@ -131,7 +131,7 @@ def dumpPacket(pxml):
     return pretty
 
 
-def parserFlatPacket(hed, msg, dbname=None):
+def parserFlatPacket(hed, msg, db=None):
     """
     """
     print(msg)
@@ -169,19 +169,20 @@ def parserFlatPacket(hed, msg, dbname=None):
 
                 print(packet)
 
-                # Actually commit the packet
-                dbase = utils.database.influxobj(dbname, connect=True)
+                # Actually commit the packet. singleCommit opens it,
+                #   writes the packet, and then optionally closes it.
+                #   By leaving it open we can make sure to change the
+                #   retention period.
+                db.singleCommit(packet, close=False)
                 # No arguments here means a default of 6 weeks of data held
-                dbase.alterRetention()
-
-                dbase.writeToDB(packet, debug=True)
-                dbase.closeDB()
+                db.alterRetention()
+                db.close()
         except xmls.XMLSchemaDecodeError as err:
             print(err.message.strip())
             print(err.reason.strip())
 
 
-def parserLOlogs(hed, msg, dbname=None):
+def parserLOlogs(hed, msg, db=None):
     """
     '22:26:55 Level_4:CCD Temp:-110.06 18.54 Setpoints:-109.95 0.00 '
     '22:26:55 Level_4:Telescope threads have been reactivated'
@@ -278,18 +279,19 @@ def parserLOlogs(hed, msg, dbname=None):
 
             print(packet)
 
-            # Actually commit the packet
-            dbase = utils.database.influxobj(dbname, connect=True)
+            # Actually commit the packet. singleCommit opens it,
+            #   writes the packet, and then optionally closes it.
+            #   By leaving it open we can make sure to change the
+            #   retention period.
+            db.singleCommit(packet, close=False)
             # No arguments here means a default of 6 weeks of data held
-            dbase.alterRetention()
-
-            dbase.writeToDB(packet)
-            dbase.closeDB()
+            db.alterRetention()
+            db.close()
     else:
         pass
 
 
-def parserLPI(hed, msg, dbname=None):
+def parserLPI(hed, msg, db=None):
     """
     'mirrorCoverMode=Open'
     'instrumentCoverState=OPEN'
@@ -357,18 +359,19 @@ def parserLPI(hed, msg, dbname=None):
                                                    tags=tags,
                                                    fields=fields)
 
-        # Actually commit the packet
-        dbase = utils.database.influxobj(dbname, connect=True)
-        # No arguments here means a default of 6 weeks of data held
-        dbase.alterRetention()
-
-        dbase.writeToDB(packet)
-        dbase.closeDB()
-
         print(packet)
 
+        # Actually commit the packet. singleCommit opens it,
+        #   writes the packet, and then optionally closes it.
+        #   By leaving it open we can make sure to change the
+        #   retention period.
+        db.singleCommit(packet, close=False)
+        # No arguments here means a default of 6 weeks of data held
+        db.alterRetention()
+        db.close()
 
-def parserPDU(hed, msg, dbname=None):
+
+def parserPDU(hed, msg, db=None):
     """
     'gwavespdu2.lowell.edu:23 IPC ONLINE!'
     'gwavespdu2.lowell.edu:23 OUTLET 2 ON ( UNIT#0 J2 )NIH-TEMP'
@@ -395,7 +398,7 @@ def parserPDU(hed, msg, dbname=None):
         # This is the shorthand label/tag at the very end
         label = message[-1].strip("(").strip(")")
 
-        if dbname is not None:
+        if db is not None:
             # Make the InfluxDB style packet
             meas = ["PDUStates"]
             # The "tag" is the pdu's hostname since there are multiple
@@ -414,10 +417,11 @@ def parserPDU(hed, msg, dbname=None):
 
             print(packet)
 
-            # Actually commit the packet
-            dbase = utils.database.influxobj(dbname, connect=True)
+            # Actually commit the packet. singleCommit opens it,
+            #   writes the packet, and then optionally closes it.
+            #   By leaving it open we can make sure to change the
+            #   retention period.
+            db.singleCommit(packet, close=False)
             # No arguments here means a default of 6 weeks of data held
-            dbase.alterRetention()
-
-            dbase.writeToDB(packet)
-            dbase.closeDB()
+            db.alterRetention()
+            db.close()
