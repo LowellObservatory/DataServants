@@ -149,9 +149,24 @@ def parserFlatPacket(hed, msg, db=None):
 
     # In this house, we only store valid packets!
     good = schema.is_valid(msg)
+
+    # A DIRTY DIRTY HACK
+    try:
+        xmlp = schema.to_dict(msg, decimal_type=float, validation='lax')
+        print(xmlp)
+        good = True
+    except:
+        good = False
+
     if good is True:
+        print("Packet good!")
         try:
             xmlp = schema.to_dict(msg, decimal_type=float, validation='lax')
+            # I HATE THIS
+            if type(xmlp) == tuple:
+                xmlp = xmlp[0]
+
+            # Back to normal.
             keys = xmlp.keys()
 
             fields = {}
