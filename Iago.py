@@ -91,6 +91,11 @@ if __name__ == "__main__":
                 #   on their topic name and does the hard stuff!!
                 crackers = amqp.subscriber(dbconn=idb)
 
+            # One by one, set up the messager connections.
+            #   THIS OF COURSE implies that the connections are done elsewhere
+            #   in Iago's codepath; specifically iago.amqparse (etc.)
+            for each in idict:
+                it = idict[each]
                 # Establish connections and subscriptions w/our helper
                 # TODO: Figure out how to fold in broker passwords
                 print("Connecting to %s" % (cblk.brokerhost))
@@ -101,12 +106,6 @@ if __name__ == "__main__":
                                            port=cblk.brokerport,
                                            connect=True,
                                            listener=crackers)
-
-            # One by one, set up the messager connections.
-            #   THIS OF COURSE implies that the connections are done elsewhere
-            #   in Iago's codepath; specifically iago.amqparse (etc.)
-            for each in idict:
-                it = idict[each]
 
             # Semi-infinite loop
             while runner.halt is False:
