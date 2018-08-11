@@ -187,7 +187,7 @@ def parserLOlogs(hed, msg, db=None):
     '22:26:55 Level_4:CCD Temp:-110.06 18.54 Setpoints:-109.95 0.00 '
     '22:26:55 Level_4:Telescope threads have been reactivated'
     """
-    ts = hed['timestamp']
+    # ts = hed['timestamp']
     topic = os.path.basename(hed['destination'])
 
     # print(ts, msg)
@@ -207,7 +207,7 @@ def parserLOlogs(hed, msg, db=None):
     now = now.replace(hour=int(ltime[0]), minute=int(ltime[1]),
                       second=int(ltime[2]), microsecond=0)
 
-    lts = now.strftime("%Y-%m-%dT%H:%M:%S.%f")
+    # lts = now.strftime("%Y-%m-%dT%H:%M:%S.%f")
     # Get just the log level
     loglevel = msg.split(" ")[1].split(":")[0]
     # Now get the message, putting back together anything split by ":"
@@ -299,7 +299,7 @@ def parserLPI(hed, msg, db=None):
     'foldMirrorsState=HOME,HOME,HOME,HOME'
     'foldMirrorsStageCoordindates=+0.00,+0.00,+0.00,+0.00'
     """
-    ts = hed['timestamp']
+    # ts = hed['timestamp']
 
     key = msg.split("=")[0]
     value = msg.split("=")[1]
@@ -376,7 +376,7 @@ def parserPDU(hed, msg, db=None):
     'gwavespdu2.lowell.edu:23 IPC ONLINE!'
     'gwavespdu2.lowell.edu:23 OUTLET 2 ON ( UNIT#0 J2 )NIH-TEMP'
     """
-    ts = hed['timestamp']
+    # ts = hed['timestamp']
 
     # Cut the hostname down to something more managable
     hostname = msg.split(" ")[0]
