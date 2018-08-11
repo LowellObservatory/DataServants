@@ -332,9 +332,9 @@ def parserLPI(hed, msg, db=None):
         coords = True
     else:
         # If it's not one of these, just cheat and pass
-        dbname = None
+        db = None
 
-    if dbname is not None:
+    if db is not None:
         meas = ["LightPath"]
         if covers is True:
             tags = {"Covers": key}
