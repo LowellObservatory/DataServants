@@ -98,7 +98,7 @@ def commandYvetteSimple(eSSH, baseYcmd, args, iobj, cmd, debug=False):
 
 
 def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
-                  dbname=None, debug=False):
+                  db=None, debug=False):
     """
     """
     # A place to store any/all packets that are made here, to be returned
@@ -122,7 +122,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
     #   Can't depend on presence of packet in the db because the query
     #   interval depends a little bit on current time and it's easy to get
     #   false positives in the dashboard. CUSTOM.
-    etags = ['binLOIS', 'scriptLOIS', 'generic']
+    # etags = ['binLOIS', 'scriptLOIS', 'generic']
 
     # Fields from Yvette's answer that we want to record as a status packet.
     desired = ['boottime', 'hostname']
@@ -176,10 +176,10 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                                                    tags=ptags,
                                                    fields=spa)
         # Store the packet
-        if dbname is not None:
-            dbase = utils.database.influxobj(dbname, connect=True)
-            dbase.writeToDB(packet)
-            dbase.closeDB()
+        if db is not None:
+            # Actually commit the packet. singleCommit opens it,
+            #   writes the packet, and then optionally closes it.
+            db.singleCommit(packet, close=True)
 
         packets.append(packet)
 
@@ -187,8 +187,8 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
     #   FOR THE LOVE OF THE FLYING SPAGHETTI MONSTER MAKE SURE THESE MATCH
     pdesired = ['age', 'createtime', 'cmdline', 'num_threads',
                 'status', 'pid', 'ppid', 'terminal']
-    pdesiredfmt = [float, float, str, int,
-                   str, int, int, str]
+    # pdesiredfmt = [float, float, str, int,
+    #               str, int, int, str]
 
     gf = {}
     packets = []
@@ -216,14 +216,14 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                     # CUSTOM
                     if pid['exe'].startswith('/opt/LOIS'):
                         ptype = "binLOIS"
-                        pstatus = "enabled"
+                        # pstatus = "enabled"
                     # CUSTOM
                     elif pid['exe'] == '/bin/bash':
                         ptype = "scriptLOIS"
-                        pstatus = "enabled"
+                        # pstatus = "enabled"
                     else:
                         ptype = "generic"
-                        pstatus = "enabled"
+                        # pstatus = "enabled"
 
                     # Need to do this because dicts are mutable
                     ptags = tags.copy()
@@ -235,10 +235,10 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                                                                tags=ptags,
                                                                fields=gf)
                     # Store the packet
-                    if dbname is not None:
-                        dbase = utils.database.influxobj(dbname, connect=True)
-                        dbase.writeToDB(packet)
-                        dbase.closeDB()
+                    if db is not None:
+                        # Actually commit the packet. singleCommit opens it,
+                        #   writes the packet, and then optionally closes it.
+                        db.singleCommit(packet, close=True)
 
                     # THIS COULD FAIL AND BE WEIRD IF writeToDB ISN'T FIXED
                     packets.append(packet)
@@ -246,7 +246,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
     return packets
 
 
-def actionSpace(eSSH, baseYcmd, iobj, dbname=None, debug=False):
+def actionSpace(eSSH, baseYcmd, iobj, db=None, debug=False):
     """Check free space at the specified directory.
 
     Uses a `Paramiko <http://docs.paramiko.org/en/latest/>`_ SSH
@@ -337,15 +337,14 @@ def actionSpace(eSSH, baseYcmd, iobj, dbname=None, debug=False):
     if superdebug is True:
         print(packet)
     if packet != []:
-        if dbname is not None:
-            # Actually write to the database to store for plotting
-            dbase = utils.database.influxobj(dbname, connect=True)
-            dbase.writeToDB(packet)
-            dbase.closeDB()
+        if db is not None:
+            # Actually commit the packet. singleCommit opens it,
+            #   writes the packet, and then optionally closes it.
+            db.singleCommit(packet, close=True)
     return packet
 
 
-def actionStats(eSSH, baseYcmd, iobj, dbname=None, debug=False):
+def actionStats(eSSH, baseYcmd, iobj, db=None, debug=False):
     """Check CPU and RAM information on the remote machine.
 
     Uses a `Paramiko <http://docs.paramiko.org/en/latest/>`_ SSH
@@ -465,11 +464,10 @@ def actionStats(eSSH, baseYcmd, iobj, dbname=None, debug=False):
         print(gf)
         print(packet)
     if packet != []:
-        if dbname is not None:
-            # Actually write to the database to store for plotting
-            dbase = utils.database.influxobj(dbname, connect=True)
-            dbase.writeToDB(packet, debug=True)
-            dbase.closeDB()
+        if db is not None:
+            # Actually commit the packet. singleCommit opens it,
+            #   writes the packet, and then optionally closes it.
+            db.singleCommit(packet, close=True)
     return packet
 
 

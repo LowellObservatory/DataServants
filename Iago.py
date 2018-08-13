@@ -122,7 +122,7 @@ if __name__ == "__main__":
             # Semi-infinite loop
             while runner.halt is False:
 
-                # Double check that the connection is still up
+                # Double check that the broker connection is still up
                 #   NOTE: conn.connect() handles ConnectionError exceptions
                 if conn.conn is None:
                     print("No connection at all! Retrying...")

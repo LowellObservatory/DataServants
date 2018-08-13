@@ -19,7 +19,7 @@ import datetime as dt
 from ligmos import utils
 
 
-def actionPing(iobj, dbname=None, debug=False):
+def actionPing(iobj, db=None, debug=False):
     """Ping a remote machine and record its response.
 
     Pings a remote machine, recording its average response time if that
@@ -32,10 +32,8 @@ def actionPing(iobj, dbname=None, debug=False):
         iobj (:class:`dataservants.utils.common.InstrumentHost`)
             Class containing instrument machine target information
             populated via :func:`dataservants.utils.confparsers.parseInstConf`.
-        dbname (:obj:`str`, optional)
-            InfluxDB database name in which to write the results. Defaults to
-            None, in which case the InfluxDB packet is constructed but
-            not written anywhere.
+        db ()
+            UPDATE ME
         debug (:obj:`bool`)
             Bool to trigger additional debugging outputs. Defaults to False.
 
@@ -70,6 +68,7 @@ def actionPing(iobj, dbname=None, debug=False):
     if np.isnan(pings) is True:
         pings = -9999.
     fs = {'ping': pings, 'dropped': drops}
+
     # Construct our packet
     packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                ts=ts,
@@ -79,9 +78,8 @@ def actionPing(iobj, dbname=None, debug=False):
     if superdebug is True:
         print(packet)
     if packet != []:
-        if dbname is not None:
-            # Actually write to the database to store for plotting
-            dbase = utils.database.influxobj(dbname, connect=True)
-            dbase.writeToDB(packet)
-            dbase.closeDB()
+        if db is not None:
+            # Actually commit the packet. singleCommit opens it,
+            #   writes the packet, and then optionally closes it.
+            db.singleCommit(packet, close=True)
     return packet

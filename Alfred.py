@@ -74,30 +74,30 @@ def defineActions():
     return actions
 
 
-def updateArguments(actions, iobj, args, dbname=None):
+def updateArguments(actions, iobj, args, db=None):
     """
     """
     # Update the functions with proper arguments.
     #   (opened SSH connection is added just before calling)
     # act1 == pings
     actions[0].args = [iobj]
-    actions[0].kwargs = {'dbname': dbname,
+    actions[0].kwargs = {'db': db,
                          'debug': args.debug}
 
     # act2 == check free space
     actions[1].args = [baseYcmd, iobj]
-    actions[1].kwargs = {'dbname': dbname,
+    actions[1].kwargs = {'db': db,
                          'debug': args.debug}
 
     # act3 == check target CPU/RAM stats
     actions[2].args = [baseYcmd, iobj]
-    actions[2].kwargs = {'dbname': dbname,
+    actions[2].kwargs = {'db': db,
                          'debug': args.debug}
 
     # act4 == Check on process health
     actions[3].args = [baseYcmd, iobj]
-    actions[3].kwargs = {'procName': iobj.procmon,
-                         'dbname': dbname,
+    actions[3].kwargs = {'db': db,
+                         'procName': iobj.procmon,
                          'debug': args.debug}
 
     return actions
