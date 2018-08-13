@@ -112,7 +112,7 @@ if __name__ == "__main__":
             # TODO: Figure out how to fold in broker passwords
             print("Connecting to %s" % (cblk.brokerhost))
             conn = utils.amq.amqHelper(cblk.brokerhost,
-                                       alltopics,
+                                       topics=alltopics,
                                        user=cblk.brokeruser,
                                        passw=None,
                                        port=cblk.brokerport,
