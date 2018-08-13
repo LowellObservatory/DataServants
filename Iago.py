@@ -126,11 +126,11 @@ if __name__ == "__main__":
                 #   NOTE: conn.connect() handles ConnectionError exceptions
                 if conn.conn is None:
                     print("No connection at all! Retrying...")
-                    conn.connect()
+                    conn.connect(listener=crackers)
                 elif conn.conn.transport.connected is False:
                     # Added the "first" flag to take care of a weird bug
                     print("Connection died! Reestablishing...")
-                    conn.connect()
+                    conn.connect(listener=crackers)
                 else:
                     print("Connection still valid")
 
