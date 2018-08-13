@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
             # Flatten the topic list (only good for 2D)
             print(alltopics)
-            #alltopics = [val for sub in alltopics for val in sub]
+            alltopics = [val for sub in alltopics for val in sub]
 
             # Establish connections and subscriptions w/our helper
             # TODO: Figure out how to fold in broker passwords
@@ -117,7 +117,7 @@ if __name__ == "__main__":
                                        user=cblk.brokeruser,
                                        passw=None,
                                        port=cblk.brokerport,
-                                       connect=True,
+                                       connect=False,
                                        listener=crackers)
 
             # Semi-infinite loop
