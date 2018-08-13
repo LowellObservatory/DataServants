@@ -106,7 +106,8 @@ if __name__ == "__main__":
                 alltopics.append(it.topics)
 
             # Flatten the topic list (only good for 2D)
-            alltopics = [val for sub in alltopics for val in sub]
+            print(alltopics)
+            #alltopics = [val for sub in alltopics for val in sub]
 
             # Establish connections and subscriptions w/our helper
             # TODO: Figure out how to fold in broker passwords
