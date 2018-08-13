@@ -17,6 +17,7 @@ import signal
 import datetime as dt
 
 from ligmos import utils
+from ligmos import workers
 from dataservants import alfred
 from dataservants import yvette
 
@@ -109,8 +110,12 @@ if __name__ == "__main__":
         mynameis = mynameis[:-3]
     pidpath = '/tmp/'
 
-    # InfluxDB database name to store stuff in
-    dbname = 'LIGInstruments'
+    # Define the default files we'll use
+    conf = './alfred.conf'
+    passes = './passwords.conf'
+    logfile = '/tmp/alfred.log'
+    desc = 'Alfred: The Instrument Monitor'
+    eargs = alfred.parseargs.extraArguments
 
     # Note: We need to prepend the PATH setting here because some hosts
     #   (all recent OSes, really) have a more stringent SSHd config
@@ -131,14 +136,23 @@ if __name__ == "__main__":
     # Total time for entire set of actions per instrument
     alarmtime = 600
 
-    # idict: dictionary of parsed config file
-    # args: parsed options of wadsworth.py
-    # runner: class that contains logic to quit nicely
-    idict, args, runner = alfred.valet.beginValeting(procname=mynameis,
-                                                     logfile=True)
-
     # Quick renaming to keep line length under control
     malarms = utils.multialarm
+    ip = utils.packetizer
+    ic = utils.common.hostTarget
+    udb = utils.database
+
+    # idict: dictionary of parsed config file
+    # cblk: common block from config file
+    # args: parsed options of wadsworth.py
+    # runner: class that contains logic to quit nicely
+    idict, cblk, args, runner = workers.workerSetup.toServeMan(mynameis, conf,
+                                                               passes,
+                                                               logfile,
+                                                               desc=desc,
+                                                               extraargs=eargs,
+                                                               conftype=ic,
+                                                               logfile=True)
 
     # Actually define the function calls/references to functions
     actions = defineActions()
@@ -157,7 +171,7 @@ if __name__ == "__main__":
                 #   results of the actions from all the instruments.
                 results = utils.common.instLooper(idict, runner, args,
                                                   actions, updateArguments,
-                                                  dbname=dbname,
+                                                  dbname=cblk.dbname,
                                                   alarmtime=alarmtime)
 
                 # After all the instruments are done, take a big nap

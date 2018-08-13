@@ -51,6 +51,7 @@ if __name__ == "__main__":
     amqp = iago.amqparse
 
     # idict: dictionary of parsed config file
+    # cblk: common block from config file
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
     idict, cblk, args, runner = workers.workerSetup.toServeMan(mynameis, conf,
