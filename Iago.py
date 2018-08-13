@@ -30,7 +30,8 @@ if __name__ == "__main__":
         mynameis = mynameis[:-3]
     pidpath = '/tmp/'
 
-    # Define the default files we'll use
+    # Define the default files we'll use/look for. These are passed to
+    #   the worker constructor (toServeMan).
     conf = './iago.conf'
     passes = './passwords.conf'
     logfile = '/tmp/iago.log'
@@ -79,18 +80,24 @@ if __name__ == "__main__":
                 #   connect and commit packets when they're created.
                 #   Leave it disconnected initially.
                 # TODO: Figure out how to fold in database passwords
-                idb = utils.database.influxobj(cblk.dbname,
-                                               host=cblk.dbhost,
-                                               port=cblk.dbport,
-                                               user=cblk.dbuser,
-                                               pw=None,
-                                               connect=False)
+                idb = udb.influxobj(cblk.dbname,
+                                    host=cblk.dbhost,
+                                    port=cblk.dbport,
+                                    user=cblk.dbuser,
+                                    pw=None,
+                                    connect=False)
+            else:
+                # No other database types are defined yet
+                pass
 
             if cblk.brokertype.lower() == "activemq":
                 # Register the custom listener class that Iago has.
                 #   This will be the thing that parses packets depending
                 #   on their topic name and does the hard stuff!!
                 crackers = amqp.subscriber(dbconn=idb)
+            else:
+                # No other broker types are defined yet
+                pass
 
             # Collect the activemq topics that are desired
             alltopics = []
