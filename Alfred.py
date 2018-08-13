@@ -187,7 +187,7 @@ if __name__ == "__main__":
                 #   results of the actions from all the instruments.
                 results = utils.common.instLooper(idict, runner, args,
                                                   actions, updateArguments,
-                                                  dbname=cblk.dbname,
+                                                  db=idb,
                                                   alarmtime=alarmtime)
 
                 # After all the instruments are done, take a big nap
