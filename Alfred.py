@@ -110,7 +110,8 @@ if __name__ == "__main__":
         mynameis = mynameis[:-3]
     pidpath = '/tmp/'
 
-    # Define the default files we'll use
+    # Define the default files we'll use/look for. These are passed to
+    #   the worker constructor (toServeMan).
     conf = './alfred.conf'
     passes = './passwords.conf'
     logfile = '/tmp/alfred.log'
@@ -162,6 +163,21 @@ if __name__ == "__main__":
             # Print the preamble of this particular instance
             #   (helpful to find starts/restarts when scanning thru logs)
             utils.common.printPreamble(p, idict)
+
+            if cblk.dbtype.lower() == 'influxdb':
+                # Create an influxdb object that can be spread around to
+                #   connect and commit packets when they're created.
+                #   Leave it disconnected initially.
+                # TODO: Figure out how to fold in database passwords
+                idb = udb.influxobj(cblk.dbname,
+                                    host=cblk.dbhost,
+                                    port=cblk.dbport,
+                                    user=cblk.dbuser,
+                                    pw=None,
+                                    connect=False)
+            else:
+                # No other database types are defined yet
+                pass
 
             # Semi-infinite loop
             while runner.halt is False:
