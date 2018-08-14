@@ -153,13 +153,13 @@ def parserFlatPacket(hed, msg, db=None):
     # A DIRTY DIRTY HACK
     try:
         xmlp = schema.to_dict(msg, decimal_type=float, validation='lax')
-        print(xmlp)
+        # print(xmlp)
         good = True
     except:
         good = False
 
     if good is True:
-        print("Packet good!")
+        # print("Packet good!")
         try:
             xmlp = schema.to_dict(msg, decimal_type=float, validation='lax')
             # I HATE THIS
