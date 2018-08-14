@@ -335,7 +335,7 @@ def parserLPI(hed, msg, db=None):
 
         # Cheaty flag for later
         covers = True
-    elif key.lower() == "foldmirrorstagecoordindates":
+    elif key.lower() == "foldmirrorsstagecoordindates":
         f1, f2, f3, f4 = value.split(",")
         f1 = float(f1)
         f2 = float(f2)
