@@ -14,7 +14,12 @@ import argparse as argp
 
 
 def extraArguments(parser):
-    """Setup command line arguments that Wadsworth will use.
+    """ADDITIONAL command line arguments that Iago will use.
+
+    Implies that they already contain the default set so there's no
+    setup of the parser details/format/whatever.
+
+    If there are none, it just returns the parser unchanged.
     """
 
     parser.add_argument('--rangeNew', type=int,
