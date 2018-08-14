@@ -23,11 +23,11 @@ def extraArguments(parser):
 
     parser.add_argument('--rangeOld', type=int,
                         help='Age (days) beyond which directory is cleared',
-                        default=21, nargs="?")
+                        default=3, nargs="?")
 
     parser.add_argument('--oldest', type=int,
                         help='Age (days) beyond which to ignore directories',
-                        default=7300, nargs="?")
+                        default=180, nargs="?")
 
     parser.add_argument('--hashtype', type=str,
                         choices=['xx64', 'md5', 'sha1', 'sha256', 'sha512',

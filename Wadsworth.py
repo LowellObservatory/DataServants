@@ -137,12 +137,6 @@ if __name__ == "__main__":
                                                                conftype=ic,
                                                                logfile=True)
 
-    # Debugging hack
-    args.rangeNew = 2
-    args.rangeOld = 3
-    args.oldest = 45
-    args.debug = True
-
     # Set up the desired actions in the main loop, using a helpful class
     #   to pass things to each function/process more clearly
     #   Note that we can update things per-instrument when inside the loop
