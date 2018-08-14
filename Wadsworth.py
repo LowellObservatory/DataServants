@@ -18,6 +18,7 @@ import signal
 from pid import PidFile, PidFileError
 
 from ligmos import utils
+from ligmos import workers
 from dataservants import wadsworth
 from dataservants import yvette
 
@@ -91,8 +92,13 @@ if __name__ == "__main__":
         mynameis = mynameis[:-3]
     pidpath = '/tmp/'
 
-    # InfluxDB database name to store stuff in
-    dbname = None
+    # Define the default files we'll use/look for. These are passed to
+    #   the worker constructor (toServeMan).
+    conf = './wadsworth.conf'
+    passes = './passwords.conf'
+    logfile = '/tmp/wadsworth.log'
+    desc = 'Wadsworth: The Data Butler'
+    eargs = wadsworth.parseargs.extraArguments
 
     # Note: We need to prepend the PATH setting here because some hosts
     #   (all recent OSes, really) have a more stringent SSHd config
@@ -113,11 +119,23 @@ if __name__ == "__main__":
     # Total time for entire set of actions per instrument
     alarmtime = 1000
 
+    # Quick renaming to keep line length under control
+    malarms = utils.multialarm
+    yvetteR = yvette.remote
+    mssh = utils.ssh
+    ic = utils.common.dataTarget
+
     # idict: dictionary of parsed config file
+    # cblk: common block from config file
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
-    idict, args, runner = wadsworth.buttle.beginButtling(procname=mynameis,
-                                                         logfile=False)
+    idict, cblk, args, runner = workers.workerSetup.toServeMan(mynameis, conf,
+                                                               passes,
+                                                               logfile,
+                                                               desc=desc,
+                                                               extraargs=eargs,
+                                                               conftype=ic,
+                                                               logfile=True)
 
     # Debugging hack
     args.rangeNew = 2
@@ -129,11 +147,6 @@ if __name__ == "__main__":
     #   to pass things to each function/process more clearly
     #   Note that we can update things per-instrument when inside the loop
     #   it's just helpful to do the definitions out here for the constants
-
-    # Quick renaming to keep line length under control
-    yvetteR = yvette.remote
-    malarms = utils.multialarm
-    mssh = utils.ssh
 
     # Actually define the function calls/references to functions
     print("Defining all base functions for each instrument...")
