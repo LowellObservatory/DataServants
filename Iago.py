@@ -63,9 +63,6 @@ if __name__ == "__main__":
                                                                conftype=ic,
                                                                logfile=True)
 
-    # Quick renaming to keep line length under control
-    malarms = utils.multialarm
-
     # ActiveMQ connection checker
     conn = None
 
