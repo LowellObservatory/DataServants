@@ -14,4 +14,10 @@ from dataservants import yvette
 
 
 if __name__ == "__main__":
+    # Yvette has no configuration file, and allows multiple
+    #   processes to run simultaneously if desired. That means
+    #   we're not using the ligmos.workers.toServeMan constructor
+    #   and instead skipping right into the meat of things.
+    # NOTE: beginTidying returns a json object of results, but
+    #   since it's printed over there I'm ignoring it here.
     yvette.tidy.beginTidying()
