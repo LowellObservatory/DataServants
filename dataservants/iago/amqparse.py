@@ -134,7 +134,7 @@ def dumpPacket(pxml):
 def parserFlatPacket(hed, msg, db=None):
     """
     """
-    print(msg)
+    # print(msg)
     # This is really the topic name, so we'll make that the measurement name
     #   for the sake of clarity. It NEEDS to be a list until I fix packetizer!
     meas = [os.path.basename(hed['destination'])]
