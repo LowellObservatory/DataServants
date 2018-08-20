@@ -28,7 +28,7 @@ import xmlschema as xmls
 from ligmos import utils
 
 
-class subscriber(ConnectionListener):
+class DCTSubscriber(ConnectionListener):
     def __init__(self, dbconn=None):
         # Adding an extra argument to the subclass
         self.dbconn = dbconn
