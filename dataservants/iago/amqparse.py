@@ -342,6 +342,29 @@ def parserLPI(hed, msg, db=None):
         f3 = float(f3)
         f4 = float(f4)
         coords = True
+        # Logic to suss out the active cube port.
+        #   I tried to do this all in Grafana but it's too much
+        #   of a stupid hassle since I can't really combine metrics.
+        # There's 4 fold mirrors, so 5 possible ports
+        #   As of 2018 08, mirror 1 is a NIR dichroic so that means
+        #   technically two ports are active or available at least.
+        inthresh = 100
+        # Default port status;
+        #   port[0] is the bottom/thru port
+        #   ports[1:] are directly mapped to the fold mirrors
+        #   To match other terminology:
+        #   Ports A, B, C, D == Mirror 1, 2, 3, 4
+        port0, port1, port2, port3, port4 = 0, 0, 0, 0, 0
+        if f1 > inthresh:
+            port0, port1, port2, port3, port4 = 1, 1, 0, 0, 0
+        elif f2 > inthresh:
+            port0, port1, port2, port3, port4 = 0, 0, 1, 0, 0
+        elif f3 > inthresh:
+            port0, port1, port2, port3, port4 = 0, 0, 0, 1, 0
+        elif f4 > inthresh:
+            port0, port1, port2, port3, port4 = 0, 0, 0, 0, 1
+        else:
+            port0, port1, port2, port3, port4 = 1, 0, 0, 0, 0
     elif key.lower() == "instrumentcoverstagecoordindate":
         i1 = float(value)
         coords = True
@@ -366,6 +389,13 @@ def parserLPI(hed, msg, db=None):
                 fields.update({"Mirror2": f2})
                 fields.update({"Mirror3": f3})
                 fields.update({"Mirror4": f4})
+
+                fields.update({"Port0State": port0})
+                fields.update({"Port1State": port1})
+                fields.update({"Port2State": port2})
+                fields.update({"Port3State": port3})
+                fields.update({"Port4State": port4})
+
                 tags = {"Coordinates": "CubeMirrors"}
 
         # Note: passing ts=None lets python Influx do the timestamp for you.
