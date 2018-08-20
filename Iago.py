@@ -39,10 +39,7 @@ if __name__ == "__main__":
     eargs = iago.parseargs.extraArguments
 
     # Interval between successive runs of the polling loop (seconds)
-    bigsleep = 600
-
-    # Total time for entire set of actions per instrument
-    alarmtime = 600
+    bigsleep = 120
 
     # Quick renaming to keep line length under control
     malarms = utils.multialarm
@@ -140,7 +137,7 @@ if __name__ == "__main__":
                     print("Starting a big sleep")
                     # Sleep for bigsleep, but in small chunks to check abort
                     for i in range(bigsleep):
-                        time.sleep(1)
+                        time.sleep(0.5)
                         if runner.halt is True:
                             break
 
