@@ -362,7 +362,7 @@ def parserLPI(hed, msg, db=None):
         elif f3 > inthresh:
             port0, port1, port2, port3, port4 = 0, 0, 0, 1, 0
         elif f4 > inthresh:
-            port0, port1, port2, port3, port4 = 0, 0, 0, 1, 1
+            port0, port1, port2, port3, port4 = 1, 0, 0, 0, 1
         else:
             port0, port1, port2, port3, port4 = 1, 0, 0, 0, 0
     elif key.lower() == "instrumentcoverstagecoordindate":
