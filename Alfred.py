@@ -13,15 +13,13 @@ from __future__ import division, print_function, absolute_import
 import os
 import sys
 import time
-import signal
-import datetime as dt
+
+from pid import PidFile, PidFileError
 
 from ligmos import utils
 from ligmos import workers
 from dataservants import alfred
 from dataservants import yvette
-
-from pid import PidFile, PidFileError
 
 
 def defineActions():
@@ -74,7 +72,7 @@ def defineActions():
     return actions
 
 
-def updateArguments(actions, iobj, args, db=None):
+def updateArguments(actions, iobj, args, baseYcmd, db=None):
     """
     """
     # Update the functions with proper arguments.
@@ -185,10 +183,11 @@ if __name__ == "__main__":
                 #   looping over each instrument.  We keep the main while
                 #   loop out here, though, so we can do stuff with the
                 #   results of the actions from all the instruments.
-                results = utils.common.instLooper(idict, runner, args,
-                                                  actions, updateArguments,
-                                                  db=idb,
-                                                  alarmtime=alarmtime)
+                _ = utils.common.instLooper(idict, runner, args,
+                                            actions, updateArguments,
+                                            baseYcmd,
+                                            db=idb,
+                                            alarmtime=alarmtime)
 
                 # After all the instruments are done, take a big nap
                 if runner.halt is False:
