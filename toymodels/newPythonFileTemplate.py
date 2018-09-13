@@ -39,3 +39,15 @@ def function1():
 
                 stuff = things
     """
+    pass
+
+
+def main():
+    """
+    This is the main body function.
+    """
+    pass
+
+
+if __name__ == "__main__":
+    main()
