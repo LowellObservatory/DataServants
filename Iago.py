@@ -13,14 +13,12 @@ from __future__ import division, print_function, absolute_import
 import os
 import sys
 import time
-import signal
-import datetime as dt
+
+from pid import PidFile, PidFileError
 
 from ligmos import utils
 from ligmos import workers
 from dataservants import iago
-
-from pid import PidFile, PidFileError
 
 
 if __name__ == "__main__":
@@ -136,7 +134,7 @@ if __name__ == "__main__":
                 if runner.halt is False:
                     print("Starting a big sleep")
                     # Sleep for bigsleep, but in small chunks to check abort
-                    for i in range(bigsleep):
+                    for _ in range(bigsleep):
                         time.sleep(0.5)
                         if runner.halt is True:
                             break
@@ -153,7 +151,7 @@ if __name__ == "__main__":
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
             print("Archive loop completed; STDOUT and STDERR reset.")
-    except PidFileError as err:
+    except PidFileError:
         # We've probably already started logging, so reset things
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__

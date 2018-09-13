@@ -162,7 +162,7 @@ def main():
                 if runner.halt is False:
                     print("Starting a big sleep")
                     # Sleep for bigsleep, but in small chunks to check abort
-                    for i in range(bigsleep):
+                    for _ in range(bigsleep):
                         time.sleep(1)
                         if runner.halt is True:
                             break
@@ -176,7 +176,7 @@ def main():
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
             print("Archive loop completed; STDOUT and STDERR reset.")
-    except PidFileError as err:
+    except PidFileError:
         # We've probably already started logging, so reset things
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
