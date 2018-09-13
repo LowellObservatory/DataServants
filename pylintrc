@@ -132,7 +132,8 @@ disable=invalid-name,
         xreadlines-attribute,
         deprecated-sys-function,
         exception-escape,
-        comprehension-escape
+        comprehension-escape,
+        fixme
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -353,7 +354,6 @@ enable=blacklisted-name,
        reimported,
        import-self,
        misplaced-future,
-       fixme,
        invalid-encoded-data,
        global-variable-undefined,
        global-variable-not-assigned,
