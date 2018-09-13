@@ -14,13 +14,10 @@ Further description.
 """
 
 import os
-import time
 import datetime as dt
 from dateutil import tz
 import xmltodict as xmld
 
-import stomp
-from stomp.exception import StompException
 from stomp.listener import ConnectionListener
 
 import xmlschema as xmls
@@ -106,7 +103,7 @@ def packetVintage(ts, nowUTC):
     the timestamp as reported.
     """
     # Fun with datetime...stupid colon in the UTC offset! Kill it with fire.
-    if ":" == ts[-3:-2]:
+    if ts[-3:-2] == ":":
         ts = ts[:-3]+ts[-2:]
     # Now parse the timestamp normally
     dtts = dt.datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S.%f%z")

@@ -10,8 +10,6 @@
 
 from __future__ import division, print_function, absolute_import
 
-import argparse as argp
-
 
 def extraArguments(parser):
     """ADDITIONAL command line arguments that Iago will use.

@@ -17,9 +17,7 @@ lower level routines internal to Yvette that actually do the work
 
 from __future__ import division, print_function, absolute_import
 
-import time
 import json
-import numpy as np
 import datetime as dt
 
 from ligmos import utils
