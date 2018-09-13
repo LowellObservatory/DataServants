@@ -24,17 +24,17 @@ from __future__ import division, print_function, absolute_import
 import os
 import sys
 import time
-import signal
-import datetime as dt
+
+from pid import PidFile, PidFileError
 
 from ligmos import utils
 from ligmos import workers
 from dataservants import iago
 
-from pid import PidFile, PidFileError
 
-
-if __name__ == "__main__":
+def main():
+    """
+    """
     # For PIDfile stuff; kindly ignore
     mynameis = os.path.basename(__file__)
     if mynameis.endswith('.py'):
@@ -53,8 +53,6 @@ if __name__ == "__main__":
     bigsleep = 120
 
     # Quick renaming to keep line length under control
-    malarms = utils.multialarm
-    ip = utils.packetizer
     ic = utils.common.snoopTarget
     udb = utils.database
     amqp = iago.amqparse
@@ -63,13 +61,13 @@ if __name__ == "__main__":
     # cblk: common block from config file
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
-    idict, cblk, args, runner = workers.workerSetup.toServeMan(mynameis, conf,
-                                                               passes,
-                                                               logfile,
-                                                               desc=desc,
-                                                               extraargs=eargs,
-                                                               conftype=ic,
-                                                               logfile=True)
+    idict, cblk, _, runner = workers.workerSetup.toServeMan(mynameis, conf,
+                                                            passes,
+                                                            logfile,
+                                                            desc=desc,
+                                                            extraargs=eargs,
+                                                            conftype=ic,
+                                                            logfile=True)
 
     # ActiveMQ connection checker
     conn = None
@@ -139,10 +137,6 @@ if __name__ == "__main__":
                 else:
                     print("Connection still valid")
 
-                # If we're here, we made it once thru. The above comparison
-                #   will fail without this and we'll never reconnect!
-                first = False
-
                 # Consider taking a big nap
                 if runner.halt is False:
                     print("Starting a big sleep")
@@ -170,3 +164,7 @@ if __name__ == "__main__":
         sys.stderr = sys.__stderr__
         print("Already running! Quitting...")
         utils.common.nicerExit()
+
+
+if __name__ == "__main__":
+    main()
