@@ -101,7 +101,9 @@ def updateArguments(actions, iobj, args, baseYcmd, db=None):
     return actions
 
 
-if __name__ == "__main__":
+def main():
+    """
+    """
     # For PIDfile stuff; kindly ignore
     mynameis = os.path.basename(__file__)
     if mynameis.endswith('.py'):
@@ -136,8 +138,6 @@ if __name__ == "__main__":
     alarmtime = 600
 
     # Quick renaming to keep line length under control
-    malarms = utils.multialarm
-    ip = utils.packetizer
     ic = utils.common.hostTarget
     udb = utils.database
 
@@ -213,3 +213,7 @@ if __name__ == "__main__":
         sys.stderr = sys.__stderr__
         print("Already running! Quitting...")
         utils.common.nicerExit()
+
+
+if __name__ == "__main__":
+    main()
