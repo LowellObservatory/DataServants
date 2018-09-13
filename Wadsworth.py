@@ -13,8 +13,6 @@ from __future__ import division, print_function, absolute_import
 import os
 import sys
 import time
-import signal
-
 from pid import PidFile, PidFileError
 
 from ligmos import utils
@@ -64,7 +62,7 @@ def defineActions():
     return actions
 
 
-def updateArguments(actions, iobj, args, dbname=None):
+def updateArguments(actions, iobj, args, baseYcmd, dbname=None):
     """
     """
     # Update the functions with proper arguments.
@@ -85,7 +83,9 @@ def updateArguments(actions, iobj, args, dbname=None):
     return actions
 
 
-if __name__ == "__main__":
+def main():
+    """
+    """
     # For PIDfile stuff; kindly ignore
     mynameis = os.path.basename(__file__)
     if mynameis.endswith('.py'):
@@ -120,22 +120,19 @@ if __name__ == "__main__":
     alarmtime = 1000
 
     # Quick renaming to keep line length under control
-    malarms = utils.multialarm
-    yvetteR = yvette.remote
-    mssh = utils.ssh
     ic = utils.common.dataTarget
 
     # idict: dictionary of parsed config file
     # cblk: common block from config file
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
-    idict, cblk, args, runner = workers.workerSetup.toServeMan(mynameis, conf,
-                                                               passes,
-                                                               logfile,
-                                                               desc=desc,
-                                                               extraargs=eargs,
-                                                               conftype=ic,
-                                                               logfile=True)
+    idict, _, args, runner = workers.workerSetup.toServeMan(mynameis, conf,
+                                                            passes,
+                                                            logfile,
+                                                            desc=desc,
+                                                            extraargs=eargs,
+                                                            conftype=ic,
+                                                            logfile=True)
 
     # Set up the desired actions in the main loop, using a helpful class
     #   to pass things to each function/process more clearly
@@ -157,9 +154,10 @@ if __name__ == "__main__":
                 #   looping over each instrument.  We keep the main while
                 #   loop out here, though, so we can do stuff with the
                 #   results of the actions from all the instruments.
-                results = utils.common.instLooper(idict, runner, args,
-                                                  actions, updateArguments,
-                                                  alarmtime=alarmtime)
+                _ = utils.common.instLooper(idict, runner, args,
+                                            actions, updateArguments,
+                                            baseYcmd,
+                                            alarmtime=alarmtime)
                 # After all the instruments are done, take a big nap
                 if runner.halt is False:
                     print("Starting a big sleep")
@@ -184,3 +182,7 @@ if __name__ == "__main__":
         sys.stderr = sys.__stderr__
         print("Already running! Quitting...")
         utils.common.nicerExit()
+
+
+if __name__ == "__main__":
+    main()
