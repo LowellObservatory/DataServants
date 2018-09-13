@@ -1,8 +1,16 @@
-[activemq]
-name=MyActiveMQBroker
-type=ActiveMQ
-host=localhost
-port=61613
-topics=topic1,topic2,topic3
-influxdbname=DBName
+[common]
+brokertype=ActiveMQ
+brokerhost=broker.hostname.or.ip
+brokerport=61613
+brokeruser=None
+dbtype=influxdb
+dbhost=influxdb.hostname.or.ip
+dbport=8086
+dbuser=None
+dbname=DatabaseNameGoesHere
+
+
+[groupName]
+name=GiveMeANiceHelpfulName
+topics=yourTopics, canGoHere, inaSimpleList
 enabled=True
