@@ -194,7 +194,6 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
                             #   reason (timeout?) so move on somehow
                             print("--> File transfer failed!!")
                             print(lfile, rfile)
-                            pass
                 else:
                     # This means the directory doesn't exist locally yet,
                     #   so we'll need to transfer it over and then get it next
@@ -203,7 +202,6 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
             else:
                 if vans['HashChecks']['DifferentFiles'] == 0:
                     print("--> No files matching %s" % (iobj.filemask))
-                pass
 
     # Now that we're all done with this directory:
     #   Reset the src directory to it's original value!
