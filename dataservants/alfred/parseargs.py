@@ -14,7 +14,7 @@ import argparse as argp
 
 
 def extraArguments(parser):
-    """ADDITIONAL command line arguments that Iago will use.
+    """ADDITIONAL command line arguments that Alfred will use.
 
     Implies that they already contain the default set so there's no
     setup of the parser details/format/whatever.

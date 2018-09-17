@@ -12,7 +12,7 @@ from __future__ import division, print_function, absolute_import
 
 
 def extraArguments(parser):
-    """ADDITIONAL command line arguments that Iago will use.
+    """ADDITIONAL command line arguments that Wadsworth will use.
 
     Implies that they already contain the default set so there's no
     setup of the parser details/format/whatever.
@@ -26,7 +26,7 @@ def extraArguments(parser):
 
     parser.add_argument('--rangeOld', type=int,
                         help='Age (days) beyond which directory is cleared',
-                        default=3, nargs="?")
+                        default=21, nargs="?")
 
     parser.add_argument('--oldest', type=int,
                         help='Age (days) beyond which to ignore directories',
