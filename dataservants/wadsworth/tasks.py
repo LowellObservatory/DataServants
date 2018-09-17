@@ -134,6 +134,7 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
 
                         # Now actually get the remote file
                         status = eSSH.getFile(lfile, rfile)
+                        eSSH.closeSFTP()
 
                         if status is True:
                             # Verify the file we just got against our local one
