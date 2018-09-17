@@ -62,14 +62,14 @@ def defineActions():
     return actions
 
 
-def updateArguments(actions, iobj, args, baseYcmd, dbname=None):
+def updateArguments(actions, iobj, args, baseYcmd, db=None):
     """
     """
     # Update the functions with proper arguments.
     #   (opened SSH connection is added just before calling)
     # act1 == actionSpace
     actions[0].args = [baseYcmd, iobj]
-    actions[0].kwargs = {'dbname': dbname,
+    actions[0].kwargs = {'dbname': db,
                          'debug': args.debug}
 
     # act2 == commandYvetteSimple (cmd=findnew)
