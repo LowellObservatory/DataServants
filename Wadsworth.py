@@ -69,7 +69,7 @@ def updateArguments(actions, iobj, args, baseYcmd, db=None):
     #   (opened SSH connection is added just before calling)
     # act1 == actionSpace
     actions[0].args = [baseYcmd, iobj]
-    actions[0].kwargs = {'dbname': db,
+    actions[0].kwargs = {'db': db,
                          'debug': args.debug}
 
     # act2 == commandYvetteSimple (cmd=findnew)
