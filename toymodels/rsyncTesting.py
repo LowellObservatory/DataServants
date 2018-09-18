@@ -26,6 +26,9 @@ def rsyncer(cmd, src, dest, args=None, printErrs=True, timeout=600.):
 
     try:
         subcmdwargs = [cmd] + args + [src, dest]
+        # NOTE: subprocess.run() is ONLY in Python >= 3.5! Could rewrite to
+        #   use subprocess.Popen, but I find the subprocess.CompletedProcess
+        #   instance that run() returns pretty nice.
         output = sub.run(subcmdwargs, timeout=timeout,
                          stdout=sub.PIPE, stderr=sub.PIPE)
         # Check for anything on stdout/stderr
