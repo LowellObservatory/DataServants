@@ -49,8 +49,8 @@ def defineActions():
                                            args=[],
                                            kwargs={})
 
-    act3 = utils.common.processDescription(func=wadsworth.tasks.cleanRemote,
-                                           name='CleanOldData',
+    act3 = utils.common.processDescription(func=wadsworth.tasks.buttleData,
+                                           name='ButtleData',
                                            timedelay=3.,
                                            maxtime=600,
                                            needSSH=True,
