@@ -41,15 +41,7 @@ def defineActions():
                                            args=[],
                                            kwargs={})
 
-    act2 = utils.common.processDescription(func=yvetteR.commandYvetteSimple,
-                                           name='FindNewDirs',
-                                           timedelay=3.,
-                                           maxtime=120,
-                                           needSSH=True,
-                                           args=[],
-                                           kwargs={})
-
-    act3 = utils.common.processDescription(func=wadsworth.tasks.buttleData,
+    act2 = utils.common.processDescription(func=wadsworth.tasks.buttleData,
                                            name='ButtleData',
                                            timedelay=3.,
                                            maxtime=600,
@@ -57,7 +49,7 @@ def defineActions():
                                            args=[],
                                            kwargs={})
 
-    actions = [act1, act2, act3]
+    actions = [act1, act2]
 
     return actions
 
@@ -72,13 +64,9 @@ def updateArguments(actions, iobj, args, baseYcmd, db=None):
     actions[0].kwargs = {'db': db,
                          'debug': args.debug}
 
-    # act2 == commandYvetteSimple (cmd=findnew)
-    actions[1].args = [baseYcmd, args, iobj, 'findnew']
-    actions[1].kwargs = {'debug': args.debug}
-
-    # act3 == cleanRemote
-    actions[2].args = [baseYcmd, args, iobj]
-    actions[2].kwargs = {}
+    # act2 == buttleData
+    actions[1].args = [baseYcmd, args, iobj]
+    actions[1].kwargs = {}
 
     return actions
 
