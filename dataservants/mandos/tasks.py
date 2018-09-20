@@ -35,6 +35,12 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
     yH = yvette.filehashing
     uH = utils.hashes
 
+    # Need to make sure our destination directory actually exists first
+    ldircheck = utils.files.checkDir(iobj.destdir)
+    if ldircheck[0] is False:
+        print("--> Local destination directory unreachable! Aborting!")
+        return None
+
     print("--> Defining custom action set for cleaning old files...")
 
     # Get the list of "old" files on the instrument host
@@ -60,12 +66,6 @@ def cleanRemote(eSSH, baseYcmd, args, iobj):
 
     # Actually get the old dir list on Yvette's machine
     ans, _ = utils.common.instAction(getOld)
-
-    # Now get the full directory listing on Wadsworth's machine
-    ldircheck = utils.files.checkDir(iobj.destdir)
-    if ldircheck is False:
-        print("--> Destination directory unreachable! Aborting.")
-        # return None
 
     # Type of hash file to ultimately look for
     bhfname = "AListofHashes.%s" % (args.hashtype)
