@@ -39,13 +39,15 @@ def setup_arguments(prog=None):
                         help='Mask for finding data',
                         default="*.fits")
 
+    nhstr = 'Maximum age (days) of directory to still be actively archived'
     parser.add_argument('--rangeNew', type=int,
-                        help='Age (days) of directory to be considered "new"',
+                        help=nhstr,
                         default=2, nargs="?")
 
+    ohstr = 'Maximum age (days) of a directory before it will be cleared'
     parser.add_argument('--rangeOld', type=int,
-                        help='Age (days) beyond which directory is "old"',
-                        default=14, nargs="?")
+                        help=ohstr,
+                        default=21, nargs="?")
 
     parser.add_argument('--oldest', type=int,
                         help='Age (days) beyond which to ignore directories',
