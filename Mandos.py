@@ -24,6 +24,7 @@ from ligmos import utils
 from ligmos import workers
 from dataservants import mandos
 from dataservants import yvette
+from dataservants import wadsworth
 
 
 def defineActions():
@@ -94,7 +95,8 @@ def main():
     passes = './passwords.conf'
     logfile = '/tmp/mandos.log'
     desc = 'Mandos: The Judge of Data'
-    eargs = mandos.parseargs.extraArguments
+    # Not a typo! Underscoring that Mandos and Wadsworth are connected
+    eargs = wadsworth.parseargs.extraArguments
 
     # Note: We need to prepend the PATH setting here because some hosts
     #   (all recent OSes, really) have a more stringent SSHd config
