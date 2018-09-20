@@ -23,7 +23,7 @@ def extraArguments(parser):
     nhstr = 'Maximum age (days) of directory to still be actively archived'
     parser.add_argument('--rangeNew', type=int,
                         help=nhstr,
-                        default=2, nargs="?")
+                        default=7, nargs="?")
 
     ohstr = 'Maximum age (days) of a directory before it will be cleared'
     parser.add_argument('--rangeOld', type=int,
