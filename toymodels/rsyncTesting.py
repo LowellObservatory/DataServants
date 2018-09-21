@@ -18,11 +18,21 @@ from __future__ import division, print_function, absolute_import
 import subprocess as sub
 
 
-def rsyncer(cmd, src, dest, args=None, printErrs=True, timeout=600.):
+def subpRsync(src, dest, cmd=None, args=None, timeout=600., debug=True):
     """
+    rsync, called via subprocess to get at the binary on the local machine
     """
+    if cmd is None:
+        cmd = 'rsync'
+
     if args is None:
-        args = ['-arvz', '--progress']
+        # a: archive mode; equals -rlptgoD (no -H,-A,-X)
+        # r: recurse into directories
+        # m: prune empty directory chains from file-list
+        # z: compress file data during the transfer
+        # partial: keep partially transferred files
+        # stats: give some file-transfer stats
+        args = ['-armz', '--stats', '--partial']
 
     try:
         subcmdwargs = [cmd] + args + [src, dest]
@@ -31,63 +41,151 @@ def rsyncer(cmd, src, dest, args=None, printErrs=True, timeout=600.):
         #   instance that run() returns pretty nice.
         output = sub.run(subcmdwargs, timeout=timeout,
                          stdout=sub.PIPE, stderr=sub.PIPE)
+
         # Check for anything on stdout/stderr
-        if output.stdout != b'':
-            print((output.stdout).decode("utf-8"))
+        if debug is True:
+            if output.stdout != b'':
+                print((output.stdout).decode("utf-8"))
 
         # If the return code was non-zero, this will raise CalledProcessError
         output.check_returncode()
 
+        gudstr = parseRsyncStats(output.stdout)
+
         # If we're here, then we're fine. Stay golden, Ponyboy
-        return 0
+        return 0, gudstr
     except sub.TimeoutExpired as err:
-        if printErrs is True:
-            print("Timed out!")
-            print("'%s' timed out" % (" ".join(err.cmd)))
-
-        return -99
-    except sub.CalledProcessError as err:
-        if printErrs is True:
-            print("Command error!")
-            print("'%s' returned code %d" % (" ".join(err.cmd),
-                                             err.returncode))
-            # We're in Python 3 territory, so err.stderr is b'' so convert
-            print("Standard Error Output:")
-
+        errstr = parseRsyncErr(err.stderr)
+        if errstr is None:
+            errstr = "'%s' took too long!" % (" ".join(err.cmd))
+        if debug is True:
+            print("Full STDERR: ", end='')
             print((err.stderr).decode("utf-8"))
 
-        return -999
-    except FileNotFoundError as err:
-        if printErrs is True:
-            print("Command not found!")
-            print(err.strerror)
+        errstr = "'%s' timed out" % (" ".join(err.cmd))
 
-        return -9999
+        return -99, errstr
+    except sub.CalledProcessError as err:
+        errstr = parseRsyncErr(err.stderr)
+        if errstr is None:
+            errstr = "'%s' returned code %d" % (" ".join(err.cmd),
+                                                err.returncode)
+        if debug is True:
+            print("Full STDERR: ", end='')
+            print((err.stderr).decode("utf-8"))
+
+        return -999, errstr
+    except FileNotFoundError as err:
+        if debug is True:
+            print("rsync command not found!")
+            errstr = err.strerror
+
+        return -9999, errstr
+
+
+def parseRsyncErr(errbuf):
+    """
+    """
+    # We're in Python 3 territory, so err.stderr is a bytestring!
+    if isinstance(errbuf, bytes) is True:
+        errstr = errbuf.decode("utf-8")
+    elif isinstance(errbuf, str) is True:
+        errstr = errbuf
+    else:
+        errstr = None
+
+    print(errstr)
+
+    errsplit = errstr.split("\n")
+    if errsplit[0].lower().startswith("rsync: "):
+        errmsg = errsplit[0]
+    else:
+        errmsg = None
+
+    return errmsg
+
+
+def parseRsyncStats(outbuf):
+    """
+    """
+    statusDict = {}
+
+    # In theory, the rsync --stats option should output the same stuff
+    #   so we'll YOLO it and search for strings to build our dict
+    # We're in Python 3 territory, so err.stderr is a bytestring!
+    if isinstance(outbuf, bytes) is True:
+        outstr = outbuf.decode("utf-8")
+    elif isinstance(outbuf, str) is True:
+        outstr = outbuf
+    else:
+        outstr = None
+
+    keysmap = {'Number of files:': 'nfiles',
+               'Number of created files:': 'ncreated',
+               'Number of deleted files:': 'ndeleted',
+               'Number of regular files transferred:': 'nregxfered',
+               'Total file size:': 'totsize',
+               'Total transferred file size:': 'totxfersize',
+               'Literal data:': 'literaldata',
+               'Matched data:': 'matchdata',
+               'File list size:': 'flistsize',
+               'File list generation time:': 'flisttime',
+               'File list transfer time:': 'flistxftertime',
+               'Total bytes sent:': 'totsent',
+               'Total bytes received:': 'totrecv'
+               }
+
+    if outstr is not None:
+        outstr = outstr.strip()
+        for key in keysmap:
+            print("Searching for '%s'" % (key))
+            # Since the block of stats is terminated on each line by \n,
+            #   we can search the entire string block and then snip it
+            #   on the *next* \n instance rather than a double loop search.
+            strBeg = outstr.find(key)
+            if strBeg != -1:
+                strEnd = outstr.find("\n", strBeg)
+                subStr = outstr[strBeg: strEnd]
+                val = subStr.split(key)[1].strip()
+                # Some special handling of ones with extra stuff in the line
+                if keysmap[key] == 'nfiles':
+                    vals = val.replace("(", "").replace(")", "").split(",")
+                    nf = int(vals[0].split(":")[1])
+                    nd = int(vals[1].split(":")[1])
+                    val = {"nreg": nf, "ndir": nd}
+                elif keysmap[key] == 'totsize' or\
+                                     'totxfersize' or\
+                                     'literaldata' or\
+                                     'matchdata' or\
+                                     'flisttime' or\
+                                     'flistxftertime':
+                    val = val.split()[0].strip()
+                    try:
+                        # Kill any commas in the numbers
+                        val = val.replace(",", "")
+                        val = float(val)
+                    except ValueError:
+                        # Just leave it as a string, then
+                        pass
+
+                print(keysmap[key], val)
+                statusDict.update({keysmap[key]: val})
+            print()
+
+    return statusDict
 
 
 def main():
     cmd = 'rsync'
-    arg = ['-arvz', '--progress']
+    arg = None
     src = './'
     timeout = 300.
-    dest = '/tmp/deletable'
+    dest = '/tmp/deleteme'
 
-    retval = rsyncer(cmd, src, dest, args=arg, printErrs=True, timeout=timeout)
+    retval, msg = subpRsync(src, dest,
+                            args=arg, timeout=timeout, debug=True)
 
-    if retval < 0:
-        # Decision tree to act on the various failures
-        if retval == -9999:
-            msg = "The rsync command is incorrect and not working!"
-        if retval == -999:
-            msg = "The rsync command ran but encountered an error!"
-        if retval == -99:
-            msg = "The rsync command took longer than %d seconds!" % (timeout)
-    elif retval > 0:
-        msg = "Unspecified error?"
-    elif retval == 0:
-        msg = "Success"
-
-    print(msg)
+    print(retval, msg)
 
 
 if __name__ == "__main__":
