@@ -16,7 +16,6 @@ to some extra processing logic to make sure things are all ok.
 
 from __future__ import division, print_function, absolute_import
 
-import os
 import datetime as dt
 
 from ligmos import utils
@@ -31,8 +30,6 @@ def buttleData(eSSH, baseYcmd, args, iobj):
 
     # Rename to control line length
     yR = yvette.remote
-    yH = yvette.filehashing
-    uH = utils.hashes
 
     # Need to make sure our destination directory actually exists first
     ldircheck = utils.files.checkDir(iobj.destdir)
@@ -50,15 +47,6 @@ def buttleData(eSSH, baseYcmd, args, iobj):
                                              needSSH=True,
                                              args=[eSSH, baseYcmd, args,
                                                    iobj, 'findnew'],
-                                             kwargs={'debug': args.debug})
-
-    verify = utils.common.processDescription(func=yR.commandYvetteSimple,
-                                             name='Verify',
-                                             timedelay=3.,
-                                             maxtime=625.,
-                                             needSSH=True,
-                                             args=[eSSH, baseYcmd, args,
-                                                   iobj, 'verify'],
                                              kwargs={'debug': args.debug})
 
     # Actually get the dir list on Yvette's machine

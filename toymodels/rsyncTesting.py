@@ -182,8 +182,8 @@ def main():
     timeout = 300.
     dest = '/tmp/deleteme'
 
-    retval, msg = subpRsync(src, dest,
-                            args=arg, timeout=timeout, debug=True)
+    retval, msg = subpRsync(src, dest, cmd=cmd, args=arg,
+                            timeout=timeout, debug=True)
 
     print(retval, msg)
 
