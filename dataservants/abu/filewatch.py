@@ -16,7 +16,6 @@ Further description.
 from __future__ import division, print_function, absolute_import
 
 import os
-import sys
 import time
 import datetime as dt
 
@@ -67,18 +66,18 @@ def checkFile(fname, last, startpos):
     return fstats, endpos
 
 
-def whichLogDate(base):
+def whichLogDate(basen):
     """
     """
     utctoday = dt.datetime.utcnow().date()
     utctomorrow = utctoday + dt.timedelta(days=1)
 
     # See if *tomorrow* exists, and if so use it
-    exists = os.path.isfile(basename + utctomorrow)
+    exists = os.path.isfile(basen + utctomorrow)
     if exists is True:
-        wfile = basename + utctomorrow.strftime("%Y%m%d")
+        wfile = basen + utctomorrow.strftime("%Y%m%d")
     else:
-        wfile = basename + utctoday.strftime("%Y%m%d")
+        wfile = basen + utctoday.strftime("%Y%m%d")
 
     return wfile
 
