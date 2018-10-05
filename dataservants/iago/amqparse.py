@@ -38,7 +38,7 @@ class DCTSubscriber(ConnectionListener):
         try:
             body = body.decode("utf-8")
             badMsg = False
-        except Exception as err:
+        except UnicodeDecodeError as err:
             print(str(err))
             print("Badness 10000")
             print(body)
@@ -77,7 +77,9 @@ class DCTSubscriber(ConnectionListener):
                     parserLPI(headers, body, db=self.dbconn)
                 elif tname.endswith("loisLog"):
                     parserLOlogs(headers, body, db=self.dbconn)
-                elif tname == 'tcs.loisTelemetry':
+                elif tname == 'tcs.loisTelemetry' or\
+                              'AOS.AOSPubDataSV.AOSDataPacket' or\
+                              'WRS.WRSPubDataSV.WRSDataPacket':
                     parserFlatPacket(headers, body, db=self.dbconn)
                 else:
                     # Intended to be the endpoint of the auto-XML publisher
@@ -152,7 +154,7 @@ def parserFlatPacket(hed, msg, db=None):
         xmlp = schema.to_dict(msg, decimal_type=float, validation='lax')
         # print(xmlp)
         good = True
-    except:
+    except xmls.XMLSchemaValidationError:
         good = False
 
     if good is True:
@@ -160,7 +162,7 @@ def parserFlatPacket(hed, msg, db=None):
         try:
             xmlp = schema.to_dict(msg, decimal_type=float, validation='lax')
             # I HATE THIS
-            if type(xmlp) == tuple:
+            if isinstance(xmlp, tuple):
                 xmlp = xmlp[0]
 
             # Back to normal.
@@ -378,7 +380,7 @@ def parserLPI(hed, msg, db=None):
             # Figure out which coordinates we're storing
             try:
                 # If this exists, if'll just pass by
-                i1
+                assert i1
                 fields = {"CoverCoord": i1}
                 tags = {"Coordinates": "InstCover"}
             except NameError:
