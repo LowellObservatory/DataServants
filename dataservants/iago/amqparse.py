@@ -172,7 +172,14 @@ def parserFlatPacket(hed, msg, db=None):
             # Store each key:value pairing
             for each in keys:
                 val = xmlp[each]
-                fields.update({each: val})
+                if isinstance(val, dict):
+                    # This means we have subvalues that we need to flatten!
+                    nkeys = val.keys()
+                    for oach in nkeys:
+                        nkey = "%s_%s" % (each, oach)
+                        fields.update({nkey: val[oach]})
+                else:
+                    fields.update({each: val})
 
             if fields is not None:
                 # Note: passing ts=None lets python Influx do the timestamp
