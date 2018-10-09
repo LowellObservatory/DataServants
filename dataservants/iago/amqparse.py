@@ -77,12 +77,18 @@ class DCTSubscriber(ConnectionListener):
                     parserLPI(headers, body, db=self.dbconn)
                 elif tname.endswith("loisLog"):
                     parserLOlogs(headers, body, db=self.dbconn)
-                elif tname == 'tcs.loisTelemetry' or\
-                              'AOS.AOSPubDataSV.AOSDataPacket' or\
-                              'WRS.WRSPubDataSV.WRSDataPacket':
+                elif tname in ['tcs.loisTelemetry',
+                               'AOS.AOSPubDataSV.AOSDataPacket',
+                               'WRS.WRSPubDataSV.WRSDataPacket']:
                     parserFlatPacket(headers, body, db=self.dbconn)
+                elif tname in ['AOS.AOSSubDataSV.RelativeFocusOffset',
+                               'AOS.AOSSubDataSV.AbsoluteFocusOffset'
+                               'MTS.MTSPubDataSV.MountTemperature']:
+                    parserSimpleFloat(headers, body, db=self.dbconn)
                 else:
                     # Intended to be the endpoint of the auto-XML publisher
+                    #   so I can catch most of them rather than explicitly
+                    #   check in the if/elif block above
                     print(headers)
                     print(body)
                     print(res)
@@ -476,3 +482,48 @@ def parserPDU(hed, msg, db=None):
             # No arguments here means a default of 6 weeks of data held
             db.alterRetention()
             db.close()
+
+
+def parserSimpleFloat(hed, msg, db=None):
+    """
+    """
+    print("Parsing a simple float message: %s" % msg)
+    topic = os.path.basename(hed['destination'])
+    try:
+        val = float(msg)
+    except ValueError as err:
+        print(str(err))
+        val = -9999.
+    if db is not None:
+        # Make the InfluxDB style packet
+        meas = [topic]
+        tag = {}
+
+        fields = {"value": val}
+
+        # Make and store the influx packet
+        # Note: passing ts=None lets python Influx do the timestamp for you
+        packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                   ts=None,
+                                                   tags=tag,
+                                                   fields=fields)
+        print(packet)
+
+        # Actually commit the packet. singleCommit opens it,
+        #   writes the packet, and then optionally closes it.
+        #   By leaving it open we can make sure to change the
+        #   retention period.
+        db.singleCommit(packet, close=False)
+        # No arguments here means a default of 6 weeks of data held
+        db.alterRetention()
+        db.close()
+
+
+def parserSimpleBool(hed, msg, db=None):
+    """
+    """
+    topic = os.path.basename(hed['destination'])
+
+    # TODO: Finish this one, maybe add an option to store it as an actual
+    #   bool value or convert it to a simple int flagging (0 = True, 1 = False)
+    raise NotImplementedError
