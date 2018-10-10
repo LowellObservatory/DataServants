@@ -33,7 +33,7 @@ class DCTSubscriber(ConnectionListener):
     # Subclassing stomp.listener.ConnectionListener
     def on_message(self, headers, body):
         badMsg = False
-        tname = headers['destination'].split('/')[-1]
+        tname = headers['destination'].split('/')[-1].strip()
         # Manually turn the bytestring into a string
         try:
             body = body.decode("utf-8")
@@ -82,13 +82,14 @@ class DCTSubscriber(ConnectionListener):
                                'WRS.WRSPubDataSV.WRSDataPacket']:
                     parserFlatPacket(headers, body, db=self.dbconn)
                 elif tname in ['AOS.AOSSubDataSV.RelativeFocusOffset',
-                               'AOS.AOSSubDataSV.AbsoluteFocusOffset'
+                               'AOS.AOSSubDataSV.AbsoluteFocusOffset',
                                'MTS.MTSPubDataSV.MountTemperature']:
                     parserSimpleFloat(headers, body, db=self.dbconn)
                 else:
                     # Intended to be the endpoint of the auto-XML publisher
                     #   so I can catch most of them rather than explicitly
                     #   check in the if/elif block above
+                    print("Orphan topic: %s" % (tname))
                     print(headers)
                     print(body)
                     print(res)
