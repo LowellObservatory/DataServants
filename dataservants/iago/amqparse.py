@@ -296,27 +296,47 @@ def parserLOlogs(hed, msg, db=None):
         else:
             fields = None
             # print(loglevel, logmsg)
+    elif loglevel == "Level_2":
+        fields = None
+        if logmsg.startswith("SendAnalysis"):
+            apts = logmsg.split()
+            if apts[3].startswith("PHOT"):
+                fnum, subfno = apts[3].split("(")[1].split(")")[0].split(",")
+                centx = float(apts[4])
+                centy = float(apts[5])
+                fwhm = float(apts[6])
+                instmag = float(apts[7])
+                instmagerr = float(apts[8])
+                skymean = float(apts[9])
 
-        # Make the InfluxDB packet and store it, skipping if fields is None
-        if fields is not None:
-            # Note: passing ts=None lets python Influx do the timestamp for you
-            packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                       ts=None,
-                                                       tags=tags,
-                                                       fields=fields)
+                tags.update({"frame": fnum})
+                tags.update({"subframenum": subfno})
 
-            print(packet)
+                fields = {"centx": centx}
+                fields.update({"centy": centy})
+                fields.update({"fwhm": fwhm})
+                fields.update({"instmag": instmag})
+                fields.update({"instmagerr": instmagerr})
+                fields.update({"skymean": skymean})
 
-            # Actually commit the packet. singleCommit opens it,
-            #   writes the packet, and then optionally closes it.
-            #   By leaving it open we can make sure to change the
-            #   retention period.
-            db.singleCommit(packet, close=False)
-            # No arguments here means a default of 6 weeks of data held
-            db.alterRetention()
-            db.close()
-    else:
-        pass
+    # Make the InfluxDB packet and store it, skipping if fields is None
+    if fields is not None:
+        # Note: passing ts=None lets python Influx do the timestamp for you
+        packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                   ts=None,
+                                                   tags=tags,
+                                                   fields=fields)
+
+        print(packet)
+
+        # Actually commit the packet. singleCommit opens it,
+        #   writes the packet, and then optionally closes it.
+        #   By leaving it open we can make sure to change the
+        #   retention period.
+        db.singleCommit(packet, close=False)
+        # No arguments here means a default of 6 weeks of data held
+        db.alterRetention()
+        db.close()
 
 
 def parserLPI(hed, msg, db=None):
