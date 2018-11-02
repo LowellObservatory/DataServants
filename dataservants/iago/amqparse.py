@@ -26,6 +26,8 @@ from ligmos import utils
 
 
 class DCTSubscriber(ConnectionListener):
+    """
+    """
     def __init__(self, dbconn=None):
         # Adding an extra argument to the subclass
         self.dbconn = dbconn
@@ -248,7 +250,7 @@ def parserLOlogs(hed, msg, db=None):
     meas = ['InstrumentTelemetry']
     tags = {'name': topic.split(".")[1]}
 
-    if loglevel == "Level_5" or loglevel == "Level_4":
+    if loglevel in ("Level_5", "Level_4"):
         fields = None
         if logmsg.startswith("CCD sensor adus"):
             # print("Parsing: %s" % (logmsg))
@@ -319,7 +321,8 @@ def parserLOlogs(hed, msg, db=None):
         pass
 
 
-def parserLPI(hed, msg, db=None):
+# def parserLPI(hed, msg, db=None):
+def parserLPI(_, msg, db=None):
     """
     'mirrorCoverMode=Open'
     'instrumentCoverState=OPEN'
@@ -429,7 +432,8 @@ def parserLPI(hed, msg, db=None):
         db.close()
 
 
-def parserPDU(hed, msg, db=None):
+# def parserPDU(hed, msg, db=None):
+def parserPDU(_, msg, db=None):
     """
     'gwavespdu2.lowell.edu:23 IPC ONLINE!'
     'gwavespdu2.lowell.edu:23 OUTLET 2 ON ( UNIT#0 J2 )NIH-TEMP'
@@ -523,7 +527,7 @@ def parserSimpleFloat(hed, msg, db=None):
 def parserSimpleBool(hed, msg, db=None):
     """
     """
-    topic = os.path.basename(hed['destination'])
+    # topic = os.path.basename(hed['destination'])
 
     # TODO: Finish this one, maybe add an option to store it as an actual
     #   bool value or convert it to a simple int flagging (0 = True, 1 = False)
