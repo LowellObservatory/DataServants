@@ -113,6 +113,7 @@ def main():
     # Define the default files we'll use/look for. These are passed to
     #   the worker constructor (toServeMan).
     conf = './alfred.conf'
+    epif = './alfred_extraPings.conf'
     passes = './passwords.conf'
     logfile = '/tmp/alfred.log'
     desc = 'Alfred: The Instrument Monitor'
@@ -153,6 +154,9 @@ def main():
                                                                conftype=ic,
                                                                logfile=True)
 
+    if args.extraPings is True:
+        epings, _ = utils.confparsers.parseConfFile(epif, debug=args.debug)
+
     # Actually define the function calls/references to functions
     actions = defineActions()
 
@@ -188,6 +192,19 @@ def main():
                                             baseYcmd,
                                             db=idb,
                                             alarmtime=alarmtime)
+
+                # Doing the extra pings as a side job/quickie
+                #   No need to spin up a whole big thing, this is quicker
+                for sect in epings.sections():
+                    pobj = utils.common.baseTarget()
+                    # Bit of a quick-and-dirty parse here, will fail
+                    #   on typos/capitalization problems...
+                    # TODO: Check enabled status rather than ignoring it.
+                    pobj.host = epings[sect]['host']
+                    pobj.port = epings[sect]['port']
+                    pobj.db = idb
+
+                    alfred.tasks.actionPing(pobj, debug=args.debug)
 
                 # After all the instruments are done, take a big nap
                 if runner.halt is False:

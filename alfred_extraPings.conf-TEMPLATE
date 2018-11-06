@@ -1,19 +1,19 @@
 [key]
-name=hostname
+host=hostname
 port=80
 pingonly=True
 enabled=True
 
 
 [extdns-cloudflare]
-name=1.1.1.1
+host=1.1.1.1
 port=80
 pingonly=True
 enabled=True
 
 
 [extdns-google]
-name=8.8.8.8
+host=8.8.8.8
 port=80
 pingonly=True
 enabled=True

@@ -13,8 +13,9 @@
 
 from __future__ import division, print_function, absolute_import
 
-import numpy as np
 import datetime as dt
+
+import numpy as np
 
 from ligmos import utils
 
@@ -54,7 +55,7 @@ def actionPing(iobj, db=None, debug=False):
                                       'dropped': 0}}]
     """
     # In case of emergency
-    superdebug = False
+    superdebug = debug
 
     # Timeouts and stuff are handled elsewhere in here
     #   BUT! timeout must be an int >= 1 (second)
