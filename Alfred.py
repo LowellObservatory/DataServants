@@ -205,9 +205,8 @@ def main():
                         # TODO: Check enabled status rather than ignoring it.
                         pobj.host = epings[sect]['host']
                         pobj.port = epings[sect]['port']
-                        pobj.db = idb
 
-                        alfred.tasks.actionPing(pobj, debug=args.debug)
+                        alfred.tasks.actionPing(pobj, db=idb, debug=args.debug)
 
                 # After all the instruments are done, take a big nap
                 if runner.halt is False:
