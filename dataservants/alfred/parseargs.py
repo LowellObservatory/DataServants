@@ -10,8 +10,6 @@
 
 from __future__ import division, print_function, absolute_import
 
-import argparse as argp
-
 
 def extraArguments(parser):
     """ADDITIONAL command line arguments that Alfred will use.
@@ -26,5 +24,10 @@ def extraArguments(parser):
     # parser.add_argument('-q', '--quiddich', action='store_true',
     #                     help='Define a useless argument',
     #                     default=False)
+
+    hstr = "Flag to parse alfred_extraPings.conf file to check "
+    hstr += "extra network locations (internal and external)."
+    parser.add_argument('--extraPings', action='store_true',
+                        help=hstr, default=False)
 
     return parser
