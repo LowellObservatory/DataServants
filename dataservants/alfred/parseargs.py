@@ -27,7 +27,12 @@ def extraArguments(parser):
 
     hstr = "Flag to parse alfred_extraPings.conf file to check "
     hstr += "extra network locations (internal and external)."
-    parser.add_argument('--extraPings', action='store_true',
-                        help=hstr, default=False)
+    # NOTE: Need both 'default' and 'const' here since we're using
+    #   an optional (--) argument.  Without 'const', using --extraPings
+    #   on the command line will result in args.extraPings == None
+    parser.add_argument('--extraPings', metavar='/path/to/file.conf',
+                        type=str, default='./alfred_extraPings.conf',
+                        const='./alfred_extraPings.conf',
+                        help=hstr, nargs='?')
 
     return parser
