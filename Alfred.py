@@ -177,7 +177,7 @@ def main():
                                     host=cblk.dbhost,
                                     port=cblk.dbport,
                                     user=cblk.dbuser,
-                                    pw=None,
+                                    pw=cblk.dbpass,
                                     connect=False)
             else:
                 # No other database types are defined yet
