@@ -59,16 +59,16 @@ def actionPing(iobj, db=None, debug=False):
 
     # Timeouts and stuff are handled elsewhere in here
     #   BUT! timeout must be an int >= 1 (second)
-    pings, drops = utils.pingaling.ping(iobj.host,
-                                        port=iobj.port,
-                                        timeout=3)
+    pings, drops, dnss = utils.pingaling.ping(iobj.host,
+                                              port=iobj.port,
+                                              timeout=3)
     ts = dt.datetime.utcnow()
     meas = ['PingResults']
     tags = {'host': iobj.host}
     # InfluxDB can only store one datatype per field, so no NaN or null
     if np.isnan(pings) is True:
         pings = -9999.
-    fs = {'ping': pings, 'dropped': drops}
+    fs = {'ping': pings, 'dropped': drops, 'dns': dnss}
 
     # Construct our packet
     packet = utils.packetizer.makeInfluxPacket(meas=meas,
