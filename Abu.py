@@ -82,12 +82,11 @@ def main():
                 # Create an influxdb object that can be spread around to
                 #   connect and commit packets when they're created.
                 #   Leave it disconnected initially.
-                # TODO: Figure out how to fold in database passwords
                 idb = udb.influxobj(cblk.dbname,
                                     host=cblk.dbhost,
                                     port=cblk.dbport,
                                     user=cblk.dbuser,
-                                    pw=None,
+                                    pw=cblk.dbpass,
                                     connect=False)
             else:
                 # No other database types are defined yet
@@ -112,12 +111,11 @@ def main():
             alltopics = [val for sub in alltopics for val in sub]
 
             # Establish connections and subscriptions w/our helper
-            # TODO: Figure out how to fold in broker passwords
             print("Connecting to %s" % (cblk.brokerhost))
             conn = utils.amq.amqHelper(cblk.brokerhost,
                                        topics=alltopics,
                                        user=cblk.brokeruser,
-                                       passw=None,
+                                       passw=cblk.brokerpass,
                                        port=cblk.brokerport,
                                        connect=False,
                                        listener=crackers)

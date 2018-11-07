@@ -106,7 +106,7 @@ if __name__ == "__main__":
             conn = utils.amq.amqHelper(cblk.brokerhost,
                                        topics=alltopics,
                                        user=cblk.brokeruser,
-                                       passw=None,
+                                       passw=cblk.brokerpass,
                                        port=cblk.brokerport,
                                        connect=False,
                                        listener=crackers)
