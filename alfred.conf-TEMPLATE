@@ -7,6 +7,7 @@ srcdir=/data/path/on/host1/
 procmon=None
 enabled=True
 
+
 [key2]
 name=name2
 host=host2
@@ -15,3 +16,11 @@ port=22
 srcdir=/data/path/on/host2/
 procmon=bash
 enabled=True
+
+
+[common-database]
+dbtype=influxdb
+dbhost=influxdb
+dbport=8086
+dbuser=influxdbusername
+dbname=yourdatabasename
