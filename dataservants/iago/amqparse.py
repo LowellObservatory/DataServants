@@ -212,7 +212,7 @@ def parserFlatPacket(hed, msg, db=None):
             print(err.reason.strip())
 
 
-def parserLOlogs(hed, msg, db=None):
+def parserLOlogs(hed, msg, db=None, badFWHM=100.):
     """
     '22:26:55 Level_4:CCD Temp:-110.06 18.54 Setpoints:-109.95 0.00 '
     '22:26:55 Level_4:Telescope threads have been reactivated'
@@ -320,6 +320,14 @@ def parserLOlogs(hed, msg, db=None):
                 fields.update({"instmag": instmag})
                 fields.update({"instmagerr": instmagerr})
                 fields.update({"skymean": skymean})
+
+                # Final check for goodness.
+                #   NOTE: The badFWHM value is hardcoded into LOIS when the
+                #         centroid or profile fit fails. So we'll skip those.
+                if fwhm == badFWHM:
+                    # Nuke the entire site from orbit...
+                    fields = None
+                    tags = None
 
     # Make the InfluxDB packet and store it, skipping if fields is None
     if fields is not None:
