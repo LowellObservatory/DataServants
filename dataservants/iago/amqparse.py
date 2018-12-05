@@ -328,6 +328,11 @@ def parserLOlogs(hed, msg, db=None, badFWHM=100.):
                     # Nuke the entire site from orbit...
                     fields = None
                     tags = None
+    else:
+        # Need this otherwise we'll get an exception error for all
+        #   unparsed log lines! fields won't be defined right below here
+        #   and it'll trigger a NameError for 'fields'
+        fields = None
 
     # Make the InfluxDB packet and store it, skipping if fields is None
     if fields is not None:
@@ -423,12 +428,10 @@ def parserLPI(_, msg, db=None):
             fields = {"State": value}
         elif coords is True:
             # Figure out which coordinates we're storing
-            try:
-                # If this exists, if'll just pass by
-                assert i1
+            if 'i1' in vars():
                 fields = {"CoverCoord": i1}
                 tags = {"Coordinates": "InstCover"}
-            except NameError:
+            else:
                 fields = {"Mirror1": f1}
                 fields.update({"Mirror2": f2})
                 fields.update({"Mirror3": f3})
