@@ -390,6 +390,7 @@ def parserLPI(_, msg, db=None):
     key = msg.split("=")[0]
     value = msg.split("=")[1]
     covers, coords = False, False
+    skip = False
 
     if key.lower() == 'mirrorcovermode' or \
        key.lower() == 'instrumentcoverstate':
@@ -441,48 +442,50 @@ def parserLPI(_, msg, db=None):
         coords = True
     else:
         # If it's not one of these, just cheat and pass
-        db = None
+        #   (to skip "foldMirrorsState=..." for example)
+        skip = True
 
-    meas = ["LightPath"]
-    if covers is True:
-        tags = {"Covers": key}
-        fields = {"State": value}
-    elif coords is True:
-        # Figure out which coordinates we're storing
-        if 'i1' in vars():
-            fields = {"CoverCoord": i1}
-            tags = {"Coordinates": "InstCover"}
-        else:
-            fields = {"Mirror1": f1}
-            fields.update({"Mirror2": f2})
-            fields.update({"Mirror3": f3})
-            fields.update({"Mirror4": f4})
+    if skip is False:
+        meas = ["LightPath"]
+        if covers is True:
+            tags = {"Covers": key}
+            fields = {"State": value}
+        elif coords is True:
+            # Figure out which coordinates we're storing
+            if 'i1' in vars():
+                fields = {"CoverCoord": i1}
+                tags = {"Coordinates": "InstCover"}
+            else:
+                fields = {"Mirror1": f1}
+                fields.update({"Mirror2": f2})
+                fields.update({"Mirror3": f3})
+                fields.update({"Mirror4": f4})
 
-            fields.update({"Port0State": port0})
-            fields.update({"Port1State": port1})
-            fields.update({"Port2State": port2})
-            fields.update({"Port3State": port3})
-            fields.update({"Port4State": port4})
+                fields.update({"Port0State": port0})
+                fields.update({"Port1State": port1})
+                fields.update({"Port2State": port2})
+                fields.update({"Port3State": port3})
+                fields.update({"Port4State": port4})
 
-            tags = {"Coordinates": "CubeMirrors"}
+                tags = {"Coordinates": "CubeMirrors"}
 
-    # Note: passing ts=None lets python Influx do the timestamp for you.
-    packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                               ts=None,
-                                               tags=tags,
-                                               fields=fields)
+        # Note: passing ts=None lets python Influx do the timestamp for you.
+        packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                ts=None,
+                                                tags=tags,
+                                                fields=fields)
 
-    # print(packet)
+        # print(packet)
 
-    # Actually commit the packet. singleCommit opens it,
-    #   writes the packet, and then optionally closes it.
-    #   By leaving it open we can make sure to change the
-    #   retention period.
-    if db is not None:
-        db.singleCommit(packet, close=False)
-        # No arguments here means a default of 6 weeks of data held
-        db.alterRetention()
-        db.close()
+        # Actually commit the packet. singleCommit opens it,
+        #   writes the packet, and then optionally closes it.
+        #   By leaving it open we can make sure to change the
+        #   retention period.
+        if db is not None:
+            db.singleCommit(packet, close=False)
+            # No arguments here means a default of 6 weeks of data held
+            db.alterRetention()
+            db.close()
 
 
 def parserPDU(_, msg, db=None):
