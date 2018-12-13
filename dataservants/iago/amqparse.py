@@ -82,7 +82,8 @@ class DCTSubscriber(ConnectionListener):
                     parserLOlogs(headers, body, db=self.dbconn)
                 elif tname in ['tcs.loisTelemetry',
                                'AOS.AOSPubDataSV.AOSDataPacket',
-                               'WRS.WRSPubDataSV.WRSDataPacket']:
+                               'WRS.WRSPubDataSV.WRSDataPacket',
+                               'TCS.TCSSharedVariables.TCSHighLevelStatusSV.TCSTcsStatusSV']:
                     parserFlatPacket(headers, body, db=self.dbconn)
                 elif tname in ['AOS.AOSSubDataSV.RelativeFocusOffset',
                                'AOS.AOSSubDataSV.AbsoluteFocusOffset',
