@@ -15,7 +15,7 @@ import pid
 import time
 import signal
 
-from dataservants import utils
+from ligmos import utils
 
 if __name__ == "__main__":
     mynameis = os.path.basename(__file__)

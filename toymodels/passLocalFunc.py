@@ -29,4 +29,3 @@ if __name__ == "__main__":
     thing2 = 'beees'
     idict = {"Comp1": 42, "Comp2": "coconuts"}
     passedJunk.function1(f1, idict, thing1, f1a2=thing2)
-
