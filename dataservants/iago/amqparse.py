@@ -14,6 +14,7 @@ Further description.
 """
 
 import os
+import collections
 import datetime as dt
 from dateutil import tz
 import xmltodict as xmld
@@ -139,6 +140,25 @@ def dumpPacket(pxml):
     return pretty
 
 
+def flatten(d, parent_key='', sep='_'):
+    """
+    Thankfully StackOverflow exists because I'm too tired to write out this
+    logic myself and now I can just use this:
+    https://stackoverflow.com/a/6027615
+    With thanks to:
+    https://stackoverflow.com/users/1897/imran
+    https://stackoverflow.com/users/1645874/mythsmith
+    """
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
 def parserFlatPacket(hed, msg, db=None):
     """
     """
@@ -181,12 +201,11 @@ def parserFlatPacket(hed, msg, db=None):
             # Store each key:value pairing
             for each in keys:
                 val = xmlp[each]
+
+                # TESTING
                 if isinstance(val, dict):
-                    # This means we have subvalues that we need to flatten!
-                    nkeys = val.keys()
-                    for oach in nkeys:
-                        nkey = "%s_%s" % (each, oach)
-                        fields.update({nkey: val[oach]})
+                    flatVals = flatten(val, parent_key=each)
+                    fields.update(flatVals)
                 else:
                     fields.update({each: val})
 
@@ -197,16 +216,17 @@ def parserFlatPacket(hed, msg, db=None):
                                                            tags=None,
                                                            fields=fields)
 
-                print(packet)
+                # print(packet)
 
                 # Actually commit the packet. singleCommit opens it,
                 #   writes the packet, and then optionally closes it.
                 #   By leaving it open we can make sure to change the
                 #   retention period.
-                db.singleCommit(packet, close=False)
-                # No arguments here means a default of 6 weeks of data held
-                db.alterRetention()
-                db.close()
+                if db is not None:
+                    db.singleCommit(packet, close=False)
+                    # No arguments here means a default of 6 weeks of data held
+                    db.alterRetention()
+                    db.close()
         except xmls.XMLSchemaDecodeError as err:
             print(err.message.strip())
             print(err.reason.strip())
@@ -342,16 +362,17 @@ def parserLOlogs(hed, msg, db=None, badFWHM=100.):
                                                    tags=tags,
                                                    fields=fields)
 
-        print(packet)
+        # print(packet)
 
         # Actually commit the packet. singleCommit opens it,
         #   writes the packet, and then optionally closes it.
         #   By leaving it open we can make sure to change the
         #   retention period.
-        db.singleCommit(packet, close=False)
-        # No arguments here means a default of 6 weeks of data held
-        db.alterRetention()
-        db.close()
+        if db is not None:
+            db.singleCommit(packet, close=False)
+            # No arguments here means a default of 6 weeks of data held
+            db.alterRetention()
+            db.close()
 
 
 # def parserLPI(hed, msg, db=None):
@@ -421,49 +442,48 @@ def parserLPI(_, msg, db=None):
         # If it's not one of these, just cheat and pass
         db = None
 
+    meas = ["LightPath"]
+    if covers is True:
+        tags = {"Covers": key}
+        fields = {"State": value}
+    elif coords is True:
+        # Figure out which coordinates we're storing
+        if 'i1' in vars():
+            fields = {"CoverCoord": i1}
+            tags = {"Coordinates": "InstCover"}
+        else:
+            fields = {"Mirror1": f1}
+            fields.update({"Mirror2": f2})
+            fields.update({"Mirror3": f3})
+            fields.update({"Mirror4": f4})
+
+            fields.update({"Port0State": port0})
+            fields.update({"Port1State": port1})
+            fields.update({"Port2State": port2})
+            fields.update({"Port3State": port3})
+            fields.update({"Port4State": port4})
+
+            tags = {"Coordinates": "CubeMirrors"}
+
+    # Note: passing ts=None lets python Influx do the timestamp for you.
+    packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                               ts=None,
+                                               tags=tags,
+                                               fields=fields)
+
+    # print(packet)
+
+    # Actually commit the packet. singleCommit opens it,
+    #   writes the packet, and then optionally closes it.
+    #   By leaving it open we can make sure to change the
+    #   retention period.
     if db is not None:
-        meas = ["LightPath"]
-        if covers is True:
-            tags = {"Covers": key}
-            fields = {"State": value}
-        elif coords is True:
-            # Figure out which coordinates we're storing
-            if 'i1' in vars():
-                fields = {"CoverCoord": i1}
-                tags = {"Coordinates": "InstCover"}
-            else:
-                fields = {"Mirror1": f1}
-                fields.update({"Mirror2": f2})
-                fields.update({"Mirror3": f3})
-                fields.update({"Mirror4": f4})
-
-                fields.update({"Port0State": port0})
-                fields.update({"Port1State": port1})
-                fields.update({"Port2State": port2})
-                fields.update({"Port3State": port3})
-                fields.update({"Port4State": port4})
-
-                tags = {"Coordinates": "CubeMirrors"}
-
-        # Note: passing ts=None lets python Influx do the timestamp for you.
-        packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                   ts=None,
-                                                   tags=tags,
-                                                   fields=fields)
-
-        print(packet)
-
-        # Actually commit the packet. singleCommit opens it,
-        #   writes the packet, and then optionally closes it.
-        #   By leaving it open we can make sure to change the
-        #   retention period.
         db.singleCommit(packet, close=False)
         # No arguments here means a default of 6 weeks of data held
         db.alterRetention()
         db.close()
 
 
-# def parserPDU(hed, msg, db=None):
 def parserPDU(_, msg, db=None):
     """
     'gwavespdu2.lowell.edu:23 IPC ONLINE!'
@@ -491,29 +511,29 @@ def parserPDU(_, msg, db=None):
         # This is the shorthand label/tag at the very end
         label = message[-1].strip("(").strip(")")
 
+        # Make the InfluxDB style packet
+        meas = ["PDUStates"]
+        # The "tag" is the pdu's hostname since there are multiple
+        tag = {"Name": host, "OutletNumber": int(outnumb),
+               "Label": label}
+
+        fields = {"State": outstat}
+        fields.update({"Label": label})
+
+        # Make and store the influx packet
+        # Note: passing ts=None lets python Influx do the timestamp for you
+        packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                   ts=None,
+                                                   tags=tag,
+                                                   fields=fields)
+
+        # print(packet)
+
+        # Actually commit the packet. singleCommit opens it,
+        #   writes the packet, and then optionally closes it.
+        #   By leaving it open we can make sure to change the
+        #   retention period.
         if db is not None:
-            # Make the InfluxDB style packet
-            meas = ["PDUStates"]
-            # The "tag" is the pdu's hostname since there are multiple
-            tag = {"Name": host, "OutletNumber": int(outnumb),
-                   "Label": label}
-
-            fields = {"State": outstat}
-            fields.update({"Label": label})
-
-            # Make and store the influx packet
-            # Note: passing ts=None lets python Influx do the timestamp for you
-            packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                       ts=None,
-                                                       tags=tag,
-                                                       fields=fields)
-
-            print(packet)
-
-            # Actually commit the packet. singleCommit opens it,
-            #   writes the packet, and then optionally closes it.
-            #   By leaving it open we can make sure to change the
-            #   retention period.
             db.singleCommit(packet, close=False)
             # No arguments here means a default of 6 weeks of data held
             db.alterRetention()
@@ -523,32 +543,33 @@ def parserPDU(_, msg, db=None):
 def parserSimpleFloat(hed, msg, db=None):
     """
     """
-    print("Parsing a simple float message: %s" % msg)
+    # print("Parsing a simple float message: %s" % msg)
     topic = os.path.basename(hed['destination'])
     try:
         val = float(msg)
     except ValueError as err:
         print(str(err))
         val = -9999.
+
+    # Make the InfluxDB style packet
+    meas = [topic]
+    tag = {}
+
+    fields = {"value": val}
+
+    # Make and store the influx packet
+    # Note: passing ts=None lets python Influx do the timestamp for you
+    packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                               ts=None,
+                                               tags=tag,
+                                               fields=fields)
+    # print(packet)
+
+    # Actually commit the packet. singleCommit opens it,
+    #   writes the packet, and then optionally closes it.
+    #   By leaving it open we can make sure to change the
+    #   retention period.
     if db is not None:
-        # Make the InfluxDB style packet
-        meas = [topic]
-        tag = {}
-
-        fields = {"value": val}
-
-        # Make and store the influx packet
-        # Note: passing ts=None lets python Influx do the timestamp for you
-        packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                   ts=None,
-                                                   tags=tag,
-                                                   fields=fields)
-        print(packet)
-
-        # Actually commit the packet. singleCommit opens it,
-        #   writes the packet, and then optionally closes it.
-        #   By leaving it open we can make sure to change the
-        #   retention period.
         db.singleCommit(packet, close=False)
         # No arguments here means a default of 6 weeks of data held
         db.alterRetention()
