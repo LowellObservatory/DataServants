@@ -471,9 +471,9 @@ def parserLPI(_, msg, db=None):
 
         # Note: passing ts=None lets python Influx do the timestamp for you.
         packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                ts=None,
-                                                tags=tags,
-                                                fields=fields)
+                                                   ts=None,
+                                                   tags=tags,
+                                                   fields=fields)
 
         # print(packet)
 
