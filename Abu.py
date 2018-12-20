@@ -88,6 +88,13 @@ def main():
                                     user=cblk.dbuser,
                                     pw=cblk.dbpass,
                                     connect=False)
+
+                # Connect to check the retention policy, then disconnect
+                #   but keep the object.
+                idb.connect()
+                # Set the retention to default (see ligmos/utils/database.py)
+                idb.alterRetention()
+                idb.disconnect()
             else:
                 # No other database types are defined yet
                 pass

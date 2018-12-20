@@ -172,13 +172,19 @@ def main():
                 # Create an influxdb object that can be spread around to
                 #   connect and commit packets when they're created.
                 #   Leave it disconnected initially.
-                # TODO: Figure out how to fold in database passwords
                 idb = udb.influxobj(cblk.dbname,
                                     host=cblk.dbhost,
                                     port=cblk.dbport,
                                     user=cblk.dbuser,
                                     pw=cblk.dbpass,
                                     connect=False)
+
+                # Connect to check the retention policy, then disconnect
+                #   but keep the object.
+                idb.connect()
+                # Set the retention to default (see ligmos/utils/database.py)
+                idb.alterRetention()
+                idb.disconnect()
             else:
                 # No other database types are defined yet
                 pass
