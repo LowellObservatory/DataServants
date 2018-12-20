@@ -221,13 +221,8 @@ def parserFlatPacket(hed, msg, db=None):
 
                 # Actually commit the packet. singleCommit opens it,
                 #   writes the packet, and then optionally closes it.
-                #   By leaving it open we can make sure to change the
-                #   retention period.
                 if db is not None:
-                    db.singleCommit(packet, close=False)
-                    # No arguments here means a default of 6 weeks of data held
-                    db.alterRetention()
-                    db.close()
+                    db.singleCommit(packet, close=True)
         except xmls.XMLSchemaDecodeError as err:
             print(err.message.strip())
             print(err.reason.strip())
@@ -367,16 +362,10 @@ def parserLOlogs(hed, msg, db=None, badFWHM=100.):
 
         # Actually commit the packet. singleCommit opens it,
         #   writes the packet, and then optionally closes it.
-        #   By leaving it open we can make sure to change the
-        #   retention period.
         if db is not None:
-            db.singleCommit(packet, close=False)
-            # No arguments here means a default of 6 weeks of data held
-            db.alterRetention()
-            db.close()
+            db.singleCommit(packet, close=True)
 
 
-# def parserLPI(hed, msg, db=None):
 def parserLPI(_, msg, db=None):
     """
     'mirrorCoverMode=Open'
@@ -479,13 +468,8 @@ def parserLPI(_, msg, db=None):
 
         # Actually commit the packet. singleCommit opens it,
         #   writes the packet, and then optionally closes it.
-        #   By leaving it open we can make sure to change the
-        #   retention period.
         if db is not None:
-            db.singleCommit(packet, close=False)
-            # No arguments here means a default of 6 weeks of data held
-            db.alterRetention()
-            db.close()
+            db.singleCommit(packet, close=True)
 
 
 def parserPDU(_, msg, db=None):
@@ -535,13 +519,8 @@ def parserPDU(_, msg, db=None):
 
         # Actually commit the packet. singleCommit opens it,
         #   writes the packet, and then optionally closes it.
-        #   By leaving it open we can make sure to change the
-        #   retention period.
         if db is not None:
-            db.singleCommit(packet, close=False)
-            # No arguments here means a default of 6 weeks of data held
-            db.alterRetention()
-            db.close()
+            db.singleCommit(packet, close=True)
 
 
 def parserSimpleFloat(hed, msg, db=None):
@@ -571,13 +550,8 @@ def parserSimpleFloat(hed, msg, db=None):
 
     # Actually commit the packet. singleCommit opens it,
     #   writes the packet, and then optionally closes it.
-    #   By leaving it open we can make sure to change the
-    #   retention period.
     if db is not None:
-        db.singleCommit(packet, close=False)
-        # No arguments here means a default of 6 weeks of data held
-        db.alterRetention()
-        db.close()
+        db.singleCommit(packet, close=True)
 
 
 def parserSimpleBool(hed, msg, db=None):
