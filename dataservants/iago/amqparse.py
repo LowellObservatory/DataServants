@@ -27,14 +27,17 @@ from ligmos import utils
 
 
 class DCTSubscriber(ConnectionListener):
-    """
-    """
     def __init__(self, dbconn=None):
         # Adding an extra argument to the subclass
         self.dbconn = dbconn
 
-    # Subclassing stomp.listener.ConnectionListener
+        # Grab all the schemas that are in the ligmos library
+        self.schemaDict = utils.amq.schemaDicter()
+
     def on_message(self, headers, body):
+        """
+        Basically subclassing stomp.listener.ConnectionListener
+        """
         badMsg = False
         tname = headers['destination'].split('/')[-1].strip()
         # Manually turn the bytestring into a string
@@ -84,7 +87,9 @@ class DCTSubscriber(ConnectionListener):
                                'AOS.AOSPubDataSV.AOSDataPacket',
                                'WRS.WRSPubDataSV.WRSDataPacket',
                                'TCS.TCSSharedVariables.TCSHighLevelStatusSV.TCSTcsStatusSV']:
-                    parserFlatPacket(headers, body, db=self.dbconn)
+                    schema = self.schemaDict[tname]
+                    parserFlatPacket(headers, body,
+                                     schema=schema, db=self.dbconn)
                 elif tname in ['AOS.AOSSubDataSV.RelativeFocusOffset',
                                'AOS.AOSSubDataSV.AbsoluteFocusOffset',
                                'MTS.MTSPubDataSV.MountTemperature']:
@@ -160,16 +165,13 @@ def flatten(d, parent_key='', sep='_'):
     return dict(items)
 
 
-def parserFlatPacket(hed, msg, db=None):
+def parserFlatPacket(hed, msg, schema=None, db=None):
     """
     """
     # print(msg)
     # This is really the topic name, so we'll make that the measurement name
     #   for the sake of clarity. It NEEDS to be a list until I fix packetizer!
     meas = [os.path.basename(hed['destination'])]
-
-    # Define the schema we'll use to convert datatypes using the ligmos helper
-    schema = utils.amq.checkSchema(meas[0])
 
     # Bail if there's a schema not found; needs expansion here
     if schema is None:
