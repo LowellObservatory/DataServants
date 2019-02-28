@@ -87,6 +87,9 @@ class DCTSubscriber(ConnectionListener):
                                'AOS.AOSPubDataSV.AOSDataPacket',
                                'WRS.WRSPubDataSV.WRSDataPacket',
                                'TCS.TCSSharedVariables.TCSHighLevelStatusSV.TCSTcsStatusSV']:
+
+                    # TODO: Wrap this in a proper try...except
+                    #   As of right now, it'll be caught in the "WTF!!!"
                     schema = self.schemaDict[tname]
                     parserFlatPacket(headers, body,
                                      schema=schema, db=self.dbconn)
