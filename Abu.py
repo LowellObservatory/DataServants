@@ -66,7 +66,7 @@ def main():
                                                             desc=desc,
                                                             extraargs=eargs,
                                                             conftype=ic,
-                                                            logfile=False)
+                                                            logfile=True)
 
     # ActiveMQ connection checker
     conn = None
