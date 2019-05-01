@@ -92,7 +92,7 @@ if __name__ == "__main__":
                 # Register the custom listener class that Iago has.
                 #   This will be the thing that parses packets depending
                 #   on their topic name and does the hard stuff!!
-                crackers = amqp.DCTSubscriber(dbconn=idb)
+                crackers = amqp.DCTConsumer(dbconn=idb)
             else:
                 # No other broker types are defined yet
                 pass

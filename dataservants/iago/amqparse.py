@@ -26,8 +26,15 @@ import xmlschema as xmls
 from ligmos import utils
 
 
-class DCTSubscriber(ConnectionListener):
+class DCTConsumer(ConnectionListener):
     def __init__(self, dbconn=None):
+        """
+        This will really be stuffed into a
+        utils.amq.amqHelper class, so all the connections stuff is
+        really over there in that class.  This is just to route the
+        DCT-specific messages to the right parsers
+        """
+
         # Adding an extra argument to the subclass
         self.dbconn = dbconn
 
