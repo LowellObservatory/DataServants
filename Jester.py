@@ -120,15 +120,10 @@ if __name__ == "__main__":
                     print("No connection at all! Retrying...")
                     conn.connect(listener=crackers)
                 elif conn.conn.transport.connected is False:
-                    # Added the "first" flag to take care of a weird bug
                     print("Connection died! Reestablishing...")
                     conn.connect(listener=crackers)
                 else:
                     print("Connection still valid")
-
-                # If we're here, we made it once thru. The above comparison
-                #   will fail without this and we'll never reconnect!
-                first = False
 
                 # Consider taking a big nap
                 if runner.halt is False:

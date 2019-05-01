@@ -55,7 +55,6 @@ def main():
     # Quick renaming to keep line length under control
     ic = utils.common.snoopTarget
     udb = utils.database
-    amqp = iago.amqparse
 
     # idict: dictionary of parsed config file
     # cblk: common block from config file
@@ -103,7 +102,8 @@ def main():
                 # Register the custom listener class that Iago has.
                 #   This will be the thing that parses packets depending
                 #   on their topic name and does the hard stuff!!
-                crackers = amqp.DCTSubscriber(dbconn=idb)
+                # crackers = amqp.DCTConsumer(dbconn=idb)
+                crackers = None
             else:
                 # No other broker types are defined yet
                 pass
@@ -118,6 +118,7 @@ def main():
             alltopics = [val for sub in alltopics for val in sub]
 
             # Establish connections and subscriptions w/our helper
+            # TODO: Figure out how to fold in broker passwords
             print("Connecting to %s" % (cblk.brokerhost))
             conn = utils.amq.amqHelper(cblk.brokerhost,
                                        topics=alltopics,
@@ -136,7 +137,6 @@ def main():
                     print("No connection at all! Retrying...")
                     conn.connect(listener=crackers)
                 elif conn.conn.transport.connected is False:
-                    # Added the "first" flag to take care of a weird bug
                     print("Connection died! Reestablishing...")
                     conn.connect(listener=crackers)
                 else:
