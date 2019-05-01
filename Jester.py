@@ -67,7 +67,7 @@ if __name__ == "__main__":
             #   (helpful to find starts/restarts when scanning thru logs)
             utils.common.printPreamble(p, idict)
 
-            if cblk.dbtype.lower() == 'influxdb':
+            if cblk.dbtype is not None and cblk.dbtype.lower() == 'influxdb':
                 # Create an influxdb object that can be spread around to
                 #   connect and commit packets when they're created.
                 #   Leave it disconnected initially.
@@ -88,7 +88,8 @@ if __name__ == "__main__":
                 # No other database types are defined yet
                 pass
 
-            if cblk.brokertype.lower() == "activemq":
+            if cblk.brokertype is not None and\
+               cblk.brokertype.lower() == "activemq":
                 # Register the custom listener class that Iago has.
                 #   This will be the thing that parses packets depending
                 #   on their topic name and does the hard stuff!!

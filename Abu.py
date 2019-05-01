@@ -66,7 +66,7 @@ def main():
                                                             desc=desc,
                                                             extraargs=eargs,
                                                             conftype=ic,
-                                                            logfile=True)
+                                                            logfile=False)
 
     # ActiveMQ connection checker
     conn = None
@@ -77,7 +77,9 @@ def main():
             #   (helpful to find starts/restarts when scanning thru logs)
             utils.common.printPreamble(p, idict)
 
-            if cblk.dbtype.lower() == 'influxdb':
+
+            if cblk.brokertype is not None and\
+               cblk.brokertype.lower() == "activemq":
                 # Create an influxdb object that can be spread around to
                 #   connect and commit packets when they're created.
                 #   Leave it disconnected initially.
@@ -130,7 +132,6 @@ def main():
 
             # Semi-infinite loop
             while runner.halt is False:
-
                 # Double check that the broker connection is still up
                 #   NOTE: conn.connect() handles ConnectionError exceptions
                 if conn.conn is None:
@@ -141,6 +142,9 @@ def main():
                     conn.connect(listener=crackers)
                 else:
                     print("Connection still valid")
+
+                # Actually do our actions
+                print(idict)
 
                 # Consider taking a big nap
                 if runner.halt is False:

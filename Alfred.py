@@ -168,7 +168,7 @@ def main():
             #   (helpful to find starts/restarts when scanning thru logs)
             utils.common.printPreamble(p, idict)
 
-            if cblk.dbtype.lower() == 'influxdb':
+            if cblk.dbtype is not None and cblk.dbtype.lower() == 'influxdb':
                 # Create an influxdb object that can be spread around to
                 #   connect and commit packets when they're created.
                 #   Leave it disconnected initially.
