@@ -8,7 +8,7 @@
 #
 #  @author: rhamilton
 
-"""Abu: The Kleptomaniac Scraper
+"""Abu: The Kleptomaniac Monkey
 
 Abu is designed to live on all machines of interest, and
 pull information from a variety of log file sources and republish them
@@ -29,7 +29,7 @@ from pid import PidFile, PidFileError
 
 from ligmos import utils
 from ligmos import workers
-from dataservants import iago
+from dataservants import abu
 
 
 def main():
@@ -47,7 +47,7 @@ def main():
     passes = './passwords.conf'
     logfile = '/tmp/abu.log'
     desc = "Abu: The Kleptomaniac Scraper"
-    eargs = iago.parseargs.extraArguments
+    eargs = abu.parseargs.extraArguments
 
     # Interval between successive runs of the polling loop (seconds)
     bigsleep = 120
@@ -101,10 +101,6 @@ def main():
                 pass
 
             if cblk.brokertype.lower() == "activemq":
-                # Register the custom listener class that Iago has.
-                #   This will be the thing that parses packets depending
-                #   on their topic name and does the hard stuff!!
-                # crackers = amqp.DCTConsumer(dbconn=idb)
                 crackers = None
             else:
                 # No other broker types are defined yet
@@ -144,7 +140,16 @@ def main():
                     print("Connection still valid")
 
                 # Actually do our actions
-                print(idict)
+                for sect in idict:
+                    # Remember; I override/store based on the 'name' in the
+                    #   config file rather than the actual section conf name!
+                    if sect.lower() == 'dctweatherstation':
+                        sObj = idict[sect]
+                        if sObj.method.lower() == 'http' or 'https':
+                            wxml = abu.http.webgetter(sObj.resourceloc)
+                            if wxml != '':
+                                bxml = abu.actions.columbiaTranslator(wxml)
+                                conn.publish(sObj.topics[0], bxml)
 
                 # Consider taking a big nap
                 if runner.halt is False:
