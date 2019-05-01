@@ -93,7 +93,8 @@ class DCTConsumer(ConnectionListener):
                 elif tname in ['tcs.loisTelemetry',
                                'AOS.AOSPubDataSV.AOSDataPacket',
                                'WRS.WRSPubDataSV.WRSDataPacket',
-                               'TCS.TCSSharedVariables.TCSHighLevelStatusSV.TCSTcsStatusSV']:
+                               'TCS.TCSSharedVariables.TCSHighLevelStatusSV.TCSTcsStatusSV',
+                               'Ryans.DCTWeatherStream']:
 
                     # TODO: Wrap this in a proper try...except
                     #   As of right now, it'll be caught in the "WTF!!!"
