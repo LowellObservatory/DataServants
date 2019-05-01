@@ -175,7 +175,7 @@ def flatten(d, parent_key='', sep='_'):
     return dict(items)
 
 
-def parserFlatPacket(hed, msg, schema=None, db=None):
+def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
     """
     """
     # print(msg)
@@ -238,6 +238,11 @@ def parserFlatPacket(hed, msg, schema=None, db=None):
         except xmls.XMLSchemaDecodeError as err:
             print(err.message.strip())
             print(err.reason.strip())
+
+        # Added for itteratively testing parsed packets outside of the
+        #   usual operational mode (like in toymodels/PacketSchemer)
+        if debug is True:
+            print(fields)
 
 
 def parserLOlogs(hed, msg, db=None, badFWHM=100.):

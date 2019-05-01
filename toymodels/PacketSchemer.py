@@ -15,23 +15,43 @@ Further description.
 
 from __future__ import division, print_function, absolute_import
 
+# REMEMBER: Call this FROM the top directory so the import doesn't barf!
+import sys
+sys.path.append(".")
+
+import xmltodict as xmld
+import xmlschema as xmls
+
+from ligmos.utils import amq
 from dataservants import iago
+from dataservants import abu
 
 
-def testSchema(xmlfile, location):
+def testSchema(msg, location):
     """
     """
     hed = {'destination': location}
-    with open(xmlfile, 'r') as f:
-        msg = f.read()
 
-    iago.amqparse.parserFlatPacket(hed, msg, db=None)
+    schemaObj = amq.checkSchema(location)
+
+    iago.amqparse.parserFlatPacket(hed, msg, db=None,
+                                   schema=schemaObj, debug=True)
 
 
 def main():
-    xmlfile = '../ligmos/ligmos/schemas/xmlsamples/TCS.TCSSharedVariables.TCSHighLevelStatusSV.TCSTcsStatusSV.xml'
-    testSchema(xmlfile,
-               'TCS.TCSSharedVariables.TCSHighLevelStatusSV.TCSTcsStatusSV')
+    xmlfile = '../ligmos/ligmos/schemas/xmlsamples/dctstation_orig.xml'
+    topicname = 'Ryans.DCTWeatherStream'
+
+    # Read in the example packet
+    with open(xmlfile, 'r') as f:
+        msg = f.read()
+
+    # Perform any reprocessing if necessary
+    #   Usually there isn't, unless you're testing a producer/repacking
+    betterXML = abu.actions.columbiaTranslator(msg)
+    print(betterXML)
+
+    testSchema(betterXML, topicname)
 
 
 if __name__ == "__main__":
