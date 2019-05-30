@@ -201,7 +201,8 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
         good = False
 
     if good is True:
-        # print("Packet good!")
+        if debug is True:
+            print("Packet good!")
         try:
             xmlp = schema.to_dict(msg, decimal_type=float, validation='lax')
             # I HATE THIS
@@ -244,6 +245,9 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
         #   usual operational mode (like in toymodels/PacketSchemer)
         if debug is True:
             print(fields)
+    else:
+        if debug is True:
+            print("Packet was bad!?")
 
 
 def parserLOlogs(hed, msg, db=None, badFWHM=100.):
