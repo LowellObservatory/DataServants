@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # Quick renaming to keep line length under control
     malarms = utils.multialarm
     ip = utils.packetizer
-    ic = utils.common.snoopTarget
+    ic = utils.classes.snoopTarget
     udb = utils.database
     amqp = iago.amqparse
 

@@ -138,7 +138,7 @@ def main():
     alarmtime = 600
 
     # Quick renaming to keep line length under control
-    ic = utils.common.hostTarget
+    ic = utils.classes.hostTarget
     udb = utils.database
 
     # idict: dictionary of parsed config file
@@ -155,8 +155,12 @@ def main():
 
     # abort = False will allow the code to continue if the file isn't found.
     #   That's because I've deemed extra pings "nice" but not "necessary"
+    # We're just calling the raw parser here, so epings ISN'T a class
+    #   of any sort; just a dict of configparser sections
     epings, _ = utils.confparsers.parseConfFile(args.extraPings,
                                                 debug=args.debug,
+                                                enableCheck=True,
+                                                commonBlocks=False,
                                                 abort=False)
 
     # Actually define the function calls/references to functions
@@ -204,13 +208,15 @@ def main():
                 # Doing the extra pings as a side job/quickie
                 #   No need to make this into a big to-do
                 if epings is not None:
-                    for sect in epings.sections():
+                    for sect in epings:
                         # Check to see if this section is "enabled"
                         penab = epings[sect].getboolean('enabled')
                         if penab is True:
-                            pobj = utils.common.baseTarget()
+                            pobj = utils.classes.baseTarget()
                             # Bit of a quick-and-dirty parse here, will fail
-                            #   on typos/capitalization problems...
+                            #   on typos/capitalization problems.
+                            # But since alfred's task expects a class,
+                            #   we've gotta bite the bullet
                             pobj.host = epings[sect]['host']
                             pobj.port = epings[sect]['port']
 

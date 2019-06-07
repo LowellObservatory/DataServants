@@ -53,7 +53,7 @@ def main():
     bigsleep = 120
 
     # Quick renaming to keep line length under control
-    ic = utils.common.snoopTarget
+    ic = utils.classes.snoopTarget
     udb = utils.database
 
     # idict: dictionary of parsed config file

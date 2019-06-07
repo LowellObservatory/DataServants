@@ -118,7 +118,7 @@ def main():
     alarmtime = 1000
 
     # Quick renaming to keep line length under control
-    ic = utils.common.dataTarget
+    ic = utils.classes.dataTarget
 
     # idict: dictionary of parsed config file
     # cblk: common block from config file

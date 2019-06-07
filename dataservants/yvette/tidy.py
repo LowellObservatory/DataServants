@@ -111,8 +111,8 @@ def beginTidying(noprint=False):
         #   function calls, it's been broken out into another function
         #   elsewhere
         if args.freespace is True:
-                frees = utils.files.checkFreeSpace(args.dir, debug=args.debug)
-                rjson.update({"FreeSpace": frees})
+            frees = utils.files.checkFreeSpace(args.dir, debug=args.debug)
+            rjson.update({"FreeSpace": frees})
 
         if args.cpumem is True:
             cpus = utils.cpumem.checkCPUusage()
@@ -158,7 +158,7 @@ def beginTidying(noprint=False):
             if args.verify is True:
                 broken = tasks.verificationActions(args, hfname,
                                                    debug=args.debug)
-                if type(broken) == tuple:
+                if isinstance(broken, tuple):
                     rjson.update({"HashChecks": {"NFilesFound": broken[0],
                                                  "MissingFiles": broken[1],
                                                  "UnhashedFiles": broken[2],
