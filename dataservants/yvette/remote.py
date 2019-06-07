@@ -203,7 +203,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                     for pk in pdesired:
                         try:
                             # Need to flatten some fools first
-                            if type(pid[pk]) == list:
+                            if isinstance(pid[pk], list):
                                 store = " ".join(pid[pk])
                             else:
                                 store = pid[pk]
@@ -432,19 +432,19 @@ def actionStats(eSSH, baseYcmd, iobj, db=None, debug=False):
 
     gf = {}
     if fsa != {}:
-        for each in dbmapCPU.keys():
+        for each in dbmapCPU:
             try:
                 gf.update({each: fsa['MachineCPU'][dbmapCPU[each]]})
             except KeyError:
                 pass
 
-        for oach in dbmapLoad.keys():
+        for oach in dbmapLoad:
             try:
                 gf.update({oach: fsa['MachineLoads'][dbmapLoad[oach]]})
             except KeyError:
                 pass
 
-        for pach in dbmapMem.keys():
+        for pach in dbmapMem:
             try:
                 gf.update({pach: fsa['MachineMem'][dbmapMem[pach]]})
             except KeyError:
