@@ -77,7 +77,6 @@ def main():
             #   (helpful to find starts/restarts when scanning thru logs)
             utils.common.printPreamble(p, idict)
 
-
             if cblk.brokertype is not None and\
                cblk.brokertype.lower() == "activemq":
                 # Create an influxdb object that can be spread around to
