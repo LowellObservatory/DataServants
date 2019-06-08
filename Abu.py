@@ -53,8 +53,8 @@ def main():
     bigsleep = 120
 
     # Quick renaming to keep line length under control
-    ic = utils.classes.snoopTarget
     udb = utils.database
+    ic = utils.classes.snoopTarget
 
     # idict: dictionary of parsed config file
     # cblk: common block from config file
@@ -77,9 +77,7 @@ def main():
             #   (helpful to find starts/restarts when scanning thru logs)
             utils.common.printPreamble(p, idict)
 
-
-            if cblk.brokertype is not None and\
-               cblk.brokertype.lower() == "activemq":
+            if cblk.dbtype is not None and cblk.dbtype.lower() == "influxdb":
                 # Create an influxdb object that can be spread around to
                 #   connect and commit packets when they're created.
                 #   Leave it disconnected initially.
@@ -100,31 +98,9 @@ def main():
                 # No other database types are defined yet
                 pass
 
-            if cblk.brokertype.lower() == "activemq":
-                crackers = None
-            else:
-                # No other broker types are defined yet
-                pass
-
-            # Collect the activemq topics that are desired
-            alltopics = []
-            for each in idict:
-                it = idict[each]
-                alltopics.append(it.topics)
-
-            # Flatten the topic list (only good for 2D)
-            alltopics = [val for sub in alltopics for val in sub]
-
-            # Establish connections and subscriptions w/our helper
-            # TODO: Figure out how to fold in broker passwords
-            print("Connecting to %s" % (cblk.brokerhost))
-            conn = utils.amq.amqHelper(cblk.brokerhost,
-                                       topics=alltopics,
-                                       user=cblk.brokeruser,
-                                       passw=cblk.brokerpass,
-                                       port=cblk.brokerport,
-                                       connect=False,
-                                       listener=crackers)
+            silentListener = utils.amq.silentSubscriber()
+            conn, crackers = utils.amq.setupBroker(idict, cblk, ic,
+                                                   listener=silentListener)
 
             # Semi-infinite loop
             while runner.halt is False:
