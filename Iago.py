@@ -95,7 +95,7 @@ if __name__ == "__main__":
                 #   on their topic name and does the hard stuff!!
                 crackers = amqp.DCTConsumer(dbconn=idb)
 
-            conn, crackers = utils.amq.setupBroker(idict, cblk, ic,
+            conn, crackers = utils.amq.setupBroker(idict, cblk,
                                                    listener=crackers)
 
             # Semi-infinite loop

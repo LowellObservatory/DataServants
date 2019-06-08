@@ -99,7 +99,7 @@ def main():
                 pass
 
             silentListener = utils.amq.silentSubscriber()
-            conn, crackers = utils.amq.setupBroker(idict, cblk, ic,
+            conn, crackers = utils.amq.setupBroker(idict, cblk,
                                                    listener=silentListener)
 
             # Semi-infinite loop
