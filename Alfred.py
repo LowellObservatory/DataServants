@@ -153,10 +153,10 @@ def main():
                                                                conftype=ic,
                                                                logfile=True)
 
-    # abort = False will allow the code to continue if the file isn't found.
-    #   That's because I've deemed extra pings "nice" but not "necessary"
     # We're just calling the raw parser here, so epings ISN'T a class
     #   of any sort; just a dict of configparser sections
+    # abort = False will allow the code to continue if the file isn't found.
+    #   That's because I've deemed extra pings "nice" but not "necessary"
     epings, _ = utils.confparsers.parseConfFile(args.extraPings,
                                                 debug=args.debug,
                                                 enableCheck=True,
@@ -172,7 +172,7 @@ def main():
             #   (helpful to find starts/restarts when scanning thru logs)
             utils.common.printPreamble(p, idict)
 
-            if cblk.dbtype is not None and cblk.dbtype.lower() == 'influxdb':
+            if cblk is not None and cblk.dbtype.lower() == 'influxdb':
                 # Create an influxdb object that can be spread around to
                 #   connect and commit packets when they're created.
                 #   Leave it disconnected initially.
