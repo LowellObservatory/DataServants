@@ -86,37 +86,17 @@ if __name__ == "__main__":
                 idb.disconnect()
             else:
                 # No other database types are defined yet
-                pass
+                idb = None
 
-            if cblk.brokertype is not None and\
-               cblk.brokertype.lower() == "activemq":
+            crackers = None
+            if cblk is not None and cblk.brokertype.lower() == "activemq":
                 # Register the custom listener class that Iago has.
                 #   This will be the thing that parses packets depending
                 #   on their topic name and does the hard stuff!!
                 crackers = amqp.DCTConsumer(dbconn=idb)
-            else:
-                # No other broker types are defined yet
-                pass
 
-            # Collect the activemq topics that are desired
-            alltopics = []
-            for each in idict:
-                it = idict[each]
-                alltopics.append(it.topics)
-
-            # Flatten the topic list (only good for 2D)
-            alltopics = [val for sub in alltopics for val in sub]
-
-            # Establish connections and subscriptions w/our helper
-            # TODO: Figure out how to fold in broker passwords
-            print("Connecting to %s" % (cblk.brokerhost))
-            conn = utils.amq.amqHelper(cblk.brokerhost,
-                                       topics=alltopics,
-                                       user=cblk.brokeruser,
-                                       passw=cblk.brokerpass,
-                                       port=cblk.brokerport,
-                                       connect=False,
-                                       listener=crackers)
+            conn, crackers = utils.amq.setupBroker(idict, cblk,
+                                                   listener=crackers)
 
             # Semi-infinite loop
             while runner.halt is False:
