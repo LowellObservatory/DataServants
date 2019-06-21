@@ -1,6 +1,10 @@
 from ligmos.utils import confparsers, classes
 
-cfile = './alfred.conf'
+# cfile = './alfred.conf'
+# confclass = classes.hostTarget
+# pfile = './passwords.conf'
+
+cfile = './abu.conf'
 confclass = classes.hostTarget
 pfile = './passwords.conf'
 

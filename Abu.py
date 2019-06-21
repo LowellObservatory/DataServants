@@ -54,7 +54,7 @@ def main():
 
     # Quick renaming to keep line length under control
     udb = utils.database
-    ic = utils.classes.snoopTarget
+    ic = utils.classes.sneakyTarget
 
     # idict: dictionary of parsed config file
     # cblk: common block from config file
@@ -77,6 +77,8 @@ def main():
             #   (helpful to find starts/restarts when scanning thru logs)
             utils.common.printPreamble(p, idict)
 
+            # Establish our database connection(s); if there is more than
+            #   one, only the first one will
             if cblk.dbtype is not None and cblk.dbtype.lower() == "influxdb":
                 # Create an influxdb object that can be spread around to
                 #   connect and commit packets when they're created.
