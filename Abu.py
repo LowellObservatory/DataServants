@@ -77,32 +77,9 @@ def main():
             #   (helpful to find starts/restarts when scanning thru logs)
             utils.common.printPreamble(p, idict)
 
-            # Establish our database connection(s); if there is more than
-            #   one, only the first one will
-            if cblk.dbtype is not None and cblk.dbtype.lower() == "influxdb":
-                # Create an influxdb object that can be spread around to
-                #   connect and commit packets when they're created.
-                #   Leave it disconnected initially.
-                idb = udb.influxobj(cblk.dbname,
-                                    host=cblk.dbhost,
-                                    port=cblk.dbport,
-                                    user=cblk.dbuser,
-                                    pw=cblk.dbpass,
-                                    connect=False)
-
-                # Connect to check the retention policy, then disconnect
-                #   but keep the object.
-                idb.connect()
-                # Set the retention to default (see ligmos/utils/database.py)
-                idb.alterRetention()
-                idb.disconnect()
-            else:
-                # No other database types are defined yet
-                pass
-
-            silentListener = utils.amq.silentSubscriber()
-            conn, crackers = utils.amq.setupBroker(idict, cblk,
-                                                   listener=silentListener)
+            #
+            # TO BE REPLACED WITH STUFF FROM confDebugging
+            #
 
             # Semi-infinite loop
             while runner.halt is False:
