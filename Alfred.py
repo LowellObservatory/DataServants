@@ -138,9 +138,9 @@ def main():
     # Total time for entire set of actions per instrument
     alarmtime = 600
 
-    # idict: dictionary of parsed config file
-    # cblk: common block from config file
-    # args: parsed options of wadsworth.py
+    # config: dictionary of parsed config file
+    # comm: common block from config file
+    # args: parsed options
     # runner: class that contains logic to quit nicely
     config, comm, args, runner = workerSetup.toServeMan(mynameis, conf,
                                                         passes,
@@ -148,7 +148,7 @@ def main():
                                                         desc=desc,
                                                         extraargs=eargs,
                                                         conftype=conftype,
-                                                        logfile=False)
+                                                        logfile=True)
 
     # Parse the extra config file, but do it in a bit of a sloppy way
     #   that just fills out the class with whatever else
