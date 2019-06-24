@@ -2,13 +2,13 @@ from ligmos.utils import amq, classes, database, confparsers
 from ligmos.workers import connSetup
 
 
-cfile = './alfred.conf'
-confclass = classes.hostTarget
-pfile = './passwords.conf'
-
-# cfile = './abu.conf'
-# confclass = classes.sneakyTarget
+# cfile = './alfred.conf'
+# confclass = classes.hostTarget
 # pfile = './passwords.conf'
+
+cfile = './abu.conf'
+confclass = classes.sneakyTarget
+pfile = './passwords.conf'
 
 # Parse the things!
 config, comm = confparsers.parseConfig(cfile, confclass,

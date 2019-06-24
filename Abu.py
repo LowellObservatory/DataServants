@@ -86,16 +86,17 @@ def main():
 
                 # Actually do our actions
                 for sect in config:
-                    # Remember; I override/store based on the 'name' in the
-                    #   config file rather than the actual section conf name!
-                    if sect.lower() == 'dctweatherstation':
+                    # A bit of messy hacking to cut to the chase
+                    #   Should eventually turn this into a proper action/method
+                    if sect.lower() == 'dctweather':
                         sObj = config[sect]
-                        connObj = amqs[sObj.broker]
-                        if sObj.method.lower() == 'http' or 'https':
-                            wxml = abu.http.webgetter(sObj.resourceloc)
+                        connObj = amqs[sObj.broker][0]
+                        if sObj.resourcemethod.lower() == 'http' or 'https':
+                            wxml = abu.http.webgetter(sObj.resourcelocation)
                             if wxml != '':
                                 bxml = abu.actions.columbiaTranslator(wxml)
-                                connObj.publish(sObj.topics[0], bxml)
+                                print("Sending to %s" % (sObj.pubtopic))
+                                connObj.publish(sObj.pubtopic, bxml)
 
                 # Consider taking a big nap
                 if runner.halt is False:
