@@ -15,12 +15,11 @@ Actual hashing functions can be found in :mod:`dataservants.utils.hashes`.
 
 from __future__ import division, print_function, absolute_import
 
-import os
-from os.path import basename
+import datetime as dt
+from os.path import basename, getsize
+from collections import OrderedDict
 
 import numpy as np
-import datetime as dt
-from collections import OrderedDict
 
 from ligmos import utils
 
@@ -80,14 +79,14 @@ def getListFilesSizes(mdir, filetype="*.fits", debug=False):
     """
     # Find all the files matching filetype at and underneath mdir
     ff = utils.files.recursiveSearcher(mdir, fileext=filetype)
-    if len(ff) == 0:
+    if ff == []:
         # No files found, so return None for both ff and sizes to show this
         return None, None
 
     # Need to convert to be in GiB right off the bat since some of the inst.
     #   host machines are 32-bit, and os.path.getsize() returns bytes, so
     #   sum(os.path.getsize()) will overrun the 32-bit val and go negative!
-    sizes = [os.path.getsize(e)/1024./1024./1024. for e in ff]
+    sizes = [getsize(e)/1024./1024./1024. for e in ff]
     tsize = np.sum(sizes)
     if debug is True:
         print("Found %d files in %s" % (len(ff), mdir))
@@ -171,7 +170,7 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
         #   BUT don't verify that has, assume that it's good for now
         hfname = mdir + "/AListofHashes." + htype
         existingHashes = utils.hashes.readHashFile(hfname, basenamed=False)
-        existingFiles = [basename(each) for each in existingHashes.keys()]
+        existingFiles = [basename(each) for each in existingHashes]
         if debug is True:
             print("%d files in hashfile %s" % (len(existingFiles), hfname))
     else:
@@ -220,7 +219,7 @@ def makeManifest(mdir, htype='xx64', bsize=2**25,
     if fullpath is True:
         returnDict = existingHashes
     else:
-        for fkey in existingHashes.keys():
+        for fkey in existingHashes:
             returnDict.update({basename(fkey): existingHashes[fkey]})
 
     return returnDict
@@ -285,7 +284,7 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
     existingHashes = utils.hashes.readHashFile(hfname,
                                                basenamed=False,
                                                debug=debug)
-    existingFiles = [basename(each) for each in existingHashes.keys()]
+    existingFiles = [basename(each) for each in existingHashes]
 
     if debug is True:
         print("%d files in hashfile %s" % (len(existingFiles), hfname))
@@ -299,7 +298,7 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
                            fullpath=False, debug=debug)
 
     # Now compare the new against the old file list. Strip out path info again.
-    inDR = [os.path.basename(each) for each in ff]
+    inDR = [basename(each) for each in ff]
 
     # Highlight files that were in the hash file but aren't in the directory
     #   then get the filename from the hashfile but now is missing
@@ -307,7 +306,7 @@ def verifyFiles(mdir, htype='xx64', bsize=2**25,
 
     # TODO: Clean this up with a fancy list comprehension
     for s in missing:
-        for fullpathfile in existingHashes.keys():
+        for fullpathfile in existingHashes:
             if s in fullpathfile:
                 fpmissing.append(fullpathfile)
 

@@ -19,9 +19,6 @@ from __future__ import division, print_function, absolute_import
 import sys
 sys.path.append(".")
 
-import xmltodict as xmld
-import xmlschema as xmls
-
 from ligmos.utils import amq
 from dataservants import iago
 from dataservants import abu
