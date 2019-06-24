@@ -150,9 +150,17 @@ def main():
                                                         conftype=conftype,
                                                         logfile=False)
 
-    # We're just calling the raw parser here, so epings ISN'T a class
-    #   of any sort; just a dict of configparser sections
-    epings = confparsers.rawParser(args.extraPings)
+    # Parse the extra config file, but do it in a bit of a sloppy way
+    #   that just fills out the class with whatever else
+    #   we find in the file.
+    # REMEMBER there are two returns! The second contains any common
+    #   items, and is just None if searchCommon is False...but it's
+    #   always returned!
+    epings, _ = confparsers.parseConfig(args.extraPings, conftype,
+                                        passfile=None,
+                                        searchCommon=False,
+                                        enableCheck=True,
+                                        debug=args.debug)
 
     # Actually define the function calls/references to functions
     actions = defineActions()
@@ -184,23 +192,13 @@ def main():
                 #   No need to make this into a big to-do
                 if epings is not None:
                     for sect in epings:
-                        # Check to see if this section is "enabled"
-                        penab = epings[sect].getboolean('enabled')
-                        if penab is True:
-                            pobj = classes.baseTarget()
-                            # Bit of a quick-and-dirty parse here, will fail
-                            #   on typos/capitalization problems.
-                            # But since alfred's task expects a class,
-                            #   we've gotta bite the bullet
-                            pobj.host = epings[sect]['host']
-                            pobj.port = epings[sect]['port']
-                            dbtag = epings[sect]['database']
-                            db = comm[dbtag]
+                        pobj = epings[sect]
+                        dbtag = pobj.database
+                        db = idbs[dbtag]
 
-                            alfred.tasks.actionPing(pobj, db=db,
-                                                    debug=args.debug)
-                        else:
-                            print("Ping %s is disabled in conf file!" % (sect))
+                        res = alfred.tasks.actionPing(pobj, db=db,
+                                                      debug=args.debug)
+                        print(res)
 
                 # After all the instruments are done, take a big nap
                 if runner.halt is False:
