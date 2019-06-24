@@ -90,11 +90,12 @@ def main():
                     #   config file rather than the actual section conf name!
                     if sect.lower() == 'dctweatherstation':
                         sObj = config[sect]
+                        connObj = amqs[sObj.broker]
                         if sObj.method.lower() == 'http' or 'https':
                             wxml = abu.http.webgetter(sObj.resourceloc)
                             if wxml != '':
                                 bxml = abu.actions.columbiaTranslator(wxml)
-                                conn.publish(sObj.topics[0], bxml)
+                                connObj.publish(sObj.topics[0], bxml)
 
                 # Consider taking a big nap
                 if runner.halt is False:
@@ -108,8 +109,8 @@ def main():
             # The above loop is exited when someone sends SIGTERM
             print("PID %d is now out of here!" % (p.pid))
 
-            # Disconnect from the ActiveMQ broker
-            conn.disconnect()
+            # Disconnect from all ActiveMQ brokers
+            amq.disconnectAll(amqs)
 
             # The PID file will have already been either deleted/overwritten by
             #   another function/process by this point, so just give back the
