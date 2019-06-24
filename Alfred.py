@@ -16,10 +16,10 @@ import time
 
 from pid import PidFile, PidFileError
 
-from ligmos import utils
-from ligmos import workers
 from dataservants import alfred
 from dataservants import yvette
+from ligmos.utils import amq, classes, common, confparsers
+from ligmos.workers import connSetup, workerSetup
 
 
 def defineActions():
@@ -35,37 +35,37 @@ def defineActions():
     #   Note that we need to also update things per-instrument when
     #   inside the main loop via updateArguments()...it's just helpful to
     #   do the definitions out here for the constants and for clarity.
-    act1 = utils.common.processDescription(func=alfredT.actionPing,
-                                           name='CheckPing',
-                                           timedelay=3.,
-                                           maxtime=120,
-                                           needSSH=False,
-                                           args=[],
-                                           kwargs={})
+    act1 = common.processDescription(func=alfredT.actionPing,
+                                     name='CheckPing',
+                                     timedelay=3.,
+                                     maxtime=120,
+                                     needSSH=False,
+                                     args=[],
+                                     kwargs={})
 
-    act2 = utils.common.processDescription(func=yvetteR.actionSpace,
-                                           name='CheckFreeSpace',
-                                           timedelay=3.,
-                                           maxtime=120,
-                                           needSSH=True,
-                                           args=[],
-                                           kwargs={})
+    act2 = common.processDescription(func=yvetteR.actionSpace,
+                                     name='CheckFreeSpace',
+                                     timedelay=3.,
+                                     maxtime=120,
+                                     needSSH=True,
+                                     args=[],
+                                     kwargs={})
 
-    act3 = utils.common.processDescription(func=yvetteR.actionStats,
-                                           name='CheckStats',
-                                           timedelay=3.,
-                                           maxtime=120,
-                                           needSSH=True,
-                                           args=[],
-                                           kwargs={})
+    act3 = common.processDescription(func=yvetteR.actionStats,
+                                     name='CheckStats',
+                                     timedelay=3.,
+                                     maxtime=120,
+                                     needSSH=True,
+                                     args=[],
+                                     kwargs={})
 
-    act4 = utils.common.processDescription(func=yvetteR.actionProcess,
-                                           name='CheckProcess',
-                                           timedelay=3.,
-                                           maxtime=120,
-                                           needSSH=True,
-                                           args=[],
-                                           kwargs={})
+    act4 = common.processDescription(func=yvetteR.actionProcess,
+                                     name='CheckProcess',
+                                     timedelay=3.,
+                                     maxtime=120,
+                                     needSSH=True,
+                                     args=[],
+                                     kwargs={})
 
     actions = [act1, act2, act3, act4]
 
@@ -117,6 +117,7 @@ def main():
     logfile = '/tmp/alfred.log'
     desc = 'Alfred: The Instrument Monitor'
     eargs = alfred.parseargs.extraArguments
+    conftype = classes.hostTarget
 
     # Note: We need to prepend the PATH setting here because some hosts
     #   (all recent OSes, really) have a more stringent SSHd config
@@ -137,31 +138,21 @@ def main():
     # Total time for entire set of actions per instrument
     alarmtime = 600
 
-    # Quick renaming to keep line length under control
-    ic = utils.classes.hostTarget
-    udb = utils.database
-
     # idict: dictionary of parsed config file
     # cblk: common block from config file
     # args: parsed options of wadsworth.py
     # runner: class that contains logic to quit nicely
-    idict, cblk, args, runner = workers.workerSetup.toServeMan(mynameis, conf,
-                                                               passes,
-                                                               logfile,
-                                                               desc=desc,
-                                                               extraargs=eargs,
-                                                               conftype=ic,
-                                                               logfile=True)
+    config, comm, args, runner = workerSetup.toServeMan(mynameis, conf,
+                                                        passes,
+                                                        logfile,
+                                                        desc=desc,
+                                                        extraargs=eargs,
+                                                        conftype=conftype,
+                                                        logfile=False)
 
     # We're just calling the raw parser here, so epings ISN'T a class
     #   of any sort; just a dict of configparser sections
-    # abort = False will allow the code to continue if the file isn't found.
-    #   That's because I've deemed extra pings "nice" but not "necessary"
-    epings, _ = utils.confparsers.parseConfFile(args.extraPings,
-                                                debug=args.debug,
-                                                enableCheck=True,
-                                                commonBlocks=False,
-                                                abort=False)
+    epings = confparsers.rawParser(args.extraPings)
 
     # Actually define the function calls/references to functions
     actions = defineActions()
@@ -170,28 +161,12 @@ def main():
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
             # Print the preamble of this particular instance
             #   (helpful to find starts/restarts when scanning thru logs)
-            utils.common.printPreamble(p, idict)
+            common.printPreamble(p, config)
 
-            if cblk is not None and cblk.dbtype.lower() == 'influxdb':
-                # Create an influxdb object that can be spread around to
-                #   connect and commit packets when they're created.
-                #   Leave it disconnected initially.
-                idb = udb.influxobj(cblk.dbname,
-                                    host=cblk.dbhost,
-                                    port=cblk.dbport,
-                                    user=cblk.dbuser,
-                                    pw=cblk.dbpass,
-                                    connect=False)
-
-                # Connect to check the retention policy, then disconnect
-                #   but keep the object.
-                idb.connect()
-                # Set the retention to default (see ligmos/utils/database.py)
-                idb.alterRetention()
-                idb.disconnect()
-            else:
-                # No other database types are defined yet
-                pass
+            # Check to see if there are any connections/objects to establish
+            amqtopics = amq.getAllTopics(config, comm)
+            amqs, idbs = connSetup.connAMQ_IDB(comm, amqtopics,
+                                               amqlistener=None)
 
             # Semi-infinite loop
             while runner.halt is False:
@@ -199,11 +174,11 @@ def main():
                 #   looping over each instrument.  We keep the main while
                 #   loop out here, though, so we can do stuff with the
                 #   results of the actions from all the instruments.
-                _ = utils.common.instLooper(idict, runner, args,
-                                            actions, updateArguments,
-                                            baseYcmd,
-                                            db=idb,
-                                            alarmtime=alarmtime)
+                _ = common.instLooper(config, runner, args,
+                                      actions, updateArguments,
+                                      baseYcmd,
+                                      db=idbs,
+                                      alarmtime=alarmtime)
 
                 # Doing the extra pings as a side job/quickie
                 #   No need to make this into a big to-do
@@ -212,15 +187,17 @@ def main():
                         # Check to see if this section is "enabled"
                         penab = epings[sect].getboolean('enabled')
                         if penab is True:
-                            pobj = utils.classes.baseTarget()
+                            pobj = classes.baseTarget()
                             # Bit of a quick-and-dirty parse here, will fail
                             #   on typos/capitalization problems.
                             # But since alfred's task expects a class,
                             #   we've gotta bite the bullet
                             pobj.host = epings[sect]['host']
                             pobj.port = epings[sect]['port']
+                            dbtag = epings[sect]['database']
+                            db = comm[dbtag]
 
-                            alfred.tasks.actionPing(pobj, db=idb,
+                            alfred.tasks.actionPing(pobj, db=db,
                                                     debug=args.debug)
                         else:
                             print("Ping %s is disabled in conf file!" % (sect))
@@ -248,7 +225,7 @@ def main():
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
         print("Already running! Quitting...")
-        utils.common.nicerExit()
+        common.nicerExit()
 
 
 if __name__ == "__main__":
