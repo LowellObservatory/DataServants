@@ -26,8 +26,9 @@ amqlistener = amq.silentSubscriber()
 #   above, but even that can be hidden away if we really need/want to do that.
 
 amqtopics = amq.getAllTopics(config, comm)
-amqbrokers, influxdatabases = connSetup.establishAMQIDBConnections(comm,
-                                                                   amqtopics)
+amqbrokers, influxdatabases = connSetup.connAMQ_IDB(comm,
+                                                    amqtopics,
+                                                    amqlistener=amqlistener)
 
 # This part should be in whatever loop gets set up to continually run
 #   amqbroker sections containing the connection objects can change, so
