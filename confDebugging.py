@@ -1,4 +1,4 @@
-from ligmos.utils import amq, classes, database, confutils, confparsers
+from ligmos.utils import amq, classes, database, confparsers
 
 
 def checkAMQConnections(amqbrokers, subscribe=True):
@@ -16,7 +16,7 @@ def checkAMQConnections(amqbrokers, subscribe=True):
         thisListener = amqbrokers[bconn][1]
         if connChecking.conn is None:
             print("No connection at all! Retrying...")
-            # The topics were already stuffed into the connChecking object before,
+            # The topics were already stuffed into the connChecking object,
             #   but it's nice to remember that we're subscribing to them
             connChecking.connect(listener=thisListener, subscribe=subscribe)
         elif connChecking.conn.transport.connected is False:
@@ -43,14 +43,14 @@ def establishAMQIDBConnections(comm):
         # Rename for easier access/passing
         cobj = comm[commsection]
 
-        # Now check the properties of this object to see if it's something we can
+        # Now check the properties of this object to see if it's something we
         #   actually regconize and then connect to
         if cobj.type.lower() == 'activemq':
             # We get brokerlistener back as a return just in case it was
             #   None initially, in which case amq.setupBroker would give one
             conn, amqlistener = amq.setupAMQBroker(cobj,
-                                                amqtopics[commsection],
-                                                listener=amqlistener)
+                                                   amqtopics[commsection],
+                                                   listener=amqlistener)
 
             # Store this so we can check/use it later
             brokerbits = [conn, amqlistener]
