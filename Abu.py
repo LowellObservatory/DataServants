@@ -27,9 +27,9 @@ import time
 
 from pid import PidFile, PidFileError
 
-from ligmos import utils
-from ligmos import workers
 from dataservants import abu
+from ligmos.utils import amq, classes, common
+from ligmos.workers import connSetup, workerSetup
 
 
 def main():
@@ -48,58 +48,48 @@ def main():
     logfile = '/tmp/abu.log'
     desc = "Abu: The Kleptomaniac Scraper"
     eargs = abu.parseargs.extraArguments
+    conftype = classes.sneakyTarget
 
     # Interval between successive runs of the polling loop (seconds)
     bigsleep = 120
 
     # Quick renaming to keep line length under control
-    udb = utils.database
-    ic = utils.classes.sneakyTarget
 
-    # idict: dictionary of parsed config file
-    # cblk: common block from config file
-    # args: parsed options of wadsworth.py
+    # config: dictionary of parsed config file
+    # comm: common block from config file
+    # args: parsed options
     # runner: class that contains logic to quit nicely
-    idict, cblk, _, runner = workers.workerSetup.toServeMan(mynameis, conf,
-                                                            passes,
-                                                            logfile,
-                                                            desc=desc,
-                                                            extraargs=eargs,
-                                                            conftype=ic,
-                                                            logfile=True)
-
-    # ActiveMQ connection checker
-    conn = None
+    config, comm, _, runner = workerSetup.toServeMan(mynameis, conf,
+                                                     passes,
+                                                     logfile,
+                                                     desc=desc,
+                                                     extraargs=eargs,
+                                                     conftype=conftype,
+                                                     logfile=False)
 
     try:
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
             # Print the preamble of this particular instance
             #   (helpful to find starts/restarts when scanning thru logs)
-            utils.common.printPreamble(p, idict)
+            common.printPreamble(p, config)
 
-            #
-            # TO BE REPLACED WITH STUFF FROM confDebugging
-            #
+            # Check to see if there are any connections/objects to establish
+            amqlistener = amq.silentSubscriber()
+
+            amqtopics = amq.getAllTopics(config, comm)
+            amqs, idbs = connSetup.connAMQ_IDB(comm, amqtopics,
+                                               amqlistener=amqlistener)
 
             # Semi-infinite loop
             while runner.halt is False:
-                # Double check that the broker connection is still up
-                #   NOTE: conn.connect() handles ConnectionError exceptions
-                if conn.conn is None:
-                    print("No connection at all! Retrying...")
-                    conn.connect(listener=crackers)
-                elif conn.conn.transport.connected is False:
-                    print("Connection died! Reestablishing...")
-                    conn.connect(listener=crackers)
-                else:
-                    print("Connection still valid")
+                amqs = amq.checkConnections(amqs, subscribe=True)
 
                 # Actually do our actions
-                for sect in idict:
+                for sect in config:
                     # Remember; I override/store based on the 'name' in the
                     #   config file rather than the actual section conf name!
                     if sect.lower() == 'dctweatherstation':
-                        sObj = idict[sect]
+                        sObj = config[sect]
                         if sObj.method.lower() == 'http' or 'https':
                             wxml = abu.http.webgetter(sObj.resourceloc)
                             if wxml != '':
@@ -132,7 +122,7 @@ def main():
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
         print("Already running! Quitting...")
-        utils.common.nicerExit()
+        common.nicerExit()
 
 
 if __name__ == "__main__":
