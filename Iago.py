@@ -17,8 +17,8 @@ import time
 from pid import PidFile, PidFileError
 
 from dataservants import iago
-from ligmos.utils import amq, classes, common, confparsers
 from ligmos.workers import connSetup, workerSetup
+from ligmos.utils import amq, classes, common, confparsers
 
 
 if __name__ == "__main__":
