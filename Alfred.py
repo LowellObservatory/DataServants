@@ -18,7 +18,7 @@ from pid import PidFile, PidFileError
 
 from dataservants import alfred
 from dataservants import yvette
-from ligmos.utils import amq, classes, common, confparsers
+from ligmos.utils import classes, common, confparsers
 from ligmos.workers import connSetup, workerSetup
 
 
@@ -173,10 +173,6 @@ def main():
 
             # Check to see if there are any connections/objects to establish
             idbs = connSetup.connIDB(comm)
-
-            amqlistener = None
-            amqtopics = amq.getAllTopics(config, comm)
-            amqs = connSetup.connAMQ(comm, amqtopics, amqlistener=amqlistener)
 
             # Semi-infinite loop
             while runner.halt is False:
