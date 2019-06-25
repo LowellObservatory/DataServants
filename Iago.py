@@ -59,17 +59,21 @@ if __name__ == "__main__":
             common.printPreamble(p, config)
 
             # Check to see if there are any connections/objects to establish
+            idbs = connSetup.connIDB(comm)
+
+            # Specify our custom listener that will really do all the work
+            #   Since we're hardcoding for the DCTConsumer anyways, I'll take
+            #   a bit shortcut and hardcode for the DCT influx database.
+            # TODO: Figure out a way to create a dict of listeners specified
+            #   in some creative way. Could add a configuration item to the
+            #   file and then loop over it, and change connAMQ accordingly.
+            dctdb = idbs['database-dct']
+            amqlistener = iago.amqparse.DCTConsumer(dbconn=dctdb)
             amqtopics = amq.getAllTopics(config, comm)
+            amqs = connSetup.connAMQ(comm, amqtopics, amqlistener=amqlistener)
 
-            # Specify our custom listener that will really do all the work.
-            #   We'll go back and add in the DB connection info after we
-            #   gather them all up
-            listener = iago.amqparse.DCTConsumer(dbconn=None)
-            amqs, idbs = connSetup.connAMQ_IDB(comm, amqtopics,
-                                               amqlistener=listener)
-
-            # Now actually set the database info for the listener
-            idbs
+            # Check to see if there are any connections/objects to establish
+            amqtopics = amq.getAllTopics(config, comm)
 
             # Semi-infinite loop
             while runner.halt is False:

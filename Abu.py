@@ -74,11 +74,11 @@ def main():
             common.printPreamble(p, config)
 
             # Check to see if there are any connections/objects to establish
-            amqlistener = amq.silentSubscriber()
+            idbs = connSetup.connIDB(comm)
 
+            amqlistener = amq.silentSubscriber()
             amqtopics = amq.getAllTopics(config, comm)
-            amqs, idbs = connSetup.connAMQ_IDB(comm, amqtopics,
-                                               amqlistener=amqlistener)
+            amqs = connSetup.connAMQ(comm, amqtopics, amqlistener=amqlistener)
 
             # Semi-infinite loop
             while runner.halt is False:
