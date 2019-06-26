@@ -112,8 +112,8 @@ def main():
 
     # Define the default files we'll use/look for. These are passed to
     #   the worker constructor (toServeMan).
-    conf = './alfred.conf'
-    passes = './passwords.conf'
+    conf = './config/alfred.conf'
+    passes = './config/passwords.conf'
     logfile = '/tmp/alfred.log'
     desc = 'Alfred: The Instrument Monitor'
     eargs = alfred.parseargs.extraArguments

@@ -43,8 +43,8 @@ def main():
 
     # Define the default files we'll use/look for. These are passed to
     #   the worker constructor (toServeMan).
-    conf = './abu.conf'
-    passes = './passwords.conf'
+    conf = './config/abu.conf'
+    passes = './config/passwords.conf'
     logfile = '/tmp/abu.log'
     desc = "Abu: The Kleptomaniac Scraper"
     eargs = abu.parseargs.extraArguments
