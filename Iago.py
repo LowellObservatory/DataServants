@@ -50,7 +50,7 @@ if __name__ == "__main__":
                                                         desc=desc,
                                                         extraargs=eargs,
                                                         conftype=conftype,
-                                                        logfile=False)
+                                                        logfile=True)
 
     try:
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
