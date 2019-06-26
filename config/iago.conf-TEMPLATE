@@ -3,7 +3,7 @@ name=GiveMeANiceHelpfulName
 broker=broker-tag
 topics=yourTopics, canGoHere, inaSimpleList
 database=database-tag
-databasetable=DatabaseNameGoesHere
+tablename=DatabaseNameGoesHere
 enabled=True
 
 

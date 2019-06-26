@@ -2,7 +2,7 @@
 host=hostname
 port=80
 database=databaseTagFromMainAlfredConfig
-databasetable=tablename
+tablename=tablename
 enabled=True
 
 
@@ -10,7 +10,7 @@ enabled=True
 host=1.1.1.1
 port=80
 database=databaseTagFromMainAlfredConfig
-databasetable=tablename
+tablename=tablename
 enabled=True
 
 
@@ -18,5 +18,5 @@ enabled=True
 host=8.8.8.8
 port=80
 database=databaseTagFromMainAlfredConfig
-databasetable=tablename
+tablename=tablename
 enabled=True
