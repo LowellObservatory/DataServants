@@ -82,5 +82,5 @@ def actionPing(iobj, db=None, debug=False):
         if db is not None:
             # Actually commit the packet. singleCommit opens it,
             #   writes the packet, and then optionally closes it.
-            db.singleCommit(packet, table=iobj.databasetable, close=True)
+            db.singleCommit(packet, table=iobj.tablename, close=True)
     return packet

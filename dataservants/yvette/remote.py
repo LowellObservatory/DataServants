@@ -177,7 +177,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
         if db is not None:
             # Actually commit the packet. singleCommit opens it,
             #   writes the packet, and then optionally closes it.
-            db.singleCommit(packet, table=iobj.databasetable, close=True)
+            db.singleCommit(packet, table=iobj.tablename, close=True)
 
         packets.append(packet)
 
@@ -236,7 +236,7 @@ def actionProcess(eSSH, baseYcmd, iobj, procName='lois',
                     if db is not None:
                         # Actually commit the packet. singleCommit opens it,
                         #   writes the packet, and then optionally closes it.
-                        db.singleCommit(packet, table=iobj.databasetable,
+                        db.singleCommit(packet, table=iobj.tablename,
                                         close=True)
 
                     # THIS COULD FAIL AND BE WEIRD IF writeToDB ISN'T FIXED
@@ -339,7 +339,7 @@ def actionSpace(eSSH, baseYcmd, iobj, db=None, debug=False):
         if db is not None:
             # Actually commit the packet. singleCommit opens it,
             #   writes the packet, and then optionally closes it.
-            db.singleCommit(packet, table=iobj.databasetable, close=True)
+            db.singleCommit(packet, table=iobj.tablename, close=True)
     return packet
 
 
@@ -466,7 +466,7 @@ def actionStats(eSSH, baseYcmd, iobj, db=None, debug=False):
         if db is not None:
             # Actually commit the packet. singleCommit opens it,
             #   writes the packet, and then optionally closes it.
-            db.singleCommit(packet, table=iobj.databasetable, close=True)
+            db.singleCommit(packet, table=iobj.tablename, close=True)
     return packet
 
 
