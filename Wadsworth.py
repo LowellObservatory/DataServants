@@ -82,8 +82,8 @@ def main():
 
     # Define the default files we'll use/look for. These are passed to
     #   the worker constructor (toServeMan).
-    conf = './wadsworth.conf'
-    passes = './passwords.conf'
+    conf = './config/wadsworth.conf'
+    passes = './config/passwords.conf'
     logfile = '/tmp/wadsworth.log'
     desc = 'Wadsworth: The Data Butler'
     eargs = wadsworth.parseargs.extraArguments

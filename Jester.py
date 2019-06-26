@@ -30,8 +30,8 @@ if __name__ == "__main__":
 
     # Define the default files we'll use/look for. These are passed to
     #   the worker constructor (toServeMan).
-    conf = './iago.conf'
-    passes = './passwords.conf'
+    conf = './config/iago.conf'
+    passes = './config/passwords.conf'
     logfile = '/tmp/jester.log'
     desc = "Jester: A Useful Idiot"
     eargs = iago.parseargs.extraArguments
@@ -68,6 +68,7 @@ if __name__ == "__main__":
             #   in some creative way. Could add a configuration item to the
             #   file and then loop over it, and change connAMQ accordingly.
             dctdb = idbs['database-dct']
+            dctdb.tablename = config['dctbroker'].tablename
             amqlistener = iago.amqparse.DCTConsumer(dbconn=dctdb)
             amqtopics = amq.getAllTopics(config, comm)
             amqs = connSetup.connAMQ(comm, amqtopics, amqlistener=amqlistener)

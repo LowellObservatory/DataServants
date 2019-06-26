@@ -91,8 +91,8 @@ def main():
     # NOTE: Mandos' configuration is the *same* as Wadsworth.
     #   Mandos exists because it's easier to schedule deletion/verification
     #   as a unique task/worker and keep Wadsworth just buttling data.
-    conf = './wadsworth.conf'
-    passes = './passwords.conf'
+    conf = './config/wadsworth.conf'
+    passes = './config/passwords.conf'
     logfile = '/tmp/mandos.log'
     desc = 'Mandos: The Judge of Data'
     # Not a typo! Underscoring that Mandos and Wadsworth are connected
