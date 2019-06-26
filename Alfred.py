@@ -148,7 +148,7 @@ def main():
                                                         desc=desc,
                                                         extraargs=eargs,
                                                         conftype=conftype,
-                                                        logfile=False)
+                                                        logfile=True)
 
     # Parse the extra config file, but do it in a bit of a sloppy way
     #   that just fills out the class with whatever else
