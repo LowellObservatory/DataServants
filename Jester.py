@@ -16,9 +16,9 @@ import time
 
 from pid import PidFile, PidFileError
 
-from ligmos import utils
-from ligmos import workers
 from dataservants import iago
+from ligmos.workers import connSetup, workerSetup
+from ligmos.utils import amq, classes, common
 
 
 if __name__ == "__main__":
@@ -30,101 +30,60 @@ if __name__ == "__main__":
 
     # Define the default files we'll use/look for. These are passed to
     #   the worker constructor (toServeMan).
-    conf = './iago.conf'
-    passes = './passwords.conf'
-    logfile = '/tmp/iago.log'
+    conf = './config/iago.conf'
+    passes = './config/passwords.conf'
+    logfile = '/tmp/jester.log'
     desc = "Jester: A Useful Idiot"
     eargs = iago.parseargs.extraArguments
+    conftype = classes.snoopTarget
 
     # Interval between successive runs of the polling loop (seconds)
     bigsleep = 15
 
-    # Quick renaming to keep line length under control
-    malarms = utils.multialarm
-    ip = utils.packetizer
-    ic = utils.common.snoopTarget
-    udb = utils.database
-    amqp = iago.amqparse
-
-    # idict: dictionary of parsed config file
-    # cblk: common block from config file
-    # args: parsed options of wadsworth.py
+    # config: dictionary of parsed config file
+    # comm: common block from config file
+    # args: parsed options
     # runner: class that contains logic to quit nicely
-    idict, cblk, args, runner = workers.workerSetup.toServeMan(mynameis, conf,
-                                                               passes,
-                                                               logfile,
-                                                               desc=desc,
-                                                               extraargs=eargs,
-                                                               conftype=ic,
-                                                               logfile=False)
-
-    # ActiveMQ connection checker
-    conn = None
+    config, comm, args, runner = workerSetup.toServeMan(mynameis, conf,
+                                                        passes,
+                                                        logfile,
+                                                        desc=desc,
+                                                        extraargs=eargs,
+                                                        conftype=conftype,
+                                                        logfile=False)
 
     try:
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
             # Print the preamble of this particular instance
             #   (helpful to find starts/restarts when scanning thru logs)
-            utils.common.printPreamble(p, idict)
+            common.printPreamble(p, config)
 
-            if cblk.dbtype is not None and cblk.dbtype.lower() == 'influxdb':
-                # Create an influxdb object that can be spread around to
-                #   connect and commit packets when they're created.
-                #   Leave it disconnected initially.
-                idb = udb.influxobj(cblk.dbname,
-                                    host=cblk.dbhost,
-                                    port=cblk.dbport,
-                                    user=cblk.dbuser,
-                                    pw=cblk.dbpass,
-                                    connect=False)
+            # Check to see if there are any connections/objects to establish
+            idbs = connSetup.connIDB(comm)
 
-                # Connect to check the retention policy, then disconnect
-                #   but keep the object.
-                idb.connect()
-                # Set the retention to default (see ligmos/utils/database.py)
-                idb.alterRetention()
-                idb.disconnect()
-            else:
-                # No other database types are defined yet
-                pass
+            # Specify our custom listener that will really do all the work
+            #   Since we're hardcoding for the DCTConsumer anyways, I'll take
+            #   a bit shortcut and hardcode for the DCT influx database.
+            # TODO: Figure out a way to create a dict of listeners specified
+            #   in some creative way. Could add a configuration item to the
+            #   file and then loop over it, and change connAMQ accordingly.
+            dctdb = idbs['database-dct']
+            dctdb.tablename = config['dctbroker'].tablename
+            amqlistener = iago.amqparse.DCTConsumer(dbconn=dctdb)
+            amqtopics = amq.getAllTopics(config, comm)
+            amqs = connSetup.connAMQ(comm, amqtopics, amqlistener=amqlistener)
 
-            if cblk.brokertype is not None and\
-               cblk.brokertype.lower() == "activemq":
-                # Register the custom listener class that Iago has.
-                #   This will be the thing that parses packets depending
-                #   on their topic name and does the hard stuff!!
-                crackers = amqp.DCTConsumer(dbconn=idb)
-            else:
-                # No other broker types are defined yet
-                pass
-
-            # Collect the activemq topics that are desired
-            alltopics = []
-
-            # Establish connections and subscriptions w/our helper
-            # TODO: Figure out how to fold in broker passwords
-            print("Connecting to %s" % (cblk.brokerhost))
-            conn = utils.amq.amqHelper(cblk.brokerhost,
-                                       topics=alltopics,
-                                       user=cblk.brokeruser,
-                                       passw=cblk.brokerpass,
-                                       port=cblk.brokerport,
-                                       connect=False,
-                                       listener=crackers)
+            # Check to see if there are any connections/objects to establish
+            amqtopics = amq.getAllTopics(config, comm)
 
             # Semi-infinite loop
             while runner.halt is False:
+                # Check on our connections
+                amqs = amq.checkConnections(amqs, subscribe=True)
 
-                # Double check that the broker connection is still up
-                #   NOTE: conn.connect() handles ConnectionError exceptions
-                if conn.conn is None:
-                    print("No connection at all! Retrying...")
-                    conn.connect(listener=crackers)
-                elif conn.conn.transport.connected is False:
-                    print("Connection died! Reestablishing...")
-                    conn.connect(listener=crackers)
-                else:
-                    print("Connection still valid")
+                # There really isn't anything to actually *do* in here;
+                #   all the real work happens in the listener, so we really
+                #   just spin our wheels here.
 
                 # Consider taking a big nap
                 if runner.halt is False:
@@ -138,8 +97,8 @@ if __name__ == "__main__":
             # The above loop is exited when someone sends SIGTERM
             print("PID %d is now out of here!" % (p.pid))
 
-            # Disconnect from the ActiveMQ broker
-            conn.disconnect()
+            # Disconnect from all ActiveMQ brokers
+            amq.disconnectAll(amqs)
 
             # The PID file will have already been either deleted/overwritten by
             #   another function/process by this point, so just give back the
@@ -152,4 +111,4 @@ if __name__ == "__main__":
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
         print("Already running! Quitting...")
-        utils.common.nicerExit()
+        common.nicerExit()

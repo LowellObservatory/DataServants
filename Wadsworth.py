@@ -15,10 +15,10 @@ import sys
 import time
 from pid import PidFile, PidFileError
 
-from ligmos import utils
-from ligmos import workers
-from dataservants import wadsworth
 from dataservants import yvette
+from dataservants import wadsworth
+from ligmos.utils import classes, common
+from ligmos.workers import workerSetup
 
 
 def defineActions():
@@ -33,21 +33,21 @@ def defineActions():
     #   Note that we need to also update things per-instrument when
     #   inside the main loop via updateArguments()...it's just helpful to
     #   do the definitions out here for the constants and for clarity.
-    act1 = utils.common.processDescription(func=yvetteR.actionSpace,
-                                           name='CheckFreeSpace',
-                                           timedelay=3.,
-                                           maxtime=120,
-                                           needSSH=True,
-                                           args=[],
-                                           kwargs={})
+    act1 = common.processDescription(func=yvetteR.actionSpace,
+                                     name='CheckFreeSpace',
+                                     timedelay=3.,
+                                     maxtime=120,
+                                     needSSH=True,
+                                     args=[],
+                                     kwargs={})
 
-    act2 = utils.common.processDescription(func=wadsworth.tasks.buttleData,
-                                           name='ButtleData',
-                                           timedelay=3.,
-                                           maxtime=600,
-                                           needSSH=True,
-                                           args=[],
-                                           kwargs={})
+    act2 = common.processDescription(func=wadsworth.tasks.buttleData,
+                                     name='ButtleData',
+                                     timedelay=3.,
+                                     maxtime=600,
+                                     needSSH=True,
+                                     args=[],
+                                     kwargs={})
 
     actions = [act1, act2]
 
@@ -82,11 +82,12 @@ def main():
 
     # Define the default files we'll use/look for. These are passed to
     #   the worker constructor (toServeMan).
-    conf = './wadsworth.conf'
-    passes = './passwords.conf'
+    conf = './config/wadsworth.conf'
+    passes = './config/passwords.conf'
     logfile = '/tmp/wadsworth.log'
     desc = 'Wadsworth: The Data Butler'
     eargs = wadsworth.parseargs.extraArguments
+    conftype = classes.dataTarget
 
     # Note: We need to prepend the PATH setting here because some hosts
     #   (all recent OSes, really) have a more stringent SSHd config
@@ -107,20 +108,17 @@ def main():
     # Total time for entire set of actions per instrument
     alarmtime = 1000
 
-    # Quick renaming to keep line length under control
-    ic = utils.common.dataTarget
-
-    # idict: dictionary of parsed config file
-    # cblk: common block from config file
-    # args: parsed options of wadsworth.py
+    # config: dictionary of parsed config file
+    # comm: common block from config file
+    # args: parsed options
     # runner: class that contains logic to quit nicely
-    idict, _, args, runner = workers.workerSetup.toServeMan(mynameis, conf,
-                                                            passes,
-                                                            logfile,
-                                                            desc=desc,
-                                                            extraargs=eargs,
-                                                            conftype=ic,
-                                                            logfile=True)
+    config, comm, args, runner = workerSetup.toServeMan(mynameis, conf,
+                                                        passes,
+                                                        logfile,
+                                                        desc=desc,
+                                                        extraargs=eargs,
+                                                        conftype=conftype,
+                                                        logfile=True)
 
     # Set up the desired actions in the main loop, using a helpful class
     #   to pass things to each function/process more clearly
@@ -135,17 +133,19 @@ def main():
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
             # Print the preamble of this particular instance
             #   (helpful to find starts/restarts when scanning thru logs)
-            utils.common.printPreamble(p, idict)
+            common.printPreamble(p, config)
             # Semi-infinite loop
             while runner.halt is False:
                 # This is a common core function that handles the actions and
                 #   looping over each instrument.  We keep the main while
                 #   loop out here, though, so we can do stuff with the
                 #   results of the actions from all the instruments.
-                _ = utils.common.instLooper(idict, runner, args,
-                                            actions, updateArguments,
-                                            baseYcmd,
-                                            alarmtime=alarmtime)
+                _ = common.instLooper(config, runner, args,
+                                      actions, updateArguments,
+                                      baseYcmd,
+                                      db=None,
+                                      alarmtime=alarmtime)
+
                 # After all the instruments are done, take a big nap
                 if runner.halt is False:
                     print("Starting a big sleep")
@@ -169,7 +169,7 @@ def main():
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
         print("Already running! Quitting...")
-        utils.common.nicerExit()
+        common.nicerExit()
 
 
 if __name__ == "__main__":

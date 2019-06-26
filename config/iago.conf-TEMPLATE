@@ -1,0 +1,23 @@
+[groupName]
+name=GiveMeANiceHelpfulName
+broker=broker-tag
+topics=yourTopics, canGoHere, inaSimpleList
+database=database-tag
+tablename=DatabaseNameGoesHere
+enabled=True
+
+
+[broker-tag]
+type=ActiveMQ
+host=brokerhost
+port=61613
+user=None
+enabled=True
+
+
+[database-tag]
+type=influxdb
+host=dbhost
+port=8086
+user=None
+enabled=True

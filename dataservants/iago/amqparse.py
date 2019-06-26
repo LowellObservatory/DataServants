@@ -18,12 +18,11 @@ from __future__ import division, print_function, absolute_import
 import os
 import collections
 import datetime as dt
+
 from dateutil import tz
 import xmltodict as xmld
-
-from stomp.listener import ConnectionListener
-
 import xmlschema as xmls
+from stomp.listener import ConnectionListener
 
 from ligmos import utils
 
@@ -238,7 +237,8 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
                 # Actually commit the packet. singleCommit opens it,
                 #   writes the packet, and then optionally closes it.
                 if db is not None:
-                    db.singleCommit(packet, close=True)
+                    db.singleCommit(packet, table=db.tablename,
+                                    close=True)
         except xmls.XMLSchemaDecodeError as err:
             print(err.message.strip())
             print(err.reason.strip())
@@ -387,7 +387,7 @@ def parserLOlogs(hed, msg, db=None, badFWHM=100.):
         # Actually commit the packet. singleCommit opens it,
         #   writes the packet, and then optionally closes it.
         if db is not None:
-            db.singleCommit(packet, close=True)
+            db.singleCommit(packet, table=db.tablename, close=True)
 
 
 def parserLPI(_, msg, db=None):
@@ -493,7 +493,7 @@ def parserLPI(_, msg, db=None):
         # Actually commit the packet. singleCommit opens it,
         #   writes the packet, and then optionally closes it.
         if db is not None:
-            db.singleCommit(packet, close=True)
+            db.singleCommit(packet, table=db.tablename, close=True)
 
 
 def parserPDU(_, msg, db=None):
@@ -544,7 +544,7 @@ def parserPDU(_, msg, db=None):
         # Actually commit the packet. singleCommit opens it,
         #   writes the packet, and then optionally closes it.
         if db is not None:
-            db.singleCommit(packet, close=True)
+            db.singleCommit(packet, table=db.tablename, close=True)
 
 
 def parserSimpleFloat(hed, msg, db=None):
@@ -575,7 +575,7 @@ def parserSimpleFloat(hed, msg, db=None):
     # Actually commit the packet. singleCommit opens it,
     #   writes the packet, and then optionally closes it.
     if db is not None:
-        db.singleCommit(packet, close=True)
+        db.singleCommit(packet, table=db.tablename, close=True)
 
 
 def parserSimpleBool(hed, msg, db=None):

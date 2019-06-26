@@ -27,9 +27,9 @@ import time
 
 from pid import PidFile, PidFileError
 
-from ligmos import utils
-from ligmos import workers
 from dataservants import abu
+from ligmos.utils import amq, classes, common
+from ligmos.workers import connSetup, workerSetup
 
 
 def main():
@@ -43,112 +43,60 @@ def main():
 
     # Define the default files we'll use/look for. These are passed to
     #   the worker constructor (toServeMan).
-    conf = './abu.conf'
-    passes = './passwords.conf'
+    conf = './config/abu.conf'
+    passes = './config/passwords.conf'
     logfile = '/tmp/abu.log'
     desc = "Abu: The Kleptomaniac Scraper"
     eargs = abu.parseargs.extraArguments
+    conftype = classes.sneakyTarget
 
     # Interval between successive runs of the polling loop (seconds)
     bigsleep = 120
 
     # Quick renaming to keep line length under control
-    ic = utils.common.snoopTarget
-    udb = utils.database
 
-    # idict: dictionary of parsed config file
-    # cblk: common block from config file
-    # args: parsed options of wadsworth.py
+    # config: dictionary of parsed config file
+    # comm: common block from config file
+    # args: parsed options
     # runner: class that contains logic to quit nicely
-    idict, cblk, _, runner = workers.workerSetup.toServeMan(mynameis, conf,
-                                                            passes,
-                                                            logfile,
-                                                            desc=desc,
-                                                            extraargs=eargs,
-                                                            conftype=ic,
-                                                            logfile=True)
-
-    # ActiveMQ connection checker
-    conn = None
+    config, comm, _, runner = workerSetup.toServeMan(mynameis, conf,
+                                                     passes,
+                                                     logfile,
+                                                     desc=desc,
+                                                     extraargs=eargs,
+                                                     conftype=conftype,
+                                                     logfile=True)
 
     try:
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
             # Print the preamble of this particular instance
             #   (helpful to find starts/restarts when scanning thru logs)
-            utils.common.printPreamble(p, idict)
+            common.printPreamble(p, config)
 
-            if cblk.brokertype is not None and\
-               cblk.brokertype.lower() == "activemq":
-                # Create an influxdb object that can be spread around to
-                #   connect and commit packets when they're created.
-                #   Leave it disconnected initially.
-                idb = udb.influxobj(cblk.dbname,
-                                    host=cblk.dbhost,
-                                    port=cblk.dbport,
-                                    user=cblk.dbuser,
-                                    pw=cblk.dbpass,
-                                    connect=False)
+            # Check to see if there are any connections/objects to establish
+            idbs = connSetup.connIDB(comm)
 
-                # Connect to check the retention policy, then disconnect
-                #   but keep the object.
-                idb.connect()
-                # Set the retention to default (see ligmos/utils/database.py)
-                idb.alterRetention()
-                idb.disconnect()
-            else:
-                # No other database types are defined yet
-                pass
-
-            if cblk.brokertype.lower() == "activemq":
-                crackers = None
-            else:
-                # No other broker types are defined yet
-                pass
-
-            # Collect the activemq topics that are desired
-            alltopics = []
-            for each in idict:
-                it = idict[each]
-                alltopics.append(it.topics)
-
-            # Flatten the topic list (only good for 2D)
-            alltopics = [val for sub in alltopics for val in sub]
-
-            # Establish connections and subscriptions w/our helper
-            # TODO: Figure out how to fold in broker passwords
-            print("Connecting to %s" % (cblk.brokerhost))
-            conn = utils.amq.amqHelper(cblk.brokerhost,
-                                       topics=alltopics,
-                                       user=cblk.brokeruser,
-                                       passw=cblk.brokerpass,
-                                       port=cblk.brokerport,
-                                       connect=False,
-                                       listener=crackers)
+            amqlistener = amq.silentSubscriber()
+            amqtopics = amq.getAllTopics(config, comm)
+            amqs = connSetup.connAMQ(comm, amqtopics, amqlistener=amqlistener)
 
             # Semi-infinite loop
             while runner.halt is False:
-                # Double check that the broker connection is still up
-                #   NOTE: conn.connect() handles ConnectionError exceptions
-                if conn.conn is None:
-                    print("No connection at all! Retrying...")
-                    conn.connect(listener=crackers)
-                elif conn.conn.transport.connected is False:
-                    print("Connection died! Reestablishing...")
-                    conn.connect(listener=crackers)
-                else:
-                    print("Connection still valid")
+                amqs = amq.checkConnections(amqs, subscribe=True)
 
                 # Actually do our actions
-                for sect in idict:
-                    # Remember; I override/store based on the 'name' in the
-                    #   config file rather than the actual section conf name!
-                    if sect.lower() == 'dctweatherstation':
-                        sObj = idict[sect]
-                        if sObj.method.lower() == 'http' or 'https':
-                            wxml = abu.http.webgetter(sObj.resourceloc)
+                for sect in config:
+                    # A bit of messy hacking to cut to the chase
+                    #   Should eventually turn this into a proper action/method
+                    if sect.lower() == 'dctweather':
+                        sObj = config[sect]
+                        connObj = amqs[sObj.broker][0]
+                        if sObj.resourcemethod.lower() == 'http' or 'https':
+                            wxml = abu.http.webgetter(sObj.resourcelocation)
                             if wxml != '':
                                 bxml = abu.actions.columbiaTranslator(wxml)
-                                conn.publish(sObj.topics[0], bxml)
+                                print("Sending to %s" % (sObj.pubtopic))
+                                connObj.publish(sObj.pubtopic, bxml)
 
                 # Consider taking a big nap
                 if runner.halt is False:
@@ -162,8 +110,8 @@ def main():
             # The above loop is exited when someone sends SIGTERM
             print("PID %d is now out of here!" % (p.pid))
 
-            # Disconnect from the ActiveMQ broker
-            conn.disconnect()
+            # Disconnect from all ActiveMQ brokers
+            amq.disconnectAll(amqs)
 
             # The PID file will have already been either deleted/overwritten by
             #   another function/process by this point, so just give back the
@@ -176,7 +124,7 @@ def main():
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
         print("Already running! Quitting...")
-        utils.common.nicerExit()
+        common.nicerExit()
 
 
 if __name__ == "__main__":
