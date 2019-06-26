@@ -31,8 +31,8 @@ def extraArguments(parser):
     #   an optional (--) argument.  Without 'const', using --extraPings
     #   on the command line will result in args.extraPings == None
     parser.add_argument('--extraPings', metavar='/path/to/file.conf',
-                        type=str, default='./alfred_extraPings.conf',
-                        const='./alfred_extraPings.conf',
+                        type=str, default='./config/alfred_extraPings.conf',
+                        const='./config/alfred_extraPings.conf',
                         help=hstr, nargs='?')
 
     return parser
