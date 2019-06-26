@@ -1,19 +1,22 @@
 [key]
 host=hostname
 port=80
-pingonly=True
+database=databaseTagFromMainAlfredConfig
+databasetable=tablename
 enabled=True
 
 
 [extdns-cloudflare]
 host=1.1.1.1
 port=80
-pingonly=True
+database=databaseTagFromMainAlfredConfig
+databasetable=tablename
 enabled=True
 
 
 [extdns-google]
 host=8.8.8.8
 port=80
-pingonly=True
+database=databaseTagFromMainAlfredConfig
+databasetable=tablename
 enabled=True
