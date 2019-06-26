@@ -17,7 +17,7 @@ databasetable=databaseTableName
 enabled=True
 
 
-[key1]
+[key2]
 host=host2
 user=None
 port=22
