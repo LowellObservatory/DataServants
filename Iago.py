@@ -69,7 +69,7 @@ if __name__ == "__main__":
             #   file and then loop over it, and change connAMQ accordingly.
             dctdb = idbs['database-dct']
             dctdb.tablename = config['dctbroker'].tablename
-            amqlistener = iago.amqparse.DCTConsumer(dbconn=dctdb)
+            amqlistener = iago.listener.DCTConsumer(dbconn=dctdb)
             amqtopics = amq.getAllTopics(config, comm)
             amqs = connSetup.connAMQ(comm, amqtopics, amqlistener=amqlistener)
 
