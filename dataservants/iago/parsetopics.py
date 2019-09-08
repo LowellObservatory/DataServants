@@ -23,6 +23,8 @@ import xmlschema as xmls
 
 from ligmos import utils
 
+from . import tempHACKLOIS
+
 
 def flatten(d, parent_key='', sep='_'):
     """
@@ -186,6 +188,12 @@ def parserLOlogs(hed, msg, db=None, badFWHM=100.):
                     # Nuke the entire site from orbit...
                     fields = None
                     tags = None
+    elif loglevel in ["Level_5", "Level_4"]:
+        #
+        # THIS IS A TEMPORARY HACK UNTIL MR FREEZE ARRIVES
+        #               EVERYBODY CHILL
+        #
+        fields = tempHACKLOIS.parse_deboned_LOISTemps(logmsg)
     else:
         # Need this otherwise we'll get an exception error for all
         #   unparsed log lines! fields won't be defined right below here
