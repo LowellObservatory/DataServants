@@ -81,6 +81,10 @@ class DCTConsumer(ConnectionListener):
         # List of packets that we know have schemas and will work.
         #   Still hardcoding things at the moment.
         vFlats = ['tcs.loisTelemetry',
+                  'lmi.loisTelemetry',
+                  'deveny.loisTelemetry',
+                  'RC1.loisTelemetry',
+                  'RC2.loisTelemetry',
                   'AOS.AOSPubDataSV.AOSDataPacket',
                   'WRS.WRSPubDataSV.WRSDataPacket',
                   'TCS.TCSSharedVariables.TCSHighLevelStatusSV.TCSTcsStatusSV',
