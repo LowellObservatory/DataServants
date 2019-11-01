@@ -15,9 +15,6 @@ Further description.
 
 from __future__ import division, print_function, absolute_import
 
-import os
-import datetime as dt
-
 
 def parse_deboned_LOISTemps(logmsg):
     """
@@ -69,7 +66,10 @@ def parse_deboned_LOISTemps(logmsg):
 
         # print(temp1, temp2, set1, set2)
     else:
-        fields = {}
+        # fields needs to be set to None rather than {} because further
+        #   packet checks will look for None! You'll get empty (invalid)
+        #   packets being put into the database otherwise.
+        fields = None
         # print(loglevel, logmsg)
 
     return fields
