@@ -193,7 +193,8 @@ def parserLOlogs(hed, msg, db=None, badFWHM=100.):
         # THIS IS A TEMPORARY HACK UNTIL MR FREEZE ARRIVES
         #               EVERYBODY CHILL
         #
-        fields = tempHACKLOIS.parse_deboned_LOISTemps(logmsg)
+        # fields = tempHACKLOIS.parse_deboned_LOISTemps(logmsg)
+        fields = None
     else:
         # Need this otherwise we'll get an exception error for all
         #   unparsed log lines! fields won't be defined right below here
