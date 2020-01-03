@@ -18,6 +18,15 @@ from snimpy.snmp import SNMPNoSuchName
 from snimpy.mib import SMIException
 
 
+# def convertDatatypes(vDict):
+#     """
+#     """
+#     if vDict != {}:
+#         for key in vDict:
+#             oval = vDict[key]]
+#             print(type(oval))
+
+
 def setupSNMPTarget(snmpTarg, loadMIBs=True):
     """
     """
@@ -63,7 +72,7 @@ def grabEndpoints(snmpManager, snmpTarget):
         try:
             mpoint = getattr(snmpManager, point)
             for _, value in mpoint.iteritems():
-                rdict.update({point: value})
+                rdict.update({point: repr(value)})
         except (AttributeError, SNMPNoSuchName):
             print("%s not found!" % (point))
 

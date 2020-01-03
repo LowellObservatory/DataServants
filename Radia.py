@@ -81,6 +81,10 @@ if __name__ == "__main__":
                     valDict = radia.snmptools.grabEndpoints(smans[snmptarg],
                                                             config[snmptarg])
 
+                    # Before we can make the packet, we need to convert from
+                    #   the default snimpy datatypes
+                    # valDict = radia.snmptools.convertDatatypes(valDict)
+
                     if valDict != {}:
                         # This means that we stored at least something valid,
                         #   so construct a influxdb packet and store it!
