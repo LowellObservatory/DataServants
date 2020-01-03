@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
                     # Before we can make the packet, we need to convert from
                     #   the default snimpy datatypes
-                    # valDict = radia.snmptools.convertDatatypes(valDict)
+                    valDict = radia.snmptools.convertDatatypes(valDict)
 
                     if valDict != {}:
                         # This means that we stored at least something valid,

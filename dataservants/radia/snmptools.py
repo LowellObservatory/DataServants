@@ -13,18 +13,31 @@
 
 from __future__ import division, print_function, absolute_import
 
-from snimpy.manager import load, Manager
-from snimpy.snmp import SNMPNoSuchName
 from snimpy.mib import SMIException
+from snimpy.snmp import SNMPNoSuchName
+import snimpy.basictypes as snimpyTypes
+from snimpy.manager import load, Manager
 
 
-# def convertDatatypes(vDict):
-#     """
-#     """
-#     if vDict != {}:
-#         for key in vDict:
-#             oval = vDict[key]]
-#             print(type(oval))
+def convertDatatypes(vDict):
+    """
+    """
+    if vDict != {}:
+        for key in vDict:
+            oval = vDict[key]
+            if isinstance(oval, snimpyTypes.Enum):
+                oval = str(oval)
+            elif isinstance(oval, snimpyTypes.String):
+                oval = str(oval)
+            elif isinstance(oval, snimpyTypes.Integer):
+                oval = int(oval)
+            else:
+                # Additional datatypes needed TBD
+                pass
+
+            vDict[key] = oval
+
+    return vDict
 
 
 def setupSNMPTarget(snmpTarg, loadMIBs=True):
@@ -72,7 +85,7 @@ def grabEndpoints(snmpManager, snmpTarget):
         try:
             mpoint = getattr(snmpManager, point)
             for _, value in mpoint.iteritems():
-                rdict.update({point: repr(value)})
+                rdict.update({point: value})
         except (AttributeError, SNMPNoSuchName):
             print("%s not found!" % (point))
 
