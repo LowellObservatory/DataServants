@@ -38,7 +38,7 @@ if __name__ == "__main__":
     conftype = classes.snmpTarget
 
     # Interval between successive runs of the polling loop (seconds)
-    bigsleep = 15
+    bigsleep = 60
 
     # config: dictionary of parsed config file
     # comm: common block from config file
@@ -90,7 +90,7 @@ if __name__ == "__main__":
                     if valDict != {}:
                         # This means that we stored at least something valid,
                         #   so construct a influxdb packet and store it!
-                        pass
+                        print(valDict)
 
                 # Consider taking a big nap
                 if runner.halt is False:
