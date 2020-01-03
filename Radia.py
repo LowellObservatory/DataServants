@@ -61,12 +61,6 @@ if __name__ == "__main__":
             # Check to see if there are any connections/objects to establish
             idbs = connSetup.connIDB(comm)
 
-            # Specify our custom listener that will really do all the work
-            #   Since we're hardcoding for the DCTConsumer anyways, I'll take
-            #   a bit shortcut and hardcode for the DCT influx database.
-            # TODO: Figure out a way to create a dict of listeners specified
-            #   in some creative way. Could add a configuration item to the
-            #   file and then loop over it, and change connAMQ accordingly.
             dctdb = idbs['database-dct']
 
             # Set up the different SNMP (snimpy) managers for the devices...
@@ -90,12 +84,18 @@ if __name__ == "__main__":
                     if valDict != {}:
                         # This means that we stored at least something valid,
                         #   so construct a influxdb packet and store it!
-                        print(valDict)
                         packet = packetizer.makeInfluxPacket(meas=[snmptarg],
                                                              ts=None,
                                                              tags=None,
                                                              fields=valDict)
-                        print(packet)
+
+                        # Grab the relevant/specified database
+                        db = idbs[config[snmptarg].database]
+
+                        # Technically this is hardcoded for an influxdb db
+                        db.singleCommit(packet,
+                                        table=config[snmptarg].databasetable,
+                                        close=True)
 
                     # Mini sleep between targets
                     time.sleep(1)
