@@ -17,7 +17,7 @@ import time
 from pid import PidFile, PidFileError
 
 from dataservants import radia
-from ligmos.utils import classes, common
+from ligmos.utils import classes, common, packetizer
 from ligmos.workers import connSetup, workerSetup
 
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
                                                         desc=desc,
                                                         extraargs=eargs,
                                                         conftype=conftype,
-                                                        logfile=False)
+                                                        logfile=True)
 
     try:
         with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
@@ -91,6 +91,14 @@ if __name__ == "__main__":
                         # This means that we stored at least something valid,
                         #   so construct a influxdb packet and store it!
                         print(valDict)
+                        packet = packetizer.makeInfluxPacket(meas=snmptarg,
+                                                             ts=None,
+                                                             tags=None,
+                                                             fields=valDict)
+                        print(packet)
+
+                    # Mini sleep between targets
+                    time.sleep(1)
 
                 # Consider taking a big nap
                 if runner.halt is False:
