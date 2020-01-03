@@ -91,7 +91,7 @@ if __name__ == "__main__":
                         # This means that we stored at least something valid,
                         #   so construct a influxdb packet and store it!
                         print(valDict)
-                        packet = packetizer.makeInfluxPacket(meas=snmptarg,
+                        packet = packetizer.makeInfluxPacket(meas=[snmptarg],
                                                              ts=None,
                                                              tags=None,
                                                              fields=valDict)
