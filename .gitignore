@@ -90,3 +90,4 @@ iago.conf.backup
 wadsworth.conf
 alfred_extraPings.conf
 abu.conf
+mibs/*
