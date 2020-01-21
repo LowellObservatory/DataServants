@@ -50,9 +50,7 @@ def setupSNMPTarget(snmpTarg, loadMIBs=True):
         # Now prepend our basepath to those MIBs
         mibOrder = ["%s/%s" % (snmpTarg.miblocation, mib) for mib in mibOrder]
     elif snmpTarg.devicetype.lower() == "ubnt-unifi":
-        # NOTE: You can get a copy of RFC1213-MIB via snmp-mibs-downloader
-        #   and grab it from /usr/share/snmp/ietf (in Debian at least)
-        mibOrder = ["RFC1213-MIB.txt", "UBNT-MIB.txt", "UBNT-UniFi-MIB.txt"]
+        mibOrder = ["UBNT-MIB.txt", "UBNT-UniFi-MIB.txt"]
         # Now prepend our basepath to those MIBs
         mibOrder = ["%s/%s" % (snmpTarg.miblocation, mib) for mib in mibOrder]
     elif snmpTarg.devicetype.lower() == "apc-ups":
