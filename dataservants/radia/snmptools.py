@@ -93,8 +93,10 @@ def grabEndpoints(snmpManager, snmpTarget):
             if isinstance(mpoint, snimpyTypes.OctetString):
                 rdict.update({point: mpoint.decode("UTF-8")})
             else:
+                print(type(mpoint))
+                print(mpoint)
                 for oid, value in mpoint.iteritems():
-                    print(point, int(oid), value)
+                    print(point, oid, value)
                     spoint = "%s.%d" % (point, int(oid))
                     rdict.update({spoint: value})
         except (AttributeError, SNMPNoSuchName):
