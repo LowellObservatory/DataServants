@@ -90,8 +90,15 @@ def grabEndpoints(snmpManager, snmpTarget):
         print("Searching for %s" % (point))
         try:
             mpoint = getattr(snmpManager, point)
-            for _, value in mpoint.iteritems():
-                rdict.update({point: value})
+            # Check to see if we just got our desired answer or if we have
+            #   to dig inside of the results more
+            if isinstance(mpoint, snimpyTypes.OctetString):
+                rdict.update({point: mpoint.decode("UTF-8")})
+            else:
+                for oid, value in mpoint.iteritems():
+                    print(point, int(oid), value)
+                    spoint = "%s.%d" % (point, int(oid))
+                    rdict.update({spoint: value})
         except (AttributeError, SNMPNoSuchName):
             print("%s not found!" % (point))
 
