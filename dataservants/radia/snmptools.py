@@ -16,7 +16,7 @@ from __future__ import division, print_function, absolute_import
 from snimpy.mib import SMIException
 from snimpy.snmp import SNMPNoSuchName
 import snimpy.basictypes as snimpyTypes
-from snimpy.manager import load, Manager
+from snimpy.manager import load, Manager, ProxyColumn
 
 
 def convertDatatypes(vDict):
@@ -92,13 +92,25 @@ def grabEndpoints(snmpManager, snmpTarget):
             #   to dig inside of the results more
             if isinstance(mpoint, snimpyTypes.OctetString):
                 rdict.update({point: mpoint.decode("UTF-8")})
+            elif isinstance(mpoint, ProxyColumn):
+                # This usually means there are multiple indicies for
+                #   the given endpoint, so loop through them.
+                # Still can be ... quirky.
+                for oididx, value in mpoint.iteritems():
+                    # Here, the oididx can be a tuple sometimes. Why?
+                    #   Because SNMP MaDneSS as far as I can tell
+                    print(point, oididx, value)
+                    spoint = "%s.%d" % (point, int(oididx))
+                    rdict.update({spoint: value})
             else:
+                print("WARNING!!!")
+                print("This is an undefined block. Here's your results:")
+                # Catch-all for unhandled type quirks
                 print(type(mpoint))
                 print(mpoint)
-                for oid, value in mpoint.iteritems():
-                    print(point, oid, value)
-                    spoint = "%s.%d" % (point, int(oid))
-                    rdict.update({spoint: value})
+                print("THE RESULTS HAVE NOT BEEN STORED")
+                print("Look at radia.snmptools.grabEndpoints() AND FIX IT!")
+
         except (AttributeError, SNMPNoSuchName):
             print("%s not found!" % (point))
 
