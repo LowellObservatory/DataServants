@@ -109,6 +109,9 @@ def grabEndpoints(snmpManager, snmpTarget):
                         # ubnt-unifi ends up here
                         spoint = "%s.%d" % (point, int(oididx))
                     rdict.update({spoint: value})
+            elif isinstance(mpoint, snimpyTypes.Unsigned32):
+                # Could drop in Counter* as well as 32/64 catches too
+                rdict.update({point: int(mpoint)})
             else:
                 print("WARNING!!!")
                 print("This is an undefined block. Here's your results:")
