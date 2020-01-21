@@ -98,9 +98,16 @@ def grabEndpoints(snmpManager, snmpTarget):
                 # Still can be ... quirky.
                 for oididx, value in mpoint.iteritems():
                     # Here, the oididx can be a tuple sometimes. Why?
-                    #   Because SNMP MaDneSS as far as I can tell
+                    #   I think because in one instance I'm grabbing from
+                    #   an OID that is a group and another that's a node?
+                    #   I have the lingo wrong but it's something like that.
                     print(point, oididx, value)
-                    spoint = "%s.%d" % (point, int(oididx))
+                    if isinstance(oididx, tuple):
+                        # ubnt-airos ends up here
+                        spoint = "%s.%d" % (point, int(oididx[0]))
+                    else:
+                        # ubnt-unifi ends up here
+                        spoint = "%s.%d" % (point, int(oididx))
                     rdict.update({spoint: value})
             else:
                 print("WARNING!!!")
