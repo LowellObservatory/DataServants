@@ -76,6 +76,8 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
             print("Failed to find a working schema :(")
             good = False
     else:
+        print("Schema was not a dict")
+        print(type(schema))
         good = schema.is_valid(msg)
 
     # A DIRTY DIRTY HACK
