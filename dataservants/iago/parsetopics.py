@@ -117,11 +117,13 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
 
             if fields is not None:
                 # Note: passing ts=None lets python Influx do the timestamp
+                print("Making packet")
                 packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                            ts=None,
                                                            tags=None,
                                                            fields=fields)
 
+                print("Packet done")
                 # print(packet)
 
                 # Actually commit the packet. singleCommit opens it,
