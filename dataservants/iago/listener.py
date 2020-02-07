@@ -38,6 +38,7 @@ class DCTConsumer(ConnectionListener):
 
         # Grab all the schemas that are in the ligmos library
         self.schemaDict = utils.amq.schemaDicter()
+        print(self.schemaDict)
 
     def on_message(self, headers, body):
         """
@@ -109,6 +110,8 @@ class DCTConsumer(ConnectionListener):
                     # TODO: Wrap this in a proper try...except
                     #   As of right now, it'll be caught in the "WTF!!!"
                     schema = self.schemaDict[tname]
+                    print("Schema before call:")
+                    print(schema)
                     parserFlatPacket(headers, body,
                                      schema=schema, db=self.dbconn)
                 elif tname in vFloats:
