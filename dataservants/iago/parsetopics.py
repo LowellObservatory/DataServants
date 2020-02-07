@@ -146,6 +146,8 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
     else:
         if debug is True:
             print("Packet was bad!?")
+            print(hed)
+            print(msg)
 
 
 def parserLOlogs(hed, msg, db=None, badFWHM=100.):
