@@ -92,6 +92,7 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
         if debug is True:
             print("Packet good!")
         try:
+            print("Trying to_dict")
             xmlp = schema.to_dict(msg, decimal_type=float, validation='lax')
             # I HATE THIS
             if isinstance(xmlp, tuple):
@@ -102,6 +103,8 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
 
             fields = {}
             # Store each key:value pairing
+            print("Storing keys")
+            print(keys)
             for each in keys:
                 val = xmlp[each]
 
