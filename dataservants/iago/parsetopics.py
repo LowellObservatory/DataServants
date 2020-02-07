@@ -75,18 +75,20 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
         else:
             print("Failed to find a working schema :(")
             good = False
+            schema = None
     else:
         print("Schema was not a dict")
         print(type(schema))
         good = schema.is_valid(msg)
 
     # A DIRTY DIRTY HACK
-    try:
-        xmlp = schema.to_dict(msg, decimal_type=float, validation='lax')
-        # print(xmlp)
-        good = True
-    except xmls.XMLSchemaValidationError:
-        good = False
+    if schema is not None:
+        try:
+            xmlp = schema.to_dict(msg, decimal_type=float, validation='lax')
+            # print(xmlp)
+            good = True
+        except xmls.XMLSchemaValidationError:
+            good = False
 
     if good is True:
         if debug is True:
