@@ -124,7 +124,7 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
                                                            fields=fields)
 
                 print("Packet done")
-                # print(packet)
+                print(packet)
 
                 # Actually commit the packet. singleCommit opens it,
                 #   writes the packet, and then optionally closes it.
