@@ -67,10 +67,12 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
             if good is True:
                 # Override the schema variable with the one that worked
                 best = verKey
+                print("Found working schema %s" % (verKey))
                 break
         if best is not None:
             schema = schema[best]
         else:
+            print("Failed to find a working schema :(")
             good = False
     else:
         good = schema.is_valid(msg)
