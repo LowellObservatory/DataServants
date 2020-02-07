@@ -48,18 +48,28 @@ def flatten(d, parent_key='', sep='_'):
 def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
     """
     """
-    # print(msg)
     # This is really the topic name, so we'll make that the measurement name
     #   for the sake of clarity. It NEEDS to be a list until I fix packetizer!
     meas = [os.path.basename(hed['destination'])]
 
     # Bail if there's a schema not found; needs expansion here
     if schema is None:
-        print("No schema found for topic %s!" % (meas[0]))
+        print("FATAL ERROR: No schema found for topic %s!" % (meas[0]))
         return None
 
     # In this house, we only store valid packets!
-    good = schema.is_valid(msg)
+    if isinstance(schema, dict):
+        # For now, just be super lazy and try all the versions defined
+        #   and see which one sticks. Warning: it might be none of them!
+        for verKey in schema:
+            good = schema[verKey].is_valid(msg)
+            if good is True:
+                # Override the schema variable with the one that worked
+                best = verKey
+                break
+        schema = schema[best]
+    else:
+        good = schema.is_valid(msg)
 
     # A DIRTY DIRTY HACK
     try:
