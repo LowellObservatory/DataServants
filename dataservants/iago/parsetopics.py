@@ -64,7 +64,10 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
         #   and see which one sticks. Warning: it might be none of them!
         best = None
         for verKey in schema:
-            good = schema[verKey].is_valid(msg)
+            testSchema = schema[verKey]
+            print("Testing schema:")
+            print(testSchema.url)
+            good = testSchema.is_valid(msg)
             if good is True:
                 # Override the schema variable with the one that worked
                 best = verKey
