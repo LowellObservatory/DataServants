@@ -129,8 +129,10 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
                 # Actually commit the packet. singleCommit opens it,
                 #   writes the packet, and then optionally closes it.
                 if db is not None:
+                    print("Sending packet")
                     db.singleCommit(packet, table=db.tablename,
                                     close=True)
+                    print("Sent!")
         except xmls.XMLSchemaDecodeError as err:
             print(err.message.strip())
             print(err.reason.strip())
