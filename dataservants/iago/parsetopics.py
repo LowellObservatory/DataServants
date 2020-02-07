@@ -61,13 +61,17 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
     if isinstance(schema, dict):
         # For now, just be super lazy and try all the versions defined
         #   and see which one sticks. Warning: it might be none of them!
+        best = None
         for verKey in schema:
             good = schema[verKey].is_valid(msg)
             if good is True:
                 # Override the schema variable with the one that worked
                 best = verKey
                 break
-        schema = schema[best]
+        if best is not None:
+            schema = schema[best]
+        else:
+            good = False
     else:
         good = schema.is_valid(msg)
 
