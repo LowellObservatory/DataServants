@@ -122,8 +122,8 @@ class DCTConsumer(ConnectionListener):
                     print(body)
                     print(res)
             except Exception as err:
-                # This is a catch-all to help find parsing errors that need
-                #   to be fixed since they're not caught in a parser* func.
+                # Mostly this catches instances where the topic name doesn't
+                #   have a schema, but it catches all oopsies really
                 print("="*11)
                 print("WTF!!!")
                 print(str(err))
