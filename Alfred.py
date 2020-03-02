@@ -166,7 +166,8 @@ def main():
     actions = defineActions()
 
     try:
-        with PidFile(pidname=mynameis.lower(), piddir=pidpath) as p:
+        with PidFile(pidname=mynameis.lower(), piddir=pidpath,
+                     allow_samepid=True) as p:
             # Print the preamble of this particular instance
             #   (helpful to find starts/restarts when scanning thru logs)
             common.printPreamble(p, config)
