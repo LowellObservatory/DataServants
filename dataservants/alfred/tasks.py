@@ -55,7 +55,8 @@ def actionPing(iobj, db=None, debug=False):
                                       'dropped': 0}}]
     """
     # In case of emergency
-    superdebug = debug
+    # superdebug = debug
+    superdebug = False
 
     # Timeouts and stuff are handled elsewhere in here
     #   BUT! timeout must be an int >= 1 (second)
