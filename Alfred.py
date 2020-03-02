@@ -206,6 +206,8 @@ def main():
                         time.sleep(1)
                         if runner.halt is True:
                             break
+                else:
+                    print("runner.halt has been triggered!")
 
             # The above loop is exited when someone sends SIGTERM
             print("PID %d is now out of here!" % (p.pid))
