@@ -213,6 +213,8 @@ def main():
 
             # The above loop is exited when someone sends SIGTERM
             print("PID %d is now out of here!" % (p.pid))
+            # Explicitly call the cleanup of the PID file
+            p.close(cleanup=True)
 
             # The PID file will have already been either deleted/overwritten by
             #   another function/process by this point, so just give back the
