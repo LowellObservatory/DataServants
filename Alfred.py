@@ -205,6 +205,8 @@ def main():
                     for _ in range(bigsleep):
                         time.sleep(1)
                         if runner.halt is True:
+                            print("halt requested while sleeping!")
+                            print("issuing 'break'")
                             break
                 else:
                     print("runner.halt has been triggered!")
