@@ -14,8 +14,6 @@ import os
 import sys
 import time
 
-from pid import PidFile, PidFileError
-
 from dataservants import alfred
 from dataservants import yvette
 from ligmos.utils import classes, common, confparsers
@@ -104,12 +102,6 @@ def updateArguments(actions, iobj, args, baseYcmd, db=None):
 def main():
     """
     """
-    # For PIDfile stuff; kindly ignore
-    mynameis = os.path.basename(__file__)
-    if mynameis.endswith('.py'):
-        mynameis = mynameis[:-3]
-    pidpath = '/tmp/'
-
     # Define the default files we'll use/look for. These are passed to
     #   the worker constructor (toServeMan).
     conf = './config/alfred.conf'
@@ -142,7 +134,7 @@ def main():
     # comm: common block from config file
     # args: parsed options
     # runner: class that contains logic to quit nicely
-    config, comm, args, runner = workerSetup.toServeMan(mynameis, conf,
+    config, comm, args, runner = workerSetup.toServeMan(conf,
                                                         passes,
                                                         logfile,
                                                         desc=desc,
@@ -165,70 +157,58 @@ def main():
     # Actually define the function calls/references to functions
     actions = defineActions()
 
-    try:
-        with PidFile(pidname=mynameis.lower(), piddir=pidpath,
-                     allow_samepid=True) as p:
-            # Print the preamble of this particular instance
-            #   (helpful to find starts/restarts when scanning thru logs)
-            common.printPreamble(p, config)
+    # Get this PID for diagnostics
+    pid = os.getpid()
 
-            # Check to see if there are any connections/objects to establish
-            idbs = connSetup.connIDB(comm)
+    # Print the preamble of this particular instance
+    #   (helpful to find starts/restarts when scanning thru logs)
+    common.printPreamble(pid, config)
 
-            # Semi-infinite loop
-            while runner.halt is False:
-                # This is a common core function that handles the actions and
-                #   looping over each instrument.  We keep the main while
-                #   loop out here, though, so we can do stuff with the
-                #   results of the actions from all the instruments.
-                _ = common.instLooper(config, runner, args,
-                                      actions, updateArguments,
-                                      baseYcmd,
-                                      db=idbs,
-                                      alarmtime=alarmtime)
+    # Check to see if there are any connections/objects to establish
+    idbs = connSetup.connIDB(comm)
 
-                # Doing the extra pings as a side job/quickie
-                #   No need to make this into a big to-do
-                if epings is not None:
-                    for sect in epings:
-                        pobj = epings[sect]
-                        dbtag = pobj.database
-                        db = idbs[dbtag]
+    # Semi-infinite loop
+    while runner.halt is False:
+        # This is a common core function that handles the actions and
+        #   looping over each instrument.  We keep the main while
+        #   loop out here, though, so we can do stuff with the
+        #   results of the actions from all the instruments.
+        _ = common.instLooper(config, runner, args,
+                              actions, updateArguments,
+                              baseYcmd,
+                              db=idbs, alarmtime=alarmtime)
 
-                        res = alfred.tasks.actionPing(pobj, db=db,
-                                                      debug=args.debug)
-                        print(res)
+        # Doing the extra pings as a side job/quickie
+        #   No need to make this into a big to-do
+        if epings is not None:
+            for sect in epings:
+                pobj = epings[sect]
+                dbtag = pobj.database
+                db = idbs[dbtag]
 
-                # After all the instruments are done, take a big nap
-                if runner.halt is False:
-                    print("Starting a big sleep")
-                    # Sleep for bigsleep, but in small chunks to check abort
-                    for _ in range(bigsleep):
-                        time.sleep(1)
-                        if runner.halt is True:
-                            print("halt requested while sleeping!")
-                            print("issuing 'break'")
-                            break
-                else:
-                    print("runner.halt has been triggered!")
+                res = alfred.tasks.actionPing(pobj, db=db, debug=args.debug)
+                print(res)
 
-            # The above loop is exited when someone sends SIGTERM
-            print("PID %d is now out of here!" % (p.pid))
-            # Explicitly call the cleanup of the PID file
-            p.close(cleanup=True)
+        # After all the instruments are done, take a big nap
+        if runner.halt is False:
+            print("Starting a big sleep")
+            # Sleep for bigsleep, but in small chunks to check abort
+            for _ in range(bigsleep):
+                time.sleep(1)
+                if runner.halt is True:
+                    print("halt requested while sleeping!")
+                    print("issuing 'break'")
+                    break
+        else:
+            print("runner.halt has been triggered!")
 
-            # The PID file will have already been either deleted/overwritten by
-            #   another function/process by this point, so just give back the
-            #   console and return STDOUT and STDERR to their system defaults
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
-            print("Archive loop completed; STDOUT and STDERR reset.")
-    except PidFileError:
-        # We've probably already started logging, so reset things
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
-        print("Already running! Quitting...")
-        common.nicerExit()
+    # The above loop is exited when someone sends SIGTERM
+    print("PID %d is now out of here!" % (pid))
+
+    # Return STDOUT and STDERR to their system defaults
+    sys.stdout = sys.__stdout__
+    sys.stderr = sys.__stderr__
+    print("STDOUT and STDERR reset.")
 
 
 if __name__ == "__main__":
