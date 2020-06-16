@@ -24,8 +24,6 @@ import xmlschema as xmls
 
 from ligmos import utils
 
-from . import tempHACKLOIS
-
 
 def flatten(d, parent_key='', sep='_'):
     """

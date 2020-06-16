@@ -100,6 +100,9 @@ class DCTConsumer(ConnectionListener):
         # List of packets that are just words/strings
         vStrings = ['DCS.DSSPubDataSV.PositionStatus']
 
+        # List of packets that are bools (strings saying true/false)
+        vBools = ['DCS.DCSPubDataSV.OccultationWarning']
+
         # Now send the packet to the right place for processing.
         #   These need special parsing because they're formatted strings
         if badMsg is False:
