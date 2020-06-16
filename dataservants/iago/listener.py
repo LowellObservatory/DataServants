@@ -21,7 +21,7 @@ from stomp.listener import ConnectionListener
 from ligmos import utils
 
 from .parsetopics import parserPDU, parserLPI, parserLOlogs, \
-                         parserFlatPacket, parserSimpleFloat
+                         parserFlatPacket, parserSimple
 
 
 class DCTConsumer(ConnectionListener):
@@ -97,6 +97,9 @@ class DCTConsumer(ConnectionListener):
                    'MTS.MTSPubDataSV.MountTemperature',
                    'DCS.DCSPubDataSV.MountDomeAzimuthDifference']
 
+        # List of packets that are just words/strings
+        vStrings = ['DCS.DSSPubDataSV.PositionStatus']
+
         # Now send the packet to the right place for processing.
         #   These need special parsing because they're just straight text
         if badMsg is False:
@@ -116,7 +119,11 @@ class DCTConsumer(ConnectionListener):
                     parserFlatPacket(headers, body,
                                      schema=schema, db=self.dbconn)
                 elif tname in vFloats:
-                    parserSimpleFloat(headers, body, db=self.dbconn)
+                    parserSimple(headers, body, db=self.dbconn,
+                                 datatype='float')
+                elif tname in vStrings:
+                    parserSimple(headers, body, db=self.dbconn,
+                                 datatype='string')
                 else:
                     # Intended to be the endpoint of the auto-XML publisher
                     #   so I can catch most of them rather than explicitly

@@ -407,16 +407,24 @@ def parserPDU(_, msg, db=None):
             db.singleCommit(packet, table=db.tablename, close=True)
 
 
-def parserSimpleFloat(hed, msg, db=None):
+def parserSimple(hed, msg, db=None, datatype='float'):
     """
     """
     # print("Parsing a simple float message: %s" % msg)
     topic = os.path.basename(hed['destination'])
-    try:
-        val = float(msg)
-    except ValueError as err:
-        print(str(err))
-        val = -9999.
+    if datatype.lower() == 'float':
+        try:
+            val = float(msg)
+        except ValueError as err:
+            print(str(err))
+            val = -9999.
+    elif datatype.lower() == 'string':
+        # Do I need to worry about byte conversion stuff?  Probably not?
+        val = str(msg)
+    elif datatype.lower() == 'bool':
+        print("NOT YET FINISHED")
+    else:
+        print("DEFINITELY NOT YET FINISHED")
 
     # Make the InfluxDB style packet
     meas = [topic]
