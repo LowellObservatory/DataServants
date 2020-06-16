@@ -94,7 +94,8 @@ class DCTConsumer(ConnectionListener):
         # List of packets that we know have a float value and nothing else
         vFloats = ['AOS.AOSSubDataSV.RelativeFocusOffset',
                    'AOS.AOSSubDataSV.AbsoluteFocusOffset',
-                   'MTS.MTSPubDataSV.MountTemperature']
+                   'MTS.MTSPubDataSV.MountTemperature',
+                   'DCS.DCSPubDataSV.MountDomeAzimuthDifference']
 
         # Now send the packet to the right place for processing.
         #   These need special parsing because they're just straight text
