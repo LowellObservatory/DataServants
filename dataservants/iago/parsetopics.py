@@ -80,7 +80,7 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
             good = False
             schema = None
     else:
-        print("Schema was not a dict")
+        print("Schema was not a dict, so no other versions to check.")
         print(type(schema))
         good = schema.is_valid(msg)
 

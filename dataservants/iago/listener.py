@@ -101,7 +101,7 @@ class DCTConsumer(ConnectionListener):
         vStrings = ['DCS.DSSPubDataSV.PositionStatus']
 
         # Now send the packet to the right place for processing.
-        #   These need special parsing because they're just straight text
+        #   These need special parsing because they're formatted strings
         if badMsg is False:
             try:
                 if tname == 'joePduResult':
