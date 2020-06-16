@@ -124,6 +124,9 @@ class DCTConsumer(ConnectionListener):
                 elif tname in vStrings:
                     parserSimple(headers, body, db=self.dbconn,
                                  datatype='string')
+                elif tname in vBools:
+                    parserSimple(headers, body, db=self.dbconn,
+                                 datatype='bool')
                 else:
                     # Intended to be the endpoint of the auto-XML publisher
                     #   so I can catch most of them rather than explicitly

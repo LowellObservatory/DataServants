@@ -18,6 +18,7 @@ from __future__ import division, print_function, absolute_import
 import os
 import collections
 import datetime as dt
+import distutils.util as dut
 
 import xmlschema as xmls
 
@@ -221,13 +222,6 @@ def parserLOlogs(hed, msg, db=None, badFWHM=100.):
                     # Nuke the entire site from orbit...
                     fields = None
                     tags = None
-    elif loglevel in ["Level_5", "Level_4"]:
-        #
-        # THIS IS A TEMPORARY HACK UNTIL MR FREEZE ARRIVES
-        #               EVERYBODY CHILL
-        #
-        # fields = tempHACKLOIS.parse_deboned_LOISTemps(logmsg)
-        fields = None
     else:
         # Need this otherwise we'll get an exception error for all
         #   unparsed log lines! fields won't be defined right below here
@@ -241,8 +235,6 @@ def parserLOlogs(hed, msg, db=None, badFWHM=100.):
                                                    ts=None,
                                                    tags=tags,
                                                    fields=fields)
-
-        # print(packet)
 
         # Actually commit the packet. singleCommit opens it,
         #   writes the packet, and then optionally closes it.
@@ -399,8 +391,6 @@ def parserPDU(_, msg, db=None):
                                                    tags=tag,
                                                    fields=fields)
 
-        # print(packet)
-
         # Actually commit the packet. singleCommit opens it,
         #   writes the packet, and then optionally closes it.
         if db is not None:
@@ -419,10 +409,13 @@ def parserSimple(hed, msg, db=None, datatype='float'):
             print(str(err))
             val = -9999.
     elif datatype.lower() == 'string':
-        # Do I need to worry about byte conversion stuff?  Probably not?
         val = str(msg)
     elif datatype.lower() == 'bool':
-        print("NOT YET FINISHED")
+        try:
+            val = dut.strtobool(msg)
+        except ValueError as err:
+            print(str(err))
+            val = -9999
     else:
         print("DEFINITELY NOT YET FINISHED")
 
@@ -438,7 +431,6 @@ def parserSimple(hed, msg, db=None, datatype='float'):
                                                ts=None,
                                                tags=tag,
                                                fields=fields)
-    # print(packet)
 
     # Actually commit the packet. singleCommit opens it,
     #   writes the packet, and then optionally closes it.
