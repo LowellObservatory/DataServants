@@ -110,12 +110,13 @@ def grabEndpoints(snmpManager, snmpTarget):
                             # ubnt-unifi ends up here
                             spoint = "%s.%d" % (point, int(oididx))
                         rdict.update({spoint: value})
+                        print({spoint: value})
                 except SNMPException as e:
                     print(str(e))
                     print("...Moving on.")
                 except NotImplementedError as e:
                     print(str(e))
-                    print(oididx, value)
+                    print(point, oididx, value)
 
             elif isinstance(mpoint, snimpyTypes.Unsigned32):
                 # Could drop in Counter* as well as 32/64 catches too
