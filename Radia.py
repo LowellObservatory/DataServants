@@ -77,6 +77,7 @@ def main():
             # Before we can make the packet, we need to convert from
             #   the default snimpy datatypes
             valDict = radia.snmptools.convertDatatypes(valDict)
+            print(valDict)
 
             if valDict != {}:
                 # This means that we stored at least something valid,
@@ -85,6 +86,7 @@ def main():
                                                      ts=None,
                                                      tags=None,
                                                      fields=valDict)
+                print(packet)
 
                 # Grab the relevant/specified database
                 db = idbs[config[snmptarg].database]
