@@ -101,7 +101,7 @@ def grabEndpoints(snmpManager, snmpTarget):
                         # Here, the oididx can be a tuple sometimes. Why?
                         #   I think because in one instance I'm grabbing from
                         #   an OID that is a group and another that's a node?
-                        #   I have the lingo wrong but it's something like that.
+                        #   The lingo is wrong but it's something like that.
                         print(point, oididx, value)
                         if isinstance(oididx, tuple):
                             # ubnt-airos ends up here
@@ -113,6 +113,10 @@ def grabEndpoints(snmpManager, snmpTarget):
                 except SNMPException as e:
                     print(str(e))
                     print("...Moving on.")
+                except NotImplementedError as e:
+                    print(str(e))
+                    print(oididx, value)
+
             elif isinstance(mpoint, snimpyTypes.Unsigned32):
                 # Could drop in Counter* as well as 32/64 catches too
                 rdict.update({point: int(mpoint)})
