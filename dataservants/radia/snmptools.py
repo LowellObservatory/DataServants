@@ -31,6 +31,9 @@ def convertDatatypes(vDict):
                 oval = str(oval)
             elif isinstance(oval, snimpyTypes.Integer):
                 oval = int(oval)
+            elif isinstance(oval, snimpyTypes.Timeticks):
+                # NOTE: Timeticks type has an __int__ method of its own
+                oval = int(oval)
             else:
                 # Additional datatypes needed TBD
                 pass
