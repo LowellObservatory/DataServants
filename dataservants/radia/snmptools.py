@@ -14,7 +14,7 @@
 from __future__ import division, print_function, absolute_import
 
 from snimpy.mib import SMIException
-from snimpy.snmp import SNMPNoSuchName
+from snimpy.snmp import SNMPNoSuchName, SNMPException
 import snimpy.basictypes as snimpyTypes
 from snimpy.manager import load, Manager, ProxyColumn
 
@@ -96,19 +96,23 @@ def grabEndpoints(snmpManager, snmpTarget):
                 # This usually means there are multiple indicies for
                 #   the given endpoint, so loop through them.
                 # Still can be ... quirky.
-                for oididx, value in mpoint.iteritems():
-                    # Here, the oididx can be a tuple sometimes. Why?
-                    #   I think because in one instance I'm grabbing from
-                    #   an OID that is a group and another that's a node?
-                    #   I have the lingo wrong but it's something like that.
-                    print(point, oididx, value)
-                    if isinstance(oididx, tuple):
-                        # ubnt-airos ends up here
-                        spoint = "%s.%d" % (point, int(oididx[0]))
-                    else:
-                        # ubnt-unifi ends up here
-                        spoint = "%s.%d" % (point, int(oididx))
-                    rdict.update({spoint: value})
+                try:
+                    for oididx, value in mpoint.iteritems():
+                        # Here, the oididx can be a tuple sometimes. Why?
+                        #   I think because in one instance I'm grabbing from
+                        #   an OID that is a group and another that's a node?
+                        #   I have the lingo wrong but it's something like that.
+                        print(point, oididx, value)
+                        if isinstance(oididx, tuple):
+                            # ubnt-airos ends up here
+                            spoint = "%s.%d" % (point, int(oididx[0]))
+                        else:
+                            # ubnt-unifi ends up here
+                            spoint = "%s.%d" % (point, int(oididx))
+                        rdict.update({spoint: value})
+                except SNMPException as e:
+                    print(str(e))
+                    print("...Moving on.")
             elif isinstance(mpoint, snimpyTypes.Unsigned32):
                 # Could drop in Counter* as well as 32/64 catches too
                 rdict.update({point: int(mpoint)})
