@@ -91,3 +91,4 @@ wadsworth.conf
 alfred_extraPings.conf
 abu.conf
 mibs/*
+joeSnooping.log.*
