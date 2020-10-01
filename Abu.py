@@ -10,13 +10,9 @@
 
 """Abu: The Kleptomaniac Monkey
 
-Abu is designed to live on all machines of interest, and
-pull information from a variety of log file sources and republish them
-in a more friendly format.  A close friend of "Iago" in that sense.
-
-There can only be one Abu instance running on a given machine,
-controlled via a PID file in /tmp/ as well as some command line options to
-kill/restart the Abu process.
+Abu is designed to sneak off and steal things from machines of interest, and
+generally republish the information in a much more friendly and useful
+format.  A close friend of "Iago" in that sense.
 """
 
 from __future__ import division, print_function, absolute_import
