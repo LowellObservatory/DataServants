@@ -14,9 +14,10 @@ import os
 import sys
 import time
 
-from dataservants import iago
 from ligmos.workers import connSetup, workerSetup
 from ligmos.utils import amq, classes, common
+
+from dataservants import iago
 
 
 def main():
@@ -101,6 +102,7 @@ def main():
     sys.stdout = sys.__stdout__
     sys.stderr = sys.__stderr__
     print("STDOUT and STDERR reset.")
+
 
 if __name__ == "__main__":
     main()
