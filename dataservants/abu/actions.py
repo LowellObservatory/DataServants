@@ -19,6 +19,10 @@ from __future__ import division, print_function, absolute_import
 import xmltodict as xmld
 
 
+def amqStats(msg):
+    pass
+
+
 def columbiaTranslator(msg):
     """
     Translate the "XML" file that the Columbia Weather Systems station is
