@@ -23,7 +23,7 @@ def amqStats(msg):
     pass
 
 
-def columbiaTranslator(msg):
+def parseColumbia(msg):
     """
     Translate the "XML" file that the Columbia Weather Systems station is
     putting out into something that fits easier into the XML schema/parsing
@@ -60,7 +60,7 @@ def columbiaTranslator(msg):
     return npacket
 
 
-def isenseTranslator(msg, rootKey=None):
+def parseiSense(msg, rootKey=None):
     """
     Translate the "XML" file that the i-SENSE voltage monitor puts out
     into something that fits easier into the XML schema/parsing way of life.
