@@ -83,7 +83,7 @@ def main():
                 connObj = amqs[sObj.broker][0]
                 wxml = abu.http.webgetter(sObj.resourcelocation,
                                           user=sObj.user,
-                                          pw=sObj.pw)
+                                          pw=sObj.password)
 
                 if wxml != '':
                     bxml = None
