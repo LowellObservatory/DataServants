@@ -23,10 +23,6 @@ from requests.auth import HTTPDigestAuth
 
 def webgetter(resourceloc, user=None, pw=None):
     """
-    NOTE: I haven't really checked the auth stuff. It should work, though,
-    and I can fall back to HTTPBasicAuth if we really need.  But since
-    BasicAuth doesn't encrypt the info, I don't want to use it unless
-    it's absolutely necessary.
     """
     if user or pw is not None:
         auth = HTTPDigestAuth(user, pw)
