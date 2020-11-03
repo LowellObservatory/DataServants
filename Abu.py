@@ -10,9 +10,11 @@
 
 """Abu: The Kleptomaniac Monkey
 
-Abu is designed to sneak off and steal things from machines of interest, and
-generally republish the information in a much more friendly and useful
-format.  A close friend of "Iago" in that sense.
+Abu is designed to gather information/data from somewhere, and
+repackage/republish it in a much more friendly and useful format.
+
+The actual *storage* of data is still relegated to "Iago" to
+keep things at least a little consistent on that front.
 """
 
 from __future__ import division, print_function, absolute_import
@@ -21,9 +23,10 @@ import os
 import sys
 import time
 
-from dataservants import abu
 from ligmos.utils import amq, classes, common
 from ligmos.workers import connSetup, workerSetup
+
+from dataservants import abu
 
 
 def main():
@@ -75,15 +78,25 @@ def main():
 
         # Actually do our actions
         for sect in config:
-            # A bit of messy hacking to cut to the chase
-            #   Should eventually turn this into a proper action/method
-            if sect.lower() == 'dctweather':
-                sObj = config[sect]
+            sObj = config[sect]
+            if sObj.resourcemethod.lower() in ['http', 'https']:
                 connObj = amqs[sObj.broker][0]
-                if sObj.resourcemethod.lower() == 'http' or 'https':
-                    wxml = abu.http.webgetter(sObj.resourcelocation)
-                    if wxml != '':
-                        bxml = abu.actions.columbiaTranslator(wxml)
+                wxml = abu.http.webgetter(sObj.resourcelocation,
+                                          user=sObj.user,
+                                          pw=sObj.pw)
+
+                if wxml != '':
+                    bxml = None
+                    if sect == 'ldtweather':
+                        bxml = abu.actions.parseColumbia(wxml)
+                    elif sect == 'ldtigrid':
+                        bxml = abu.actions.parseiSense(wxml,
+                                                       rootKey="ldtiSense")
+                    else:
+                        print("WARNING: NO BROKER FUNCTION FOUND FOR %s" %
+                              (sect))
+
+                    if bxml is not None:
                         print("Sending to %s" % (sObj.pubtopic))
                         connObj.publish(sObj.pubtopic, bxml)
 
