@@ -18,14 +18,14 @@ from __future__ import division, print_function, absolute_import
 
 from requests import get
 from requests.exceptions import ConnectionError as RCE
-from requests.auth import HTTPDigestAuth
+from requests.auth import HTTPDigestAuth, HTTPBasicAuth
 
 
 def webgetter(resourceloc, user=None, pw=None):
     """
     """
     if user or pw is not None:
-        auth = HTTPDigestAuth(user, pw)
+        auth = HTTPBasicAuth(user, pw)
     else:
         auth = None
 
