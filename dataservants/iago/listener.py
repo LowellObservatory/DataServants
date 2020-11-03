@@ -89,7 +89,8 @@ class DCTConsumer(ConnectionListener):
                   'AOS.AOSPubDataSV.AOSDataPacket',
                   'WRS.WRSPubDataSV.WRSDataPacket',
                   'TCS.TCSSharedVariables.TCSHighLevelStatusSV.TCSTcsStatusSV',
-                  'Ryans.DCTWeatherStream']
+                  'Ryans.DCTWeatherStream',
+                  'lig.sitepower.isense']
 
         # List of packets that we know have a float value and nothing else
         vFloats = ['AOS.AOSSubDataSV.RelativeFocusOffset',
