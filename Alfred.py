@@ -127,10 +127,10 @@ def main():
     baseYcmd += ' '
 
     # Interval between successive runs of the instrument polling (seconds)
-    bigsleep = 600
+    bigsleep = 60
 
     # Total time for entire set of actions per instrument
-    alarmtime = 600
+    alarmtime = 300
 
     # config: dictionary of parsed config file
     # comm: common block from config file
