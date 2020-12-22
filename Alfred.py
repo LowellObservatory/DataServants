@@ -14,17 +14,18 @@ import os
 import sys
 import time
 
-from dataservants import alfred
-from dataservants import yvette
 from ligmos.utils import classes, common, confparsers
 from ligmos.workers import connSetup, workerSetup
+
+from dataservants import alfred
+# from dataservants import yvette
 
 
 def defineActions():
     """
     """
     # Renaming import to keep line length sensible
-    yvetteR = yvette.remote
+    # yvetteR = yvette.remote
     alfredT = alfred.tasks
 
     # Set up the desired actions using a helpful class to pass things
@@ -41,31 +42,32 @@ def defineActions():
                                      args=[],
                                      kwargs={})
 
-    act2 = common.processDescription(func=yvetteR.actionSpace,
-                                     name='CheckFreeSpace',
-                                     timedelay=3.,
-                                     maxtime=120,
-                                     needSSH=True,
-                                     args=[],
-                                     kwargs={})
+    # act2 = common.processDescription(func=yvetteR.actionSpace,
+    #                                  name='CheckFreeSpace',
+    #                                  timedelay=3.,
+    #                                  maxtime=120,
+    #                                  needSSH=True,
+    #                                  args=[],
+    #                                  kwargs={})
 
-    act3 = common.processDescription(func=yvetteR.actionStats,
-                                     name='CheckStats',
-                                     timedelay=3.,
-                                     maxtime=120,
-                                     needSSH=True,
-                                     args=[],
-                                     kwargs={})
+    # act3 = common.processDescription(func=yvetteR.actionStats,
+    #                                  name='CheckStats',
+    #                                  timedelay=3.,
+    #                                  maxtime=120,
+    #                                  needSSH=True,
+    #                                  args=[],
+    #                                  kwargs={})
 
-    act4 = common.processDescription(func=yvetteR.actionProcess,
-                                     name='CheckProcess',
-                                     timedelay=3.,
-                                     maxtime=120,
-                                     needSSH=True,
-                                     args=[],
-                                     kwargs={})
+    # act4 = common.processDescription(func=yvetteR.actionProcess,
+    #                                  name='CheckProcess',
+    #                                  timedelay=3.,
+    #                                  maxtime=120,
+    #                                  needSSH=True,
+    #                                  args=[],
+    #                                  kwargs={})
 
-    actions = [act1, act2, act3, act4]
+    # actions = [act1, act2, act3, act4]
+    actions = [act1]
 
     return actions
 
@@ -80,21 +82,21 @@ def updateArguments(actions, iobj, args, baseYcmd, db=None):
     actions[0].kwargs = {'db': db,
                          'debug': args.debug}
 
-    # act2 == check free space
-    actions[1].args = [baseYcmd, iobj]
-    actions[1].kwargs = {'db': db,
-                         'debug': args.debug}
+    # # act2 == check free space
+    # actions[1].args = [baseYcmd, iobj]
+    # actions[1].kwargs = {'db': db,
+    #                      'debug': args.debug}
 
-    # act3 == check target CPU/RAM stats
-    actions[2].args = [baseYcmd, iobj]
-    actions[2].kwargs = {'db': db,
-                         'debug': args.debug}
+    # # act3 == check target CPU/RAM stats
+    # actions[2].args = [baseYcmd, iobj]
+    # actions[2].kwargs = {'db': db,
+    #                      'debug': args.debug}
 
-    # act4 == Check on process health
-    actions[3].args = [baseYcmd, iobj]
-    actions[3].kwargs = {'db': db,
-                         'procName': iobj.procmon,
-                         'debug': args.debug}
+    # # act4 == Check on process health
+    # actions[3].args = [baseYcmd, iobj]
+    # actions[3].kwargs = {'db': db,
+    #                      'procName': iobj.procmon,
+    #                      'debug': args.debug}
 
     return actions
 
