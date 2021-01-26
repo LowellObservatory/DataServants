@@ -87,7 +87,7 @@ def main():
 
                 if wxml != '':
                     bxml = None
-                    if sect == 'ldtweather':
+                    if sect == 'ldtweather' or 'mesaweather':
                         bxml = abu.actions.parseColumbia(wxml)
                     elif sect == 'ldtigrid':
                         bxml = abu.actions.parseiSense(wxml,
