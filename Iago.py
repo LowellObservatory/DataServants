@@ -80,7 +80,7 @@ def main():
     # Semi-infinite loop
     while runner.halt is False:
         # Check on our connections
-        amqs = amq.checkConnections(amqs, subscribe=True)
+        pramqs = amq.checkConnections(pramqs, subscribe=True)
 
         # There really isn't anything to actually *do* in here;
         #   all the real work happens in the listener, so we really
