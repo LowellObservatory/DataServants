@@ -24,13 +24,13 @@ from .parsetopics import parserPDU, parserLPI, parserLOlogs, \
                          parserFlatPacket, parserSimple
 
 
-class DCTConsumer(ConnectionListener):
+class LDTConsumer(ConnectionListener):
     def __init__(self, dbconn=None):
         """
         This will really be stuffed into a
         utils.amq.amqHelper class, so all the connections stuff is
         really over there in that class.  This is just to route the
-        DCT-specific messages to the right parsers
+        LDT-specific messages to the right parsers
         """
 
         # Adding an extra argument to the subclass

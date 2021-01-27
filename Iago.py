@@ -58,16 +58,21 @@ def main():
     idbs = connSetup.connIDB(comm)
 
     # Specify our custom listener that will really do all the work
-    #   Since we're hardcoding for the DCTConsumer anyways, I'll take
-    #   a bit shortcut and hardcode for the DCT influx database.
-    # TODO: Figure out a way to create a dict of listeners specified
-    #   in some creative way. Could add a configuration item to the
-    #   file and then loop over it, and change connAMQ accordingly.
-    dctdb = idbs['database-dct']
-    dctdb.tablename = config['dctbroker'].tablename
-    amqlistener = iago.listener.DCTConsumer(dbconn=dctdb)
+    #   This is keyed to just the "primary" broker and database for simplicity
+    #   but a more complicated (relay) with an additional "secondary" set
+    #   could be added without much upheaval
+    prdb = idbs['database-primary']
+    prdb.tablename = config['subs-primary'].tablename
+    if config['subs-primary'].listenertype.lower() == "ldt":
+        prlistener = iago.listener.LDTConsumer(dbconn=prdb)
+    else:
+        print("WARNING: Unknown or no listenertype specified!")
+        print("Clearing any database configs and switching to Parrot type!")
+        prdb = None
+        prlistener = amq.ParrotSubscriber()
+
     amqtopics = amq.getAllTopics(config, comm)
-    amqs = connSetup.connAMQ(comm, amqtopics, amqlistener=amqlistener)
+    pramqs = connSetup.connAMQ(comm, amqtopics, amqlistener=prlistener)
 
     # Check to see if there are any connections/objects to establish
     amqtopics = amq.getAllTopics(config, comm)
