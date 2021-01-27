@@ -101,7 +101,7 @@ def main():
     print("PID %d is now out of here!" % (pid))
 
     # Disconnect from all ActiveMQ brokers
-    amq.disconnectAll(amqs)
+    pramqs.disconnectAll(pramqs)
 
     # The PID file will have already been either deleted/overwritten by
     #   another function/process by this point, so just give back the
