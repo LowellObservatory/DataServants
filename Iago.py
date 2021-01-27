@@ -65,6 +65,8 @@ def main():
     prdb.tablename = config['subs-primary'].tablename
     if config['subs-primary'].listenertype.lower() == "ldt":
         prlistener = iago.listener.LDTConsumer(dbconn=prdb)
+    elif config['subs-primary'].listenertype.lower() == "mesa":
+        prlistener = iago.listener.MesaConsumer(dbconn=prdb)
     else:
         print("WARNING: Unknown or no listenertype specified!")
         print("Clearing any database configs and switching to Parrot type!")
