@@ -453,6 +453,7 @@ def parserStageResult(hed, msg, db=None):
         print(msg.strip())
         print(packets)
 
+    if packets != []:
         # Actually commit the packet. singleCommit opens it,
         #   writes the packet, and then optionally closes it.
         if db is not None:
