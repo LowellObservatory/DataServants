@@ -263,61 +263,29 @@ def parserStageResult(hed, msg, db=None):
     omsMsg = cardMessage[1]
     axisLabels = ["AX", "AY", "AZ", "AT", "AU"]
 
+    # The unconnected 5th axis of each OMS card is used as a dirty
+    #   hack to figure out what the answer to "RP" and "RE" should look like
+    # See also: edu.lowell.lig.common.utils.ApplicationConstants.java
+    #
+    # I hate this but it wasn't my doing!
+    RPEnd = ",0"
+    REEnd = ",,"
+
     meas = ["OMSCards"]
     # print("OMS message from %s:%s" % (cardIP, cardPort))
     # print("Message: %s" % (omsMsg))
 
     # This will hold all of our packets to be sent off to the database
     packets = []
-    if omsMsg.startswith('\x06'):
-        # This is the ACK from the OMS card, so it's the reply to
-        #   RP (report position) OR a user I/O check (BX).
-        #
-        # The ACK char will be the first character in either case,
-        #   and occasionally there's a double ACK; strip all of them out
-        vals = omsMsg[1:].strip("\x06").split(',')
 
-        if len(vals) != len(axisLabels):
-            if len(vals[0]) == 2:
-                fields = {"rawValue": vals[0]}
+    # The ACK char can occasionally be doubled, so strip them all
+    vals = omsMsg.strip("\x06").split(',')
 
-                # The BX command reads all the user I/O for the car and
-                #   returns the bits, so it's for all axes
-                tags = {"cardIP": cardIP, "type": "detent", "axis": "AA"}
-
-                packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                           ts=None,
-                                                           tags=tags,
-                                                           fields=fields)
-
-                packets += packet
-                # print(fields)
-        else:
-            for i, each in enumerate(vals):
-                if each == '':
-                    # Alternative: fill with -99999 and still commit?
-                    each = None
-                else:
-                    each = int(each)
-
-                    fields = {"value": each}
-                    tags = {"cardIP": cardIP,
-                            "type": "position", "axis": axisLabels[i]}
-                    packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                               ts=None,
-                                                               tags=tags,
-                                                               fields=fields)
-
-                    packets += packet
-    elif omsMsg.startswith('%000'):
-        # This is a motion status message.  Basically just a switch statement
-        #   First part is just a flag, so ignore it.
+    if omsMsg.startswith('%000'):
+        # This is a motion status message.
         # NOTE: I'm treating these as discrete flags, which I think they are?
-        #   It could be that they're just the bits, and this could be
-        #   made smarter to just do the bit manipulation directly which
-        #   would be easier (but look more confusing).
-        #
-        # Re-get the flags that were split previously
+
+        # The initial .split(" ") at the get go orphaned the flags so get them
         omsFlag = cardMessage[2]
         if omsFlag == '00000001':
             axis = "AX"
@@ -380,17 +348,47 @@ def parserStageResult(hed, msg, db=None):
                                                    fields=fields)
 
         packets += packet
+    elif len(vals) != len(axisLabels):
+        # Check to see if this is an OMS user I/O query (detent) like "AZ; BX;"
+        #   It'll just be two bytes if so
+        if len(vals[0]) == 2:
+            fields = {"rawValue": vals[0]}
+
+            # The BX command reads all the user I/O for the car and
+            #   returns the bits, so it's for all axes
+            tags = {"cardIP": cardIP, "type": "detent", "axis": "AA"}
+
+            packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                       ts=None,
+                                                       tags=tags,
+                                                       fields=fields)
+
+            packets += packet
+            # print(fields)
     else:
-        # If there was no ACK, it's going to be a reply to either
-        #   RP (report encoder positon)
-        #   RQC (report axis command queue)
-        #   RI (report axes status)
-        # Of those, RI will be text characters and not numbers so take
-        #   care of that one first, but *all* of them will have 5 comma
-        #   delimited fields (AX, AY, AZ, AT, AU)
-        axesValues = omsMsg.split(",")
-        if axesValues[0].isalpha():
-            # This means it's the RI reply; for each axis, there will be
+        # This means it's either an RP, RE, RQC, or RI type answer
+        #   We use the cheat mentioned above about the line ending to choose
+        #     RE (report encoder position)
+        #     RP (report positon)
+        #     RQC (report axis command queue)
+        #     RI (report axes status)
+        if omsMsg.endswith(RPEnd):
+            cmdType = "RP"
+            metric = "position"
+        elif omsMsg.endswith(REEnd):
+            cmdType = "RE"
+            metric = "encoder"
+        else:
+            if vals[0].isalpha():
+                # This means the first value looks like 'MNNH'
+                cmdType = "RI"
+                metric = "states"
+            else:
+                # This means it's just another number to int() later on
+                cmdType = "RQC"
+                metric = "commandqueue"
+
+        if cmdType == "RI":
             #   1st character:
             #     P Moving in positive direction
             #     M Moving in negative direction
@@ -404,7 +402,7 @@ def parserStageResult(hed, msg, db=None):
             #   4th character:
             #     H Home switch active. Set to N when home switch not active.
             #     N Home switch not active
-            for i, each in enumerate(axesValues):
+            for i, each in enumerate(vals):
                 axis = axisLabels[i]
                 if len(each) == 4:
                     if each[0].lower() == "p":
@@ -429,60 +427,29 @@ def parserStageResult(hed, msg, db=None):
                               "AxisOvertravel": overtravel,
                               "HomeSwitchState": homestate}
 
-                    tags = {"cardIP": cardIP, "type": "states", "axis": axis}
-                    packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                               ts=None,
-                                                               tags=tags,
-                                                               fields=fields)
-                    packets += packet
-        else:
-            # This means it's either the RE OR RQC reply.  DeVeny and the RC
-            #   probes issue both of them, so I cheat a little bit.
-            #
-            # RCQ always responds for each axis because it's reporting
-            #   the command queue on the OMS card, but RE only reports
-            #   for actually connected motors.  So if there are any None's,
-            #   it's an RE reply.  Flying Spaghetti monster help us if
-            #   we actually connect all axes to real things!!!
-            vals = omsMsg.strip().split(',')
-            isrcq = True
-
-            # I can't figure out how to do this in one single step, so we
-            #   will just scan through twice to see what we most likely got
-            converted = []
-            for i, each in enumerate(vals):
-                try:
-                    val = int(each)
-                except TypeError:
-                    # Implies each was None
-                    val = None
-                except ValueError:
-                    # Implies each was ''; see the note above
-                    val = None
-                    isrcq = False
-
-                # Store the values for our final loop through
-                converted.append(val)
-
-            # Making the decision here means that we can't flip mid-processing
-            if isrcq is False:
-                metric = "encoder"
-            else:
-                metric = "commandqueue"
-
-            for i, each in enumerate(converted):
-                axis = axisLabels[i]
-                if each is not None:
-                    fields = {"value": each}
                     tags = {"cardIP": cardIP, "type": metric, "axis": axis}
-
                     packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                                ts=None,
                                                                tags=tags,
                                                                fields=fields)
                     packets += packet
+        elif cmdType in ["RP", "RE", "RQC"]:
+            for i, each in enumerate(vals):
+                if each == '':
+                    val = None
+                else:
+                    val = int(each)
 
-        print("")
+                    fields = {"value": val}
+                    tags = {"cardIP": cardIP,
+                            "type": metric, "axis": axisLabels[i]}
+                    packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                               ts=None,
+                                                               tags=tags,
+                                                               fields=fields)
+
+                    packets += packet
+
         print(msg.strip())
         print(packets)
 
