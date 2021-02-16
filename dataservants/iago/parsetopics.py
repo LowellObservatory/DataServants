@@ -490,8 +490,8 @@ def parserStageResult(hed, msg, db=None):
 
         # Actually commit the packet. singleCommit opens it,
         #   writes the packet, and then optionally closes it.
-        # if db is not None:
-        #     db.singleCommit(packet, table=db.tablename, close=True)
+        if db is not None:
+            db.singleCommit(packets, table=db.tablename, close=True)
 
 
 def parserLPI(_, msg, db=None):
