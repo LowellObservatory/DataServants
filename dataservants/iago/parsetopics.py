@@ -93,8 +93,6 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
             good = False
 
     if good is True:
-        if debug is True:
-            print("Packet good!")
         try:
             print("Trying to_dict")
             xmlp = schema.to_dict(msg, decimal_type=float, validation='lax')
@@ -107,7 +105,7 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
 
             fields = {}
             # Store each key:value pairing
-            print("Storing keys")
+            # print("Storing keys")
             print(keys)
             for each in keys:
                 val = xmlp[each]
@@ -121,13 +119,13 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
 
             if fields is not None:
                 # Note: passing ts=None lets python Influx do the timestamp
-                print("Making packet")
+                # print("Making packet")
                 packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                            ts=None,
                                                            tags=None,
                                                            fields=fields)
 
-                print("Packet done")
+                # print("Packet done")
                 print(packet)
 
                 # Actually commit the packet. singleCommit opens it,
@@ -136,7 +134,7 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
                     print("Sending packet")
                     db.singleCommit(packet, table=db.tablename,
                                     close=True)
-                    print("Sent!")
+                    # print("Sent!")
         except xmls.XMLSchemaDecodeError as err:
             print(err.message.strip())
             print(err.reason.strip())
