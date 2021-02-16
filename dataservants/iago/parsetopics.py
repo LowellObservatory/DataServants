@@ -240,6 +240,260 @@ def parserLOlogs(hed, msg, db=None, badFWHM=100.):
             db.singleCommit(packet, table=db.tablename, close=True)
 
 
+def parserStageResult(hed, msg, db=None):
+    """
+    Since the OMS query/status command is sent at
+       AA; RP; RQC; RI;
+
+    Unfortunately, THE ORDER MATTERS since the first reply will come
+    with an ACK character (0x06) and and I'm assuming that it's RP.
+
+    Also deals with OMS motion messages, a la
+    %000 00000004
+
+    Also deals with detent replies (A*; BX;)
+    7e
+
+    Results are *tagged* per axis to keep resulting queries simpler.
+    """
+    # ts = hed['timestamp']
+
+    cardMessage = msg.split(" ")
+    cardOrigin = cardMessage[0].split(":")
+    cardIP = cardOrigin[0]
+    cardPort = cardOrigin[1]
+    omsMsg = cardMessage[1]
+    axisLabels = ["AX", "AY", "AZ", "AT", "AU"]
+
+    meas = ["OMSCards"]
+    # print("OMS message from %s:%s" % (cardIP, cardPort))
+    # print("Message: %s" % (omsMsg))
+
+    # This will hold all of our packets to be sent off to the database
+    packets = []
+    if omsMsg.startswith('\x06'):
+        # This is the ACK from the OMS card, so it's the reply to
+        #   RP (report position) OR a user I/O check (BX).
+        #
+        # The ACK char will be the first character in either case,
+        #   and occasionally there's a double ACK; strip all of them out
+        vals = omsMsg[1:].strip("\x06").split(',')
+
+        if len(vals) != len(axisLabels):
+            if len(vals[0]) == 2:
+                fields = {"rawValue": vals[0]}
+
+                # The BX command reads all the user I/O for the car and
+                #   returns the bits, so it's for all axes
+                tags = {"cardIP": cardIP, "type": "detent", "axis": "AA"}
+
+                packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                           ts=None,
+                                                           tags=tags,
+                                                           fields=fields)
+
+                packets += packet
+                # print(fields)
+        else:
+            for i, each in enumerate(vals):
+                if each == '':
+                    # Alternative: fill with -99999 and still commit?
+                    each = None
+                else:
+                    each = int(each)
+
+                    fields = {"value": each}
+                    tags = {"cardIP": cardIP,
+                            "type": "position", "axis": axisLabels[i]}
+                    packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                               ts=None,
+                                                               tags=tags,
+                                                               fields=fields)
+
+                    packets += packet
+    elif omsMsg.startswith('%000'):
+        # This is a motion status message.  Basically just a switch statement
+        #   First part is just a flag, so ignore it.
+        # NOTE: I'm treating these as discrete flags, which I think they are?
+        #   It could be that they're just the bits, and this could be
+        #   made smarter to just do the bit manipulation directly which
+        #   would be easier (but look more confusing).
+        #
+        # Re-get the flags that were split previously
+        omsFlag = cardMessage[2]
+        if omsFlag == '00000001':
+            axis = "AX"
+            flagMsg = "Complete"
+        elif omsFlag == '00000002':
+            axis = "AY"
+            flagMsg = "Complete"
+        elif omsFlag == '00000004':
+            axis = "AZ"
+            flagMsg = "Complete"
+        elif omsFlag == '00000008':
+            axis = "AT"
+            flagMsg = "Complete"
+        elif omsFlag == '00000010':
+            axis = "AU"
+            flagMsg = "Complete"
+
+        elif omsFlag == '00000100':
+            axis = "AX"
+            flagMsg = "AtLimit"
+        elif omsFlag == '00000200':
+            axis = "AY"
+            flagMsg = "AtLimit"
+        elif omsFlag == '00000400':
+            axis = "AZ"
+            flagMsg = "AtLimit"
+        elif omsFlag == '00000800':
+            axis = "AT"
+            flagMsg = "AtLimit"
+        elif omsFlag == '00001000':
+            axis = "AU"
+            flagMsg = "AtLimit"
+
+        elif omsFlag == '00010000':
+            axis = "AX"
+            flagMsg = "EncoderSlip"
+        elif omsFlag == '00020000':
+            axis = "AY"
+            flagMsg = "EncoderSlip"
+        elif omsFlag == '00040000':
+            axis = "AZ"
+            flagMsg = "EncoderSlip"
+        elif omsFlag == '00080000':
+            axis = "AT"
+            flagMsg = "EncoderSlip"
+        elif omsFlag == '00100000':
+            axis = "AU"
+            flagMsg = "EncoderSlip"
+
+        elif omsFlag == '01000000':
+            axis = "AA"
+            flagMsg = "CommandError"
+
+        tags = {"cardIP": cardIP, "type": "motionupdate", "axis": axis}
+        fields = {"flagType": flagMsg}
+
+        packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                   ts=None,
+                                                   tags=tags,
+                                                   fields=fields)
+
+        packets += packet
+    else:
+        # If there was no ACK, it's going to be a reply to either
+        #   RP (report encoder positon)
+        #   RQC (report axis command queue)
+        #   RI (report axes status)
+        # Of those, RI will be text characters and not numbers so take
+        #   care of that one first, but *all* of them will have 5 comma
+        #   delimited fields (AX, AY, AZ, AT, AU)
+        axesValues = omsMsg.split(",")
+        if axesValues[0].isalpha():
+            # This means it's the RI reply; for each axis, there will be
+            #   1st character:
+            #     P Moving in positive direction
+            #     M Moving in negative direction
+            #   2nd character:
+            #     D Done (ID, II or IN command has been executed)
+            #     N No ID executed yet
+            #   3rd character:
+            #     L Axis in overtravel. Char 4 tells which direction.
+            #        Set to N when limit switch is not active.
+            #     N Not in overtravel in this direction
+            #   4th character:
+            #     H Home switch active. Set to N when home switch not active.
+            #     N Home switch not active
+            for i, each in enumerate(axesValues):
+                axis = axisLabels[i]
+                if len(each) == 4:
+                    if each[0].lower() == "p":
+                        direction = 'Positive'
+                    else:
+                        direction = 'Negative'
+                    if each[1].lower() == "d":
+                        doneness = 'Done'
+                    else:
+                        doneness = 'NotDoneOrNotUsed'
+                    if each[2].lower() == "l":
+                        overtravel = 'AxisOvertravel'
+                    else:
+                        overtravel = 'NotOvertravelOrNotUsed'
+                    if each[3].lower() == "h":
+                        homestate = 'Home'
+                    else:
+                        homestate = 'NotHomeOrNotUsed'
+
+                    fields = {"TravelDirection": direction,
+                              "CommandDone": doneness,
+                              "AxisOvertravel": overtravel,
+                              "HomeSwitchState": homestate}
+
+                    tags = {"cardIP": cardIP, "type": "states", "axis": axis}
+                    packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                               ts=None,
+                                                               tags=tags,
+                                                               fields=fields)
+                    packets += packet
+        else:
+            # This means it's either the RE OR RQC reply.  DeVeny and the RC
+            #   probes issue both of them, so I cheat a little bit.
+            #
+            # RCQ always responds for each axis because it's reporting
+            #   the command queue on the OMS card, but RE only reports
+            #   for actually connected motors.  So if there are any None's,
+            #   it's an RE reply.  Flying Spaghetti monster help us if
+            #   we actually connect all axes to real things!!!
+            vals = omsMsg.strip().split(',')
+            isrcq = True
+
+            # I can't figure out how to do this in one single step, so we
+            #   will just scan through twice to see what we most likely got
+            converted = []
+            for i, each in enumerate(vals):
+                try:
+                    val = int(each)
+                except TypeError:
+                    # Implies each was None
+                    val = None
+                except ValueError:
+                    # Implies each was ''; see the note above
+                    val = None
+                    isrcq = False
+
+                # Store the values for our final loop through
+                converted.append(val)
+
+            # Making the decision here means that we can't flip mid-processing
+            if isrcq is False:
+                metric = "encoder"
+            else:
+                metric = "commandqueue"
+
+            for i, each in enumerate(converted):
+                axis = axisLabels[i]
+                if each is not None:
+                    fields = {"value": each}
+                    tags = {"cardIP": cardIP, "type": metric, "axis": axis}
+
+                    packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                               ts=None,
+                                                               tags=tags,
+                                                               fields=fields)
+                    packets += packet
+
+        print("")
+        print(msg.strip())
+        print(packets)
+
+        # Actually commit the packet. singleCommit opens it,
+        #   writes the packet, and then optionally closes it.
+        # if db is not None:
+        #     db.singleCommit(packet, table=db.tablename, close=True)
+
+
 def parserLPI(_, msg, db=None):
     """
     'mirrorCoverMode=Open'
