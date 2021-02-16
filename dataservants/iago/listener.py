@@ -221,6 +221,8 @@ class LDTConsumer(ConnectionListener):
             try:
                 if tname == 'joePduResult':
                     parserPDU(headers, body, db=self.dbconn)
+                elif tname == 'joeStageResult':
+                    parserStageResult(headers, body, db=self.dbconn)
                 elif tname == 'lightPathInformation':
                     parserLPI(headers, body, db=self.dbconn)
                 elif tname.endswith("loisLog"):
