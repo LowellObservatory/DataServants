@@ -64,8 +64,8 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
         best = None
         for verKey in schema:
             testSchema = schema[verKey]
-            print("Testing schema:")
-            print(testSchema.url)
+            # print("Testing schema:")
+            # print(testSchema.url)
             good = testSchema.is_valid(msg)
             if good is True:
                 # Override the schema variable with the one that worked
@@ -79,8 +79,8 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
             good = False
             schema = None
     else:
-        print("Schema was not a dict, so no other versions to check.")
-        print(type(schema))
+        # print("Schema was not a dict, so no other versions to check.")
+        # print(type(schema))
         good = schema.is_valid(msg)
 
     # A DIRTY DIRTY HACK
