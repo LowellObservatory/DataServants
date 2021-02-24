@@ -128,8 +128,8 @@ def main():
                                 except:
                                     print(url, payload)
 
-                        # print("Sending to %s" % (sObj.pubtopic))
-                        # connObj.publish(sObj.pubtopic, bxml)
+                        print("Sending to %s" % (sObj.pubtopic))
+                        connObj.publish(sObj.pubtopic, bxml)
 
         # Consider taking a big nap
         if runner.halt is False:

@@ -41,7 +41,7 @@ def prepWU(config, vals, tstamp):
             "action": "updateraw",
             "softwaretype": "WeatherPosterMcWeatherPosterFace",
             "realtime": 1,
-            "rtfreq": 2.5}
+            "rtfreq": 120.}
 
     # This is the dict that maps between the WUnderground API fields and the
     #   fields in wxinfo; WUnderground API keys are first.
