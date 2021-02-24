@@ -63,7 +63,7 @@ def main():
                                                      desc=desc,
                                                      extraargs=eargs,
                                                      conftype=conftype,
-                                                     logfile=False)
+                                                     logfile=True)
 
     # Get this PID for diagnostics
     pid = os.getpid()
