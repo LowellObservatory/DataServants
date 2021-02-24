@@ -23,10 +23,17 @@ import os
 import sys
 import time
 
+from datetime import datetime as dt
+from requests.exceptions import ConnectionError as RCE
+
+import pytz
+
 from ligmos.utils import amq, classes, common
 from ligmos.workers import connSetup, workerSetup
 
-from dataservants import abu
+from dataservants.abu import parseargs
+from dataservants.abu.http import webgetter
+from dataservants.abu.actions import parseColumbia, parseiSense, prepWU
 
 
 def main():
@@ -38,7 +45,7 @@ def main():
     passes = './config/passwords.conf'
     logfile = '/tmp/abu.log'
     desc = "Abu: The Kleptomaniac Scraper"
-    eargs = abu.parseargs.extraArguments
+    eargs = parseargs.extraArguments
     conftype = classes.sneakyTarget
 
     # Interval between successive runs of the polling loop (seconds)
@@ -56,7 +63,7 @@ def main():
                                                      desc=desc,
                                                      extraargs=eargs,
                                                      conftype=conftype,
-                                                     logfile=True)
+                                                     logfile=False)
 
     # Get this PID for diagnostics
     pid = os.getpid()
@@ -81,24 +88,48 @@ def main():
             sObj = config[sect]
             if sObj.resourcemethod.lower() in ['http', 'https']:
                 connObj = amqs[sObj.broker][0]
-                wxml = abu.http.webgetter(sObj.resourcelocation,
-                                          user=sObj.user,
-                                          pw=sObj.password)
+                try:
+                    # The timekeeping on these weather servers I'm pulling
+                    #   from is absolutely awful, so just use my server time
+                    #   since it won't be minutes off
+                    now = dt.now().astimezone(pytz.UTC)
+                    wxml = webgetter(sObj.resourcelocation,
+                                     user=sObj.user,
+                                     pw=sObj.password)
+                except RCE:
+                    print("Connection error! %s" % (sect))
+                    print("Moving on, hope it's temporary")
+                    wxml = ''
 
                 if wxml != '':
                     bxml = None
                     if sect in ['ldtweather', 'mesaweather']:
-                        bxml = abu.actions.parseColumbia(wxml)
+                        bxml, val = parseColumbia(wxml, returnDict=True)
                     elif sect == 'ldtigrid':
-                        bxml = abu.actions.parseiSense(wxml,
-                                                       rootKey="ldtiSense")
+                        bxml = parseiSense(wxml, rootKey="ldtiSense")
                     else:
                         print("WARNING: NO BROKER FUNCTION FOUND FOR %s" %
                               (sect))
 
                     if bxml is not None:
-                        print("Sending to %s" % (sObj.pubtopic))
-                        connObj.publish(sObj.pubtopic, bxml)
+                        if sObj.onlinepush is not None:
+                            try:
+                                pushConfig = comm[sObj.onlinepush]
+                            except KeyError:
+                                print("INVALID ONLINE PUSH DATA")
+                                print("CHECK CONFIG FILE")
+                            if pushConfig.type.lower() == "weatherunderground":
+                                # We give our timestamp to make sure it
+                                #   gets to WUnderground ok
+                                url, payload = prepWU(pushConfig, val,
+                                                      tstamp=now)
+                                try:
+                                    webgetter(url, params=payload)
+                                except:
+                                    print(url, payload)
+
+                        # print("Sending to %s" % (sObj.pubtopic))
+                        # connObj.publish(sObj.pubtopic, bxml)
 
         # Consider taking a big nap
         if runner.halt is False:

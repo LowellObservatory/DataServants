@@ -16,12 +16,12 @@ Further description.
 from __future__ import division, print_function, absolute_import
 
 
-from requests import get
+from requests import get, post
 from requests.exceptions import ConnectionError as RCE
 from requests.auth import HTTPDigestAuth, HTTPBasicAuth
 
 
-def webgetter(resourceloc, user=None, pw=None):
+def webgetter(resourceloc, params=None, data=None, user=None, pw=None):
     """
     """
     if user or pw is not None:
@@ -29,17 +29,19 @@ def webgetter(resourceloc, user=None, pw=None):
     else:
         auth = None
 
-    url = "http://%s" % (resourceloc)
-    data = get(url, auth=auth)
+    resp = get(resourceloc, params=params, data=data, auth=auth)
     # Check the HTTP response;
     #   200 - 400 == True
     #   400 - 600 == False
     #   Other way to do it might be to check if .status_code == 200
-    if data.ok is True:
+    if resp.ok is True:
+        print(resp.status_code)
+        print(resp.text.strip())
         print("Good grab!")
     else:
-        # This will be caught elsewhere
+        # This should be caught in the calling loop and handled appropriately
         print("Bad grab :(")
+        print(resp.status_code)
         raise RCE
 
-    return data.content
+    return resp.content

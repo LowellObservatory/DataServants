@@ -15,7 +15,9 @@ Further description.
 
 from __future__ import division, print_function, absolute_import
 
+import json
 
+import pytz
 import xmltodict as xmld
 
 
@@ -23,7 +25,58 @@ def amqStats(msg):
     pass
 
 
-def parseColumbia(msg):
+def prepWU(config, vals, tstamp):
+    # See also:
+    #
+    # https://support.weather.com/s/article/PWS-Upload-Protocol?language=en_US
+    #
+    # Note that I'm setting units=e (English) up here already
+    # wunderground = 'https://weatherstation.wunderground.com/'
+    wunderground = 'https://rtupdate.wunderground.com/'
+    wunderground += 'weatherstation/updateweatherstation.php'
+    # These are all REQUIRED
+    init = {"ID": config.id,
+            "PASSWORD": config.key,
+            "dateutc": tstamp.strftime("%Y-%m-%d %H:%M:%S"),
+            "action": "updateraw",
+            "softwaretype": "WeatherPosterMcWeatherPosterFace",
+            "realtime": 1,
+            "rtfreq": 2.5}
+
+    # This is the dict that maps between the WUnderground API fields and the
+    #   fields in wxinfo; WUnderground API keys are first.
+    # NOTE: This can be expanded to other WX station types with an added
+    #   argument here as well as a better/less hardcoded Abu setup!
+    allkeys = {"winddir": "mt3SecRollAvgWindDir",
+               "windspeedmph": "mt3SecRollAvgWindSpeed",
+               "windgustdir": "mt10MinWindGustDir",
+               "windgustmph": "mt10MinWindGustSpeed",
+               "winddir_avg2m": "mt2MinRollAvgWindDir",
+               "windspdmph_avg2m": "mt2MinRollAvgWindSpeed",
+               "windgustmph_10m": "mt10MinWindGustSpeed",
+               "windgustdir_10m": "mt10MinWindGustDir",
+               "humidity": "mtRelHumidity",
+               "dewptf": "mtDewPoint",
+               "rainin": "mtRainLastHr",
+               "dailyrainin": "mtRainToday",
+               "tempf": "mtTemp1",
+               "baromin": "mtAdjBaromPress"}
+
+    toJSON = {}
+    for key in allkeys:
+        try:
+            toJSON.update({key: float(vals[allkeys[key]])})
+        except KeyError:
+            print("FAILED TO FIND KEY %s" % (key))
+
+    final = {}
+    final.update(init)
+    final.update(toJSON)
+
+    return wunderground, final
+
+
+def parseColumbia(msg, returnDict=False):
     """
     Translate the "XML" file that the Columbia Weather Systems station is
     putting out into something that fits easier into the XML schema/parsing
@@ -57,7 +110,12 @@ def parseColumbia(msg):
     #   using the magic that is xmld's unparse() method
     npacket = xmld.unparse(root, pretty=True)
 
-    return npacket
+    if returnDict is True:
+        # We return valdict here because the station name is unimportant
+        #   for what this will be used for (e.g. republishing online)
+        return npacket, valdict
+    else:
+        return npacket
 
 
 def parseiSense(msg, rootKey=None):
