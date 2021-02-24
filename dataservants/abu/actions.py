@@ -15,9 +15,6 @@ Further description.
 
 from __future__ import division, print_function, absolute_import
 
-import json
-
-import pytz
 import xmltodict as xmld
 
 
@@ -30,7 +27,6 @@ def prepWU(config, vals, tstamp):
     #
     # https://support.weather.com/s/article/PWS-Upload-Protocol?language=en_US
     #
-    # Note that I'm setting units=e (English) up here already
     # wunderground = 'https://weatherstation.wunderground.com/'
     wunderground = 'https://rtupdate.wunderground.com/'
     wunderground += 'weatherstation/updateweatherstation.php'
@@ -44,7 +40,7 @@ def prepWU(config, vals, tstamp):
             "rtfreq": 120.}
 
     # This is the dict that maps between the WUnderground API fields and the
-    #   fields in wxinfo; WUnderground API keys are first.
+    #   fields in vals; WUnderground API keys are first.
     # NOTE: This can be expanded to other WX station types with an added
     #   argument here as well as a better/less hardcoded Abu setup!
     allkeys = {"winddir": "mt3SecRollAvgWindDir",
@@ -69,6 +65,9 @@ def prepWU(config, vals, tstamp):
         except KeyError:
             print("FAILED TO FIND KEY %s" % (key))
 
+    # The WUnderground data submission point expects everything
+    #   to be in the request itself, not the body of the request,
+    #   so stuff it all together and give it back to the caller.
     final = {}
     final.update(init)
     final.update(toJSON)
