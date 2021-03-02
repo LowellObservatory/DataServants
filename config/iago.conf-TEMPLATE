@@ -1,12 +1,3 @@
-[groupName]
-name=GiveMeANiceHelpfulName
-broker=broker-tag
-topics=yourTopics, canGoHere, inaSimpleList
-database=database-tag
-tablename=DatabaseNameGoesHere
-enabled=True
-
-
 [broker-tag]
 type=ActiveMQ
 host=brokerhost
@@ -20,4 +11,24 @@ type=influxdb
 host=dbhost
 port=8086
 user=None
+enabled=True
+
+
+[topics-group1]
+name=GiveMeANiceHelpfulName
+broker=broker-tag
+listenertype=TagToAssociateAListenerInIago
+topics=yourTopics, canGoHere, inaSimpleList
+database=database-tag
+tablename=DatabaseNameGoesHere
+enabled=True
+
+
+[topics-group2]
+name=GiveMeAnotherNiceHelpfulName
+broker=broker-tag
+listenertype=TagToAssociateADifferentListenerInIago
+topics=yourTopics, canGoHere, inaSimpleList
+database=database-tag
+tablename=DatabaseNameGoesHere
 enabled=True
