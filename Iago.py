@@ -45,7 +45,7 @@ def main():
                                                         desc=desc,
                                                         extraargs=eargs,
                                                         conftype=conftype,
-                                                        logfile=True)
+                                                        logfile=False)
 
     # Get this PID for diagnostics
     pid = os.getpid()
@@ -57,32 +57,59 @@ def main():
     # Check to see if there are any connections/objects to establish
     idbs = connSetup.connIDB(comm)
 
-    # Specify our custom listener that will really do all the work
-    #   This is keyed to just the "primary" broker and database for simplicity
-    #   but a more complicated (relay) with an additional "secondary" set
-    #   could be added without much upheaval
-    prdb = idbs['database-primary']
-    prdb.tablename = config['subs-primary'].tablename
-    if config['subs-primary'].listenertype.lower() == "ldt":
-        prlistener = iago.listener.LDTConsumer(dbconn=prdb)
-    elif config['subs-primary'].listenertype.lower() == "mesa":
-        prlistener = iago.listener.MesaConsumer(dbconn=prdb)
-    else:
-        print("WARNING: Unknown or no listenertype specified!")
-        print("Clearing any database configs and switching to Parrot type!")
-        prdb = None
-        prlistener = amq.ParrotSubscriber()
+    # Specify our custom listener(s) that will really do all the work
+    #   They should be specified in a set of "topic-*" sections in the
+    #   config file to define different listeners, to spread the load
+    topicTypes = {}
+    brokerConns = {}
+    for eachSection in config.keys():
+        if eachSection.lower().startswith("topic") is True:
+            print("%s:" % (eachSection))
+            # This means it's a valid topic section so pull out the listener
+            #   type that we need as well as the broker connection
+            conSect = config[eachSection]
 
-    amqtopics = amq.getAllTopics(config, comm)
-    pramqs = connSetup.connAMQ(comm, amqtopics, amqlistener=prlistener)
+            print("listenerType: %s" % (conSect.listenertype))
+            print("brokerReference: %s" % (conSect.broker))
+            print("databaseReference: %s" % (conSect.database))
 
-    # Check to see if there are any connections/objects to establish
-    amqtopics = amq.getAllTopics(config, comm)
+            try:
+                dbref = idbs[conSect.database]
+                dbref.tablename = conSect.tablename
+            except KeyError:
+                print("Database %s not in config :(" % (conSect.database))
+                dbref = None
+
+            if conSect.listenertype.lower() == "ldt":
+                prlistener = iago.listener_LDT.LDTConsumer(dbconn=dbref)
+            elif conSect.listenertype.lower() == "omspdu":
+                prlistener = iago.listener_OMSPDU.OMSPDUConsumer(dbconn=dbref)
+            elif conSect.listenertype.lower() == "lois":
+                prlistener = iago.listener_LOIS.LOISConsumer(dbconn=dbref)
+            elif conSect.listenertype.lower() == "mesa":
+                prlistener = iago.listener_Mesa.MesaConsumer(dbconn=dbref)
+            else:
+                print("WARNING: Unknown or no listenertype specified!")
+                print("Using no databases and switching to Parrot listener!")
+                prdb = None
+                prlistener = amq.ParrotSubscriber()
+
+            topicTypes.update({eachSection: [conSect, prlistener]})
+
+            bkr = connSetup.connAMQ_simple(comm[conSect.broker],
+                                           conSect.topics,
+                                           listener=prlistener)
+            brokerConns.update({eachSection: bkr})
+
+    # allTopics = amq.getAllTopics(config, comm)
 
     # Semi-infinite loop
     while runner.halt is False:
         # Check on our connections
-        pramqs = amq.checkConnections(pramqs, subscribe=True)
+        for eachBroker in brokerConns:
+            newRef = amq.checkSingleConnection(brokerConns[eachBroker],
+                                               subscribe=True)
+            brokerConns.update({eachBroker: newRef})
 
         # There really isn't anything to actually *do* in here;
         #   all the real work happens in the listener, so we really
@@ -101,7 +128,8 @@ def main():
     print("PID %d is now out of here!" % (pid))
 
     # Disconnect from all ActiveMQ brokers
-    pramqs.disconnectAll(pramqs)
+    for each in brokerConns:
+        brokerConns[each][0].disconnect()
 
     # The PID file will have already been either deleted/overwritten by
     #   another function/process by this point, so just give back the
