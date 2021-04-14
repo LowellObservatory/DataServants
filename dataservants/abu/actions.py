@@ -235,8 +235,8 @@ def parseMeteobridge(msg,
                             mv = mv.replace(tzinfo=pytz.UTC)
                             mv = mv.astimezone(pytz.timezone("US/Arizona"))
 
-                            thesevals.update({"influx_ts":
-                                              round(mv.timestamp()*1e3)})
+                            thesevals.update({"influx_ts_s":
+                                              round(mv.timestamp())})
                             thesevals.update({"timestampdt": mv})
                         elif value.lower() != 'id':
                             # Skip the useless 'id' attribute

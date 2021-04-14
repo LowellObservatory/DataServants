@@ -106,7 +106,8 @@ class MHConsumer(ConnectionListener):
                     print(schema)
                     # NOTE: If the packet has no key called influx_ts,
                     #   it'll just default to None and influx will timestamp
-                    #   the data upon injestion
+                    #   the data upon injestion.  The key is EXPECTED
+                    #   to have a postfix (_s, _ms, _ns) denoting the precision
                     parserFlatPacket(headers, body, timestampKey='influx_ts',
                                      schema=schema, db=self.dbconn)
                 elif tname in vFloats:

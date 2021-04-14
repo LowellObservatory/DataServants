@@ -119,14 +119,35 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
 
             if fields is not None:
                 if timestampKey is not None:
-                    # This should already be in the right format, e.g. INTEGER
-                    #   seconds since the epoch in the expected timezone
+                    # Find a key that starts with the given timestampKey.  In
+                    #   pretty much all the cases I control, this will be
+                    #   influx_ts_s or influx_ts_ms
+                    # It's assumed that it's already in the right format,
+                    #   e.g. INTEGER quantity from the epoch; if it's wrong,
+                    #   you'll get influxdb errors in the log and nothing will
+                    #   actually be posted!
+                    fieldKeys = fields.keys()
                     try:
-                        ts = fields[timestampKey]
+                        if "%s_s" % (timestampKey) in fieldKeys:
+                            timeprec = "s"
+                        elif if "%s_ms" % (timestampKey) in fieldKeys:
+                            timeprec = "ms"
+                        elif if "%s_ns" % (timestampKey) in fieldKeys:
+                            timeprec = "ns"
+                        else:
+                            timeprec = 's'
+                            ts = None
+
+                        if ts is not None:
+                            validTSKey = validTS = "%s_%s" % (timestampKey,
+                                                              timeprec)
+                            ts = fields.pop(timestampKey)
                     except KeyError:
                         print("Timestamp key %s not found; defaulting to None"
                               % (timestampKey))
                         ts = None
+                        timeprec = 's'
+
                 # Note: passing ts=None lets python Influx do the timestamp
                 # print("Making packet")
                 packet = utils.packetizer.makeInfluxPacket(meas=meas,
@@ -142,7 +163,7 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
                 if db is not None:
                     print("Sending packet")
                     db.singleCommit(packet, table=db.tablename,
-                                    close=True)
+                                    close=True, timeprec=timeprec)
                     # print("Sent!")
         except xmls.XMLSchemaDecodeError as err:
             print(err.message.strip())
