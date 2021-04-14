@@ -30,13 +30,11 @@ def xmlParserCatcher(msg, attr_prefix=None):
 
     pdict = {}
     if attr_prefix is None:
-        # This is xmltodict's default
+        # This is xmltodict's default so just put it back
         attr_prefix = "@"
-    else:
-        attr_prefix = attr_prefix
 
     try:
-        pdict = xmld.parse(msg)
+        pdict = xmld.parse(msg, attr_prefix=attr_prefix)
     except xml.parsers.expat.ExpatError as e:
         print("XML Parsing Error!")
         print(str(e))
@@ -229,15 +227,15 @@ def parseMeteobridge(msg, stationName="MHClark",
                     for value in vals:
                         if value.lower() == 'date':
                             mv = dt.strptime(vals[value], "%Y%M%d%H%m%S")
-                            # And now we do the dumb dance to put the TZ info
-                            #   in the timestamp, then convert it to MST which
+                            # And now we do the dumb dance to put the TZ into
+                            #   the timestamp, and then convert it to MST which
                             #   is what the server is set up to expect
                             mv = mv.replace(tzinfo=pytz.UTC)
                             mv = mv.astimezone(pytz.timezone("US/Arizona"))
 
                             thesevals.update({"timestamp_ms":
                                               round(mv.timestamp()*1e3)})
-                            # thesevals.update({"timestampdt": mv})
+                            thesevals.update({"timestampdt": mv})
                         elif value.lower() != 'id':
                             # Skip the useless 'id' attribute
                             try:
