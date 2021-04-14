@@ -130,18 +130,17 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
                     try:
                         if "%s_s" % (timestampKey) in fieldKeys:
                             timeprec = "s"
-                        elif if "%s_ms" % (timestampKey) in fieldKeys:
+                        elif "%s_ms" % (timestampKey) in fieldKeys:
                             timeprec = "ms"
-                        elif if "%s_ns" % (timestampKey) in fieldKeys:
+                        elif "%s_ns" % (timestampKey) in fieldKeys:
                             timeprec = "ns"
                         else:
                             timeprec = 's'
                             ts = None
 
                         if ts is not None:
-                            validTSKey = validTS = "%s_%s" % (timestampKey,
-                                                              timeprec)
-                            ts = fields.pop(timestampKey)
+                            validTSKey = "%s_%s" % (timestampKey, timeprec)
+                            ts = fields.pop(validTSKey)
                     except KeyError:
                         print("Timestamp key %s not found; defaulting to None"
                               % (timestampKey))
