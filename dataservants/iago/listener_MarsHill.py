@@ -80,7 +80,10 @@ class MHConsumer(ConnectionListener):
 
         # List of packets that we know have schemas and will work.
         #   Still hardcoding things at the moment.
-        vFlats = ['lig.weather.clark']
+        vFlats = ['lig.weather.clark.basestation',
+                  'lig.weather.clark.outdoorstation',
+                  'lig.weather.clark.raingauge',
+                  'lig.weather.clark.windgauge']
 
         # List of packets that we know have a float value and nothing else
         vFloats = []
@@ -101,7 +104,10 @@ class MHConsumer(ConnectionListener):
                     schema = self.schemaDict[tname]
                     # print("Schema before call:")
                     print(schema)
-                    parserFlatPacket(headers, body,
+                    # NOTE: If the packet has no key called influx_ts,
+                    #   it'll just default to None and influx will timestamp
+                    #   the data upon injestion
+                    parserFlatPacket(headers, body, timestampKey='influx_ts',
                                      schema=schema, db=self.dbconn)
                 elif tname in vFloats:
                     parserSimple(headers, body, db=self.dbconn,

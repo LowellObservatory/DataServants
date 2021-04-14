@@ -43,7 +43,8 @@ def flatten(d, parent_key='', sep='_'):
     return dict(items)
 
 
-def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
+def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
+                     timestampKey=None):
     """
     """
     debug = True
@@ -117,10 +118,19 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False):
                     fields.update({each: val})
 
             if fields is not None:
+                if timestampKey is not None:
+                    # This should already be in the right format, e.g. INTEGER
+                    #   seconds since the epoch in the expected timezone
+                    try:
+                        ts = fields[timestampKey]
+                    except KeyError:
+                        print("Timestamp key %s not found; defaulting to None"
+                              % (timestampKey))
+                        ts = None
                 # Note: passing ts=None lets python Influx do the timestamp
                 # print("Making packet")
                 packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                           ts=None,
+                                                           ts=ts,
                                                            tags=None,
                                                            fields=fields)
 
