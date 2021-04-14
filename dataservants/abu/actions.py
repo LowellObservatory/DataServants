@@ -16,7 +16,9 @@ Further description.
 from __future__ import division, print_function, absolute_import
 
 import xml
+from datetime import datetime as dt
 
+import pytz
 import xmltodict as xmld
 
 
@@ -178,3 +180,80 @@ def parseiSense(msg, rootKey=None):
         npacket = None
 
     return npacket
+
+
+def parseMeteobridge(msg, stationName="MHClark",
+                     stationType="DavisVantagePro2", returnDict=False):
+    """
+    Translate the "XML" file that the Meteobridge is putting out into
+    something that fits easier into the XML schema/parsing way of life.
+
+    I hate this too.
+    """
+    pdict = xmlParserCatcher(msg)
+
+    if pdict != {}:
+        # There's only ever one root, so just cut to the chase
+        pdict = pdict['logger']
+
+        # Since this is eventually going to become XML, we need to define a
+        #   root key for the document; make it the stationName for simplicity
+        root = {stationName: None}
+
+        # Now loop over each individual measurement in the orig. crap packet
+        if stationType.lower() == "davisvantagepro2":
+            valueMap = {"THB": "BaseStation",
+                        "TH": "OutdoorStation",
+                        "RAIN": "RainGauge",
+                        "WIND": "WindGauge"}
+
+            valdict = {}
+            for meas in valueMap:
+                try:
+                    vals = pdict[meas]
+                except KeyError as err:
+                    print(str(err))
+                    vals = None
+
+                thesevals = {}
+                if vals is not None:
+                    for value in vals:
+                        if value.lower() == 'date':
+                            mv = dt.strptime(vals[value], "%Y%M%d%H%m%S")
+                            # And now we do the dumb dance to put the TZ info
+                            #   in the timestamp, then convert it to MST which
+                            #   is what the server is set up to expect
+                            mv = mv.replace(tzinfo=pytz.UTC)
+                            mv = mv.astimezone(pytz.timezone("US/Arizona"))
+
+                            thesevals.update({"timestamp": mv.timestamp()})
+                            # thesevals.update({"timestampdt": mv})
+                        elif value.lower() != 'id':
+                            # Skip the useless 'id' attribute
+                            try:
+                                mv = float(vals[value])
+                            except ValueError as err:
+                                # Just in case there's a string we forgot about
+                                print(str(err))
+                                mv = None
+                            if mv is not None:
+                                newEntry = {value: mv}
+                                thesevals.update(newEntry)
+                valdict.update({valueMap[meas]: thesevals})
+
+        # Add our values to this station
+        root[stationName] = valdict
+
+        # Now turn it into an XML string so we can pass it along to the broker
+        #   using the magic that is xmld's unparse() method
+        npacket = xmld.unparse(root, pretty=True)
+    else:
+        npacket = None
+        valdict = {}
+
+    if returnDict is True:
+        # We return valdict here because the station name is unimportant
+        #   for what this will be used for (e.g. republishing online)
+        return npacket, valdict
+    else:
+        return npacket

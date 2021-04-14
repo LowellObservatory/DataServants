@@ -33,7 +33,8 @@ from ligmos.workers import connSetup, workerSetup
 
 from dataservants.abu import parseargs
 from dataservants.abu.http import webgetter
-from dataservants.abu.actions import parseColumbia, parseiSense, prepWU
+from dataservants.abu.actions import parseColumbia, prepWU
+from dataservants.abu.actions import parseMeteobridge, parseiSense
 
 
 def main():
@@ -107,6 +108,9 @@ def main():
                         bxml, val = parseColumbia(wxml, returnDict=True)
                     elif sect == 'ldtigrid':
                         bxml = parseiSense(wxml, rootKey="ldtiSense")
+                    elif sect == 'mhmeteobridge':
+                        bxml = parseMeteobridge(wxml, stationName="MHClark",
+                                                stationType="DavisVantagePro2")
                     else:
                         print("WARNING: NO BROKER FUNCTION FOUND FOR %s" %
                               (sect))
