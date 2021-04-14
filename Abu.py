@@ -109,6 +109,12 @@ def main():
                     elif sect == 'ldtigrid':
                         bxml = parseiSense(wxml, rootKey="ldtiSense")
                     elif sect == 'mhmeteobridge':
+                        # NOTE: This will return a dict of XML packets
+                        #   so it can easily be cross-posted to multiple
+                        #   broker topics and then auto-parsed by iago!
+                        #   This is because each metric has its own timestamp
+                        #   that can differ by quite a bit (a few minutes)
+                        #   depending on the RF link and the station itself
                         bxml = parseMeteobridge(wxml, stationName="MHClark",
                                                 stationType="DavisVantagePro2")
                     else:
@@ -129,11 +135,21 @@ def main():
                                                       tstamp=now)
                                 try:
                                     webgetter(url, params=payload)
-                                except:
+                                except Exception as err:
+                                    print(str(err))
                                     print(url, payload)
 
-                        print("Sending to %s" % (sObj.pubtopic))
-                        connObj.publish(sObj.pubtopic, bxml)
+                        # The meteobridge parser returns a dict of XML packets
+                        #   where the keys are to be postfixed to the base
+                        #   publication topic given in the configuration file
+                        if isinstance(bxml, dict) and bxml != {}:
+                            for xp in bxml.keys():
+                                particularTopic = "%s.%s" % (sObj.pubtopic, xp)
+                                print("Sending to %s" % (particularTopic))
+                                connObj.publish(particularTopic, bxml[xp])
+                        else:
+                            print("Sending to %s" % (sObj.pubtopic))
+                            connObj.publish(sObj.pubtopic, bxml)
 
         # Consider taking a big nap
         if runner.halt is False:

@@ -189,8 +189,8 @@ def parseiSense(msg, rootKey=None):
     return npacket
 
 
-def parseMeteobridge(msg, stationName="MHClark",
-                     stationType="DavisVantagePro2", returnDict=False):
+def parseMeteobridge(msg,
+                     stationName="MHClark", stationType="DavisVantagePro2"):
     """
     Translate the "XML" file that the Meteobridge is putting out into
     something that fits easier into the XML schema/parsing way of life.
@@ -203,10 +203,6 @@ def parseMeteobridge(msg, stationName="MHClark",
         # There's only ever one root, so just cut to the chase
         pdict = pdict['logger']
 
-        # Since this is eventually going to become XML, we need to define a
-        #   root key for the document; make it the stationName for simplicity
-        root = {stationName: None}
-
         # Now loop over each individual measurement in the orig. crap packet
         if stationType.lower() == "davisvantagepro2":
             valueMap = {"THB": "BaseStation",
@@ -214,8 +210,14 @@ def parseMeteobridge(msg, stationName="MHClark",
                         "RAIN": "RainGauge",
                         "WIND": "WindGauge"}
 
-            valdict = {}
+            allXMLs = {}
             for meas in valueMap:
+                valdict = {}
+                # Store each section as its own XML packet because each one
+                #   has its own timestamp, so this lets us store them in the
+                #   database with the right timestamps each time
+                baseKey = "%s_%s" % (stationName, valueMap[meas])
+                print("baseKey:", baseKey)
                 try:
                     vals = pdict[meas]
                 except KeyError as err:
@@ -233,7 +235,7 @@ def parseMeteobridge(msg, stationName="MHClark",
                             mv = mv.replace(tzinfo=pytz.UTC)
                             mv = mv.astimezone(pytz.timezone("US/Arizona"))
 
-                            thesevals.update({"timestamp_ms":
+                            thesevals.update({"ts":
                                               round(mv.timestamp()*1e3)})
                             thesevals.update({"timestampdt": mv})
                         elif value.lower() != 'id':
@@ -247,21 +249,13 @@ def parseMeteobridge(msg, stationName="MHClark",
                             if mv is not None:
                                 newEntry = {value: mv}
                                 thesevals.update(newEntry)
-                valdict.update({valueMap[meas]: thesevals})
 
-        # Add our values to this station
-        root[stationName] = valdict
-
-        # Now turn it into an XML string so we can pass it along to the broker
-        #   using the magic that is xmld's unparse() method
-        npacket = xmld.unparse(root, pretty=True)
+                valdict.update({baseKey: thesevals})
+                # print(valdict)
+                npacket = xmld.unparse(valdict, pretty=True)
+                # print(npacket)
+                allXMLs.update({valueMap[meas].lower(): npacket})
     else:
-        npacket = None
-        valdict = {}
+        allXMLs = {}
 
-    if returnDict is True:
-        # We return valdict here because the station name is unimportant
-        #   for what this will be used for (e.g. republishing online)
-        return npacket, valdict
-    else:
-        return npacket
+    return allXMLs
