@@ -80,6 +80,7 @@ def main():
                 print("Database %s not in config :(" % (conSect.database))
                 dbref = None
 
+            # I admit in retrospect that this sucks
             if conSect.listenertype.lower() == "ldt":
                 prlistener = iago.listener_LDT.LDTConsumer(dbconn=dbref)
             elif conSect.listenertype.lower() == "omspdu":
@@ -88,6 +89,8 @@ def main():
                 prlistener = iago.listener_LOIS.LOISConsumer(dbconn=dbref)
             elif conSect.listenertype.lower() == "mesa":
                 prlistener = iago.listener_Mesa.MesaConsumer(dbconn=dbref)
+            elif conSect.listenertype.lower() == "marshill":
+                prlistener = iago.listener_MarsHill.MHConsumer(dbconn=dbref)
             else:
                 print("WARNING: Unknown or no listenertype specified!")
                 print("Using no databases and switching to Parrot listener!")
