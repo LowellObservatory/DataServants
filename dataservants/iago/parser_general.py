@@ -106,7 +106,7 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
             fields = {}
             # Store each key:value pairing
             # print("Storing keys")
-            print(keys)
+            # print(keys)
             for each in keys:
                 val = xmlp[each]
 
@@ -119,6 +119,7 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
 
             if fields is not None:
                 if timestampKey is not None:
+                    print("Specified timestamp key: %s" % (timestampKey))
                     # Find a key that starts with the given timestampKey.  In
                     #   pretty much all the cases I control, this will be
                     #   influx_ts_s or influx_ts_ms
@@ -140,6 +141,7 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
 
                         if ts is not None:
                             validTSKey = "%s_%s" % (timestampKey, timeprec)
+                            print("Timestamp key: %s" % (validTSKey))
                             ts = fields.pop(validTSKey)
                     except KeyError:
                         print("Timestamp key %s not found; defaulting to None"
@@ -147,6 +149,8 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
                         ts = None
                         timeprec = 's'
 
+                print("Just before makeInfluxPacket")
+                print(ts, timeprec)
                 # Note: passing ts=None lets python Influx do the timestamp
                 # print("Making packet")
                 packet = utils.packetizer.makeInfluxPacket(meas=meas,
