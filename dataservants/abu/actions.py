@@ -226,7 +226,7 @@ def parseMeteobridge(msg, stationName="MHClark",
                 if vals is not None:
                     for value in vals:
                         if value.lower() == 'date':
-                            mv = dt.strptime(vals[value], "%Y%M%d%H%m%S")
+                            mv = dt.strptime(vals[value], "%Y%m%d%H%M%S")
                             # And now we do the dumb dance to put the TZ into
                             #   the timestamp, and then convert it to MST which
                             #   is what the server is set up to expect
