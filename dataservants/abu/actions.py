@@ -22,10 +22,19 @@ import pytz
 import xmltodict as xmld
 
 
-def xmlParserCatcher(msg):
-    # Making this a little util function so I don't have to copy this
-    #   exception check into literally every XML parsing function
+def xmlParserCatcher(msg, attr_prefix=None):
+    """
+    Making this a little util function so I don't have to copy this
+    exception check into literally every XML parsing function
+    """
+
     pdict = {}
+    if attr_prefix is None:
+        # This is xmltodict's default
+        attr_prefix = "@"
+    else:
+        attr_prefix = attr_prefix
+
     try:
         pdict = xmld.parse(msg)
     except xml.parsers.expat.ExpatError as e:
@@ -190,7 +199,7 @@ def parseMeteobridge(msg, stationName="MHClark",
 
     I hate this too.
     """
-    pdict = xmlParserCatcher(msg)
+    pdict = xmlParserCatcher(msg, attr_prefix='')
 
     if pdict != {}:
         # There's only ever one root, so just cut to the chase
@@ -226,7 +235,8 @@ def parseMeteobridge(msg, stationName="MHClark",
                             mv = mv.replace(tzinfo=pytz.UTC)
                             mv = mv.astimezone(pytz.timezone("US/Arizona"))
 
-                            thesevals.update({"timestamp": mv.timestamp()})
+                            thesevals.update({"timestamp_ms":
+                                              round(mv.timestamp()*1e3)})
                             # thesevals.update({"timestampdt": mv})
                         elif value.lower() != 'id':
                             # Skip the useless 'id' attribute
