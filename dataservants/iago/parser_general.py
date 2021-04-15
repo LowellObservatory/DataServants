@@ -128,26 +128,33 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
                     #   you'll get influxdb errors in the log and nothing will
                     #   actually be posted!
                     fieldKeys = fields.keys()
-                    try:
-                        if "%s_s" % (timestampKey) in fieldKeys:
-                            timeprec = "s"
-                        elif "%s_ms" % (timestampKey) in fieldKeys:
-                            timeprec = "ms"
-                        elif "%s_ns" % (timestampKey) in fieldKeys:
-                            timeprec = "ns"
-                        else:
-                            timeprec = 's'
-                            ts = None
+                    validTS = True
+                    if "%s_s" % (timestampKey) in fieldKeys:
+                        timeprec = "s"
+                    elif "%s_ms" % (timestampKey) in fieldKeys:
+                        timeprec = "ms"
+                    elif "%s_ns" % (timestampKey) in fieldKeys:
+                        timeprec = "ns"
+                    else:
+                        # If we end up in here, we didn't find a valid choice
+                        #   so set it to None and set defaults
+                        validTS = False
+                        timeprec = 's'
+                        ts = None
 
-                        if ts is not None:
+                    # There was no good way to set ts above without copying
+                    #   and pasting a bunch (at least that I could suss out)
+                    #   so check if our flag
+                    if validTS is True:
+                        try:
                             validTSKey = "%s_%s" % (timestampKey, timeprec)
                             print("Timestamp key: %s" % (validTSKey))
                             ts = fields.pop(validTSKey)
-                    except KeyError:
-                        print("Timestamp key %s not found; defaulting to None"
-                              % (timestampKey))
-                        ts = None
-                        timeprec = 's'
+                        except KeyError:
+                            print("Timestamp key %s not found, using None"
+                                  % (timestampKey))
+                            ts = None
+                            timeprec = 's'
 
                 print("Just before makeInfluxPacket")
                 print(ts, timeprec)
