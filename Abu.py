@@ -33,8 +33,8 @@ from ligmos.workers import connSetup, workerSetup
 
 from dataservants.abu import parseargs
 from dataservants.abu.http import webgetter
-from dataservants.abu.actions import parseColumbia, prepWU
-from dataservants.abu.actions import parseMeteobridge, parseiSense
+from dataservants.abu.power import parseiSense
+from dataservants.abu.weather import parseColumbia, parseMeteobridge, prepWU
 
 
 def main():

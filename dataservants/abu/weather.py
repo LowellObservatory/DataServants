@@ -15,35 +15,12 @@ Further description.
 
 from __future__ import division, print_function, absolute_import
 
-import xml
 from datetime import datetime as dt
 
 import pytz
 import xmltodict as xmld
 
-
-def xmlParserCatcher(msg, attr_prefix=None):
-    """
-    Making this a little util function so I don't have to copy this
-    exception check into literally every XML parsing function
-    """
-
-    pdict = {}
-    if attr_prefix is None:
-        # This is xmltodict's default so just put it back
-        attr_prefix = "@"
-
-    try:
-        pdict = xmld.parse(msg, attr_prefix=attr_prefix)
-    except xml.parsers.expat.ExpatError as e:
-        print("XML Parsing Error!")
-        print(str(e))
-
-    return pdict
-
-
-def amqStats(msg):
-    pass
+from .helpers import xmlParserCatcher
 
 
 def prepWU(config, vals, tstamp):
@@ -54,6 +31,7 @@ def prepWU(config, vals, tstamp):
     # wunderground = 'https://weatherstation.wunderground.com/'
     wunderground = 'https://rtupdate.wunderground.com/'
     wunderground += 'weatherstation/updateweatherstation.php'
+
     # These are all REQUIRED
     init = {"ID": config.id,
             "PASSWORD": config.key,
@@ -143,50 +121,6 @@ def parseColumbia(msg, returnDict=False):
         return npacket, valdict
     else:
         return npacket
-
-
-def parseiSense(msg, rootKey=None):
-    """
-    Translate the "XML" file that the i-SENSE voltage monitor puts out
-    into something that fits easier into the XML schema/parsing way of life.
-    """
-    pdict = xmlParserCatcher(msg)
-
-    if pdict != {}:
-        # There's only ever one root, so just cut to the chase
-        pdict = pdict['attributes']
-
-        if rootKey is None:
-            rootKey = "isense"
-
-        # Since this is eventually going to become XML, we need to define a
-        #   root key for the document; all other tags will live under it
-        root = {rootKey: None}
-
-        # Now loop over each individual measurement in the orig. crap packet
-        valdict = {}
-        for imeas in pdict['attribute']:
-            mn = imeas['@id']
-            try:
-                mv = imeas['#text']
-            except KeyError:
-                # This means that the attribute had no actual value
-                mv = ""
-
-            newEntry = {mn: mv}
-
-            valdict.update(newEntry)
-
-        # Add our values to this station
-        root[rootKey] = valdict
-
-        # Now turn it into an XML string so we can pass it along to the broker
-        #   using the magic that is xmld's unparse() method
-        npacket = xmld.unparse(root, pretty=True)
-    else:
-        npacket = None
-
-    return npacket
 
 
 def parseMeteobridge(msg,
