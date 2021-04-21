@@ -87,6 +87,7 @@ def main():
         # Actually do our actions
         for sect in config:
             sObj = config[sect]
+            wxml = ''
             if sObj.resourcemethod.lower() in ['http', 'https']:
                 connObj = amqs[sObj.broker][0]
                 try:
@@ -102,54 +103,57 @@ def main():
                     print("Moving on, hope it's temporary")
                     wxml = ''
 
-                if wxml != '':
-                    bxml = None
-                    if sect in ['ldtweather', 'mesaweather']:
-                        bxml, val = parseColumbia(wxml, returnDict=True)
-                    elif sect == 'ldtigrid':
-                        bxml = parseiSense(wxml, rootKey="ldtiSense")
-                    elif sect == 'mhmeteobridge':
-                        # NOTE: This will return a dict of XML packets
-                        #   so it can easily be cross-posted to multiple
-                        #   broker topics and then auto-parsed by iago!
-                        #   This is because each metric has its own timestamp
-                        #   that can differ by quite a bit (a few minutes)
-                        #   depending on the RF link and the station itself
-                        bxml = parseMeteobridge(wxml, stationName="MHClark",
-                                                stationType="DavisVantagePro2")
-                    else:
-                        print("WARNING: NO BROKER FUNCTION FOUND FOR %s" %
-                              (sect))
+            if wxml != '':
+                bxml = None
+                if sObj.devicetype.lower() == "columbia_orion":
+                    bxml, val = parseColumbia(wxml, returnDict=True)
+                elif sObj.devicetype.lower() == "isense":
+                    # TODO: Clean up this hard coded rootKey thing but we've
+                    #   only got 1 iSense device and it's at the LDT, so...
+                    bxml = parseiSense(wxml, rootKey="ldtiSense")
+                elif sObj.devicetype.lower() == "meteobridge":
+                    # NOTE: This will return a dict of XML packets
+                    #   so it can easily be cross-posted to multiple
+                    #   broker topics and then auto-parsed by iago!
+                    #   This is because each metric has its own timestamp
+                    #   that can differ by quite a bit (a few minutes)
+                    #   depending on the RF link and the station itself
+                    # TODO: Clean up these hardcoded things too
+                    bxml = parseMeteobridge(wxml, stationName="MHClark",
+                                            stationType="DavisVantagePro2")
+                else:
+                    print("WARNING: NO BROKER FUNCTION FOUND FOR %s" %
+                          (sect))
 
-                    if bxml is not None:
-                        if sObj.onlinepush is not None:
+                if bxml is not None:
+                    if sObj.onlinepush is not None:
+                        try:
+                            pushConfig = comm[sObj.onlinepush]
+                        except KeyError:
+                            print("INVALID ONLINE PUSH DATA")
+                            print("CHECK CONFIG FILE")
+                        if pushConfig.type.lower() == "weatherunderground":
+                            # We give our timestamp to make sure it
+                            #   gets to WUnderground ok
+                            url, payload = prepWU(pushConfig, val,
+                                                    tstamp=now)
                             try:
-                                pushConfig = comm[sObj.onlinepush]
-                            except KeyError:
-                                print("INVALID ONLINE PUSH DATA")
-                                print("CHECK CONFIG FILE")
-                            if pushConfig.type.lower() == "weatherunderground":
-                                # We give our timestamp to make sure it
-                                #   gets to WUnderground ok
-                                url, payload = prepWU(pushConfig, val,
-                                                      tstamp=now)
-                                try:
-                                    webgetter(url, params=payload)
-                                except Exception as err:
-                                    print(str(err))
-                                    print(url, payload)
+                                webgetter(url, params=payload)
+                            except Exception as err:
+                                print(str(err))
+                                print(url, payload)
 
-                        # The meteobridge parser returns a dict of XML packets
-                        #   where the keys are to be postfixed to the base
-                        #   publication topic given in the configuration file
-                        if isinstance(bxml, dict) and bxml != {}:
-                            for xp in bxml.keys():
-                                particularTopic = "%s.%s" % (sObj.pubtopic, xp)
-                                print("Sending to %s" % (particularTopic))
-                                connObj.publish(particularTopic, bxml[xp])
-                        else:
-                            print("Sending to %s" % (sObj.pubtopic))
-                            connObj.publish(sObj.pubtopic, bxml)
+                    # The meteobridge parser returns a dict of XML packets
+                    #   where the keys are to be postfixed to the base
+                    #   publication topic given in the configuration file
+                    if isinstance(bxml, dict) and bxml != {}:
+                        for xp in bxml.keys():
+                            particularTopic = "%s.%s" % (sObj.pubtopic, xp)
+                            print("Sending to %s" % (particularTopic))
+                            connObj.publish(particularTopic, bxml[xp])
+                    else:
+                        print("Sending to %s" % (sObj.pubtopic))
+                        connObj.publish(sObj.pubtopic, bxml)
 
         # Consider taking a big nap
         if runner.halt is False:
