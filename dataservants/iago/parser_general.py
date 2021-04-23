@@ -155,6 +155,10 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
                                   % (timestampKey))
                             ts = None
                             timeprec = 's'
+                else:
+                    # Need this for older codes that don't specify this
+                    ts = None
+                    timeprec = 's'
 
                 print("Just before makeInfluxPacket")
                 print(ts, timeprec)
