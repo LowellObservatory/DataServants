@@ -108,18 +108,18 @@ def main():
                 if sObj.devicetype.lower() == "columbia_orion":
                     bxml, val = parseColumbia(wxml, returnDict=True)
                 elif sObj.devicetype.lower() == "isense":
-                    # TODO: Clean up this hard coded rootKey thing but we've
-                    #   only got 1 iSense device and it's at the LDT, so...
-                    bxml = parseiSense(wxml, rootKey="ldtiSense")
-                elif sObj.devicetype.lower() == "meteobridge":
+                    # TODO: Clean up this hard coded rootKey thing.
+                    #   It should be "ldtiSense" because that's what Iago
+                    #   will be looking for later.
+                    bxml = parseiSense(wxml, rootKey=sObj.name)
+                elif sObj.devicetype.lower() == "meteobridge_vantagepro2":
                     # NOTE: This will return a dict of XML packets
                     #   so it can easily be cross-posted to multiple
                     #   broker topics and then auto-parsed by iago!
                     #   This is because each metric has its own timestamp
                     #   that can differ by quite a bit (a few minutes)
                     #   depending on the RF link and the station itself
-                    # TODO: Clean up these hardcoded things too
-                    bxml = parseMeteobridge(wxml, stationName="MHClark",
+                    bxml = parseMeteobridge(wxml, stationName=sObj.name,
                                             stationType="DavisVantagePro2")
                 else:
                     print("WARNING: NO BROKER FUNCTION FOUND FOR %s" %
@@ -136,7 +136,7 @@ def main():
                             # We give our timestamp to make sure it
                             #   gets to WUnderground ok
                             url, payload = prepWU(pushConfig, val,
-                                                    tstamp=now)
+                                                  tstamp=now)
                             try:
                                 webgetter(url, params=payload)
                             except Exception as err:
