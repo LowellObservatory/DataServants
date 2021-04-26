@@ -121,9 +121,9 @@ def main():
         # Consider taking a big nap
         if runner.halt is False:
             print("Starting a big sleep")
-            # Sleep for bigsleep, but in small chunks to check abort
+            # Sleep for bigsleep, but in very small chunks to check abort
             for _ in range(bigsleep):
-                time.sleep(1)
+                time.sleep(0.1)
                 if runner.halt is True:
                     break
 
