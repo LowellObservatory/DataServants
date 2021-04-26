@@ -196,7 +196,7 @@ def main():
             print("Starting a big sleep")
             # Sleep for bigsleep, but in small chunks to check abort
             for _ in range(bigsleep):
-                time.sleep(1)
+                time.sleep(0.1)
                 if runner.halt is True:
                     print("halt requested while sleeping!")
                     print("issuing 'break'")
