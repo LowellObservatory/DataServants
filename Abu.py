@@ -110,7 +110,7 @@ def main():
             if sObj.resourcemethod.lower() == 'file':
                 # This will happen the first time through checking a file
                 #   so just make sure the attribute we need exists from now on
-                if sObj.hasattr('prevFileHash') is False:
+                if hasattr(sObj, 'prevFileHash') is False:
                     sObj.prevFileHash = None
 
                 fhash, changed = checkFileHash(sObj.fname,
