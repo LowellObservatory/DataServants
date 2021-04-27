@@ -113,7 +113,7 @@ def main():
                 if hasattr(sObj, 'prevFileHash') is False:
                     sObj.prevFileHash = None
 
-                fhash, changed = checkFileHash(sObj.fname,
+                fhash, changed = checkFileHash(sObj.resourcelocation,
                                                oldhash=sObj.prevFileHash)
 
                 if changed is True:
