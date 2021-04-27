@@ -33,6 +33,8 @@ from ligmos.workers import connSetup, workerSetup
 
 from dataservants.abu import parseargs
 from dataservants.abu.http import webgetter
+from dataservants.abu.filewatch import checkFileHash
+
 from dataservants.abu.power import parseiSense
 from dataservants.abu.weather import parseColumbia, parseMeteobridge, prepWU
 
@@ -87,9 +89,9 @@ def main():
         # Actually do our actions
         for sect in config:
             sObj = config[sect]
+            connObj = amqs[sObj.broker][0]
             wxml = ''
             if sObj.resourcemethod.lower() in ['http', 'https']:
-                connObj = amqs[sObj.broker][0]
                 try:
                     # The timekeeping on these weather servers I'm pulling
                     #   from is absolutely awful, so just use my server time
@@ -102,6 +104,18 @@ def main():
                     print("Connection error! %s" % (sect))
                     print("Moving on, hope it's temporary")
                     wxml = ''
+            if sObj.resourcemethod.lower() == 'file':
+                # This will happen the first time through checking a file
+                #   so just make sure the attribute we need exists from now on
+                if sObj.hasattr('prevFileHash') is False:
+                    sObj.prevFileHash = None
+
+                fhash, changed = checkFileHash(sObj.fname,
+                                               oldhash=sObj.prevFileHash)
+
+                if changed is True:
+                    sObj.prevFileHash = fhash
+                    # Now parse the file and then do stuff with it
 
             if wxml != '':
                 bxml = None

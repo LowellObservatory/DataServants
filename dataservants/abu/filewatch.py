@@ -19,6 +19,8 @@ import os
 import time
 import datetime as dt
 
+from ligmos.utils import hashes
+
 
 def checkFile(fname, last, startpos):
     """
@@ -64,6 +66,27 @@ def checkFile(fname, last, startpos):
             print("Read %d lines" % (len(nlines)))
 
     return fstats, endpos
+
+
+def checkFileHash(fname, oldhash=None):
+    """
+    """
+    fdigest = None
+    try:
+        fhash = hashes.hashfunc(fname, debug=True)
+        fdigest = fhash.hexdigest()
+    except (IOError, OSError) as err:
+        print(str(err))
+
+    sameFile = None
+    if fdigest is not None:
+        if oldhash is not None:
+            if oldhash == fdigest:
+                sameFile = True
+            else:
+                sameFile = None
+
+    return fdigest, sameFile
 
 
 def whichLogDate(basen):
