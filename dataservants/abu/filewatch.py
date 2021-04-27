@@ -78,17 +78,17 @@ def checkFileHash(fname, oldhash=None):
     except (IOError, OSError) as err:
         print(str(err))
 
-    sameFile = None
+    different = None
     if fdigest is not None:
         if oldhash is not None:
             if oldhash == fdigest:
-                sameFile = True
+                different = False
             else:
-                sameFile = None
+                different = True
         else:
-            sameFile = False
+            different = True
 
-    return fdigest, sameFile
+    return fdigest, different
 
 
 def whichLogDate(basen):
