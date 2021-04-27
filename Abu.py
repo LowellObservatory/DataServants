@@ -117,8 +117,11 @@ def main():
                                                oldhash=sObj.prevFileHash)
 
                 if changed is True:
+                    print("File has changed:", sObj.prevFileHash, fhash)
                     sObj.prevFileHash = fhash
                     # Now parse the file and then do stuff with it
+                else:
+                    print("File has not changed:", sObj.prevFileHash, fhash)
 
             if wxml != '':
                 bxml = None
