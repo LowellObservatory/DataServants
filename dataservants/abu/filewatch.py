@@ -85,6 +85,8 @@ def checkFileHash(fname, oldhash=None):
                 sameFile = True
             else:
                 sameFile = None
+        else:
+            sameFile = False
 
     return fdigest, sameFile
 
