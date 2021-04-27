@@ -54,6 +54,9 @@ def main():
     # Interval between successive runs of the polling loop (seconds)
     bigsleep = 120
 
+    # Time for tiny sleeps (in sec) to allow for abort checks/other processes
+    microsleep = 0.1
+
     # Quick renaming to keep line length under control
 
     # config: dictionary of parsed config file
@@ -173,8 +176,8 @@ def main():
         if runner.halt is False:
             print("Starting a big sleep")
             # Sleep for bigsleep, but in small chunks to check abort
-            for _ in range(bigsleep):
-                time.sleep(0.1)
+            for _ in range(round(bigsleep/microsleep)):
+                time.sleep(microsleep)
                 if runner.halt is True:
                     break
 
