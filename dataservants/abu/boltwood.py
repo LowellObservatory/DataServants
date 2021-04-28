@@ -103,7 +103,8 @@ def boltwood_clarityii(msg,
             windUnits = "unknown"
 
         # Start to assemble the output dictionary
-        fields = {"datetime": dtobj_utc,
+        fields = {"datetime": dtobj.isoformat(),
+                  "influx_ts_s": dtobj.timestamp(),
                   "tempUnits": tempUnits,
                   "windUnits": windUnits}
 
