@@ -36,6 +36,7 @@ from dataservants.abu.http import webgetter
 from dataservants.abu.filewatch import checkFileHash
 
 from dataservants.abu.power import parseiSense
+from dataservants.abu.boltwood import boltwood_clarityii
 from dataservants.abu.weather import parseColumbia, parseMeteobridge, prepWU
 
 
@@ -118,8 +119,19 @@ def main():
 
                 if changed is True:
                     print("File has changed:", sObj.prevFileHash, fhash)
-                    sObj.prevFileHash = fhash
+                    try:
+                        with open(sObj.resourcelocation, 'r') as f:
+                            msg = f.read()
+                        sObj.prevFileHash = fhash
+                    except (IOError, OSError) as err:
+                        print(str(err))
+                        msg = None
+
                     # Now parse the file and then do stuff with it
+                    if msg is not None:
+                        if sObj.devicetype.lower() == "boltwood_cloudsensorii":
+                            wxml = boltwood_clarityii(msg,
+                                                      timezone="US/Arizona")
                 else:
                     print("File has not changed:", sObj.prevFileHash, fhash)
 
