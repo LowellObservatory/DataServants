@@ -83,7 +83,8 @@ class MHConsumer(ConnectionListener):
         vFlats = ['lig.weather.clark.basestation',
                   'lig.weather.clark.outdoorstation',
                   'lig.weather.clark.raingauge',
-                  'lig.weather.clark.windgauge']
+                  'lig.weather.clark.windgauge',
+                  'lig.weather.timo.boltwoodii']
 
         # List of packets that we know have a float value and nothing else
         vFloats = []
