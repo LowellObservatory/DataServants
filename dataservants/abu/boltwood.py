@@ -102,9 +102,11 @@ def boltwood_clarityii(msg,
         except KeyError:
             windUnits = "unknown"
 
-        # Start to assemble the output dictionary
-        fields = {"datetime": dtobj.isoformat(),
-                  "influx_ts_s": dtobj.timestamp(),
+        # Start to assemble the output dictionary. Note that we need an
+        #   influx timestamp with millisecond precision because the eventual
+        #   packet needs to have this as an integer, not a float!
+        fields = {"datetime": dtobj,
+                  "influx_ts_ms": dtobj.timestamp()*1e3,
                   "tempUnits": tempUnits,
                   "windUnits": windUnits}
 
