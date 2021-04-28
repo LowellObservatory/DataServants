@@ -137,8 +137,6 @@ def boltwood_clarityii(msg,
             if col != "junk":
                 newfield = {col: val}
                 fields.update(newfield)
-            else:
-                print(col, val)
 
             root = {rootname: fields}
             if fields != {}:
