@@ -121,19 +121,14 @@ def main():
                     print("File has changed:", sObj.prevFileHash, fhash)
                     try:
                         with open(sObj.resourcelocation, 'r') as f:
-                            msg = f.read()
+                            wxml = f.read()
                         sObj.prevFileHash = fhash
                     except (IOError, OSError) as err:
                         print(str(err))
-                        msg = None
-
-                    # Now parse the file and then do stuff with it
-                    if msg is not None:
-                        if sObj.devicetype.lower() == "boltwood_cloudsensorii":
-                            wxml = boltwood_clarityii(msg,
-                                                      timezone="US/Arizona")
+                        wxml = ''
                 else:
                     print("File has not changed:", sObj.prevFileHash, fhash)
+                    wxml = ''
 
             if wxml != '':
                 bxml = None
@@ -153,6 +148,8 @@ def main():
                     #   depending on the RF link and the station itself
                     bxml = parseMeteobridge(wxml, stationName=sObj.name,
                                             stationType="DavisVantagePro2")
+                elif sObj.devicetype.lower() == "boltwood_cloudsensorii":
+                    bxml = boltwood_clarityii(wxml, timezone="US/Arizona")
                 else:
                     print("WARNING: NO BROKER FUNCTION FOUND FOR %s" %
                           (sect))
