@@ -105,8 +105,8 @@ def boltwood_clarityii(msg,
         # Start to assemble the output dictionary. Note that we need an
         #   influx timestamp with millisecond precision because the eventual
         #   packet needs to have this as an integer, not a float!
-        fields = {"datetime": dtobj,
-                  "influx_ts_ms": round(dtobj.timestamp()*1e3),
+        fields = {"timestampdt": dtobj_aware,
+                  "influx_ts_ms": round(dtobj_aware.timestamp()*1e3),
                   "tempUnits": tempUnits,
                   "windUnits": windUnits}
 
