@@ -150,7 +150,7 @@ def main():
                                             stationType="DavisVantagePro2")
                 elif sObj.devicetype.lower() == "boltwood_cloudsensorii":
                     bxml = boltwood_clarityii(wxml, timezone="US/Arizona")
-                elif sObj.devicetype.lower() == "boltwood_cloudsensorii":
+                elif sObj.devicetype.lower() == "aag_cloudwatcher":
                     bxml = aagcloudwatcher(wxml, timezone="US/Arizona")
                 else:
                     print("WARNING: NO BROKER FUNCTION FOUND FOR %s" %
