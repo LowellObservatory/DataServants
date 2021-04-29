@@ -37,6 +37,7 @@ from dataservants.abu.filewatch import checkFileHash
 
 from dataservants.abu.power import parseiSense
 from dataservants.abu.boltwood import boltwood_clarityii
+from dataservants.abu.aagcloudwatcher import aagcloudwatcher
 from dataservants.abu.weather import parseColumbia, parseMeteobridge, prepWU
 
 
