@@ -145,9 +145,10 @@ def boltwood_clarityii(msg,
                 newfield = {col: val}
                 fields.update(newfield)
 
-            # Quick calculation to expose the raw sky temperature since skyT
-            #   is Sky-Ambient already and they give Ambient
-            fields.update({"skyTemp": fields[4] + fields[5]})
+            # Quick math to expose the raw sky temperature since skyT
+            #   is Sky-Ambient already and they give Ambient.
+            realSkyTemp = float(allfields[0]) + float(allfields[1])
+            fields.update({"skyTemp": realSkyTemp})
 
             root = {rootname: fields}
             if fields != {}:
