@@ -43,7 +43,7 @@ def boltwood_clarityii(msg,
 
     # These are skimmed off the top and processed first
     #   "date", "time", "tempUnits", "windUnits"
-    datamap = ["skyTemp", "ambientTemp", "enclosureTemp", "windSpeed",
+    datamap = ["relSkyTemp", "ambientTemp", "enclosureTemp", "windSpeed",
                "relativeHumidity", "dewpoint", "heaterPercentage",
                "rainFlag", "moistureFlag", "secondsSinceRead",
                "junk", "cloudFlag", "windFlag", "rainFlag", "lightFlag",
@@ -88,9 +88,10 @@ def boltwood_clarityii(msg,
 
         # You *need* to do this in this exact way; datetime.replate(tzinfo)
         #   will give weird results like a timezone offset of -07:28 !
+        # thisTZ needs to be the timezone of the machine where the data file
+        #   was written, and since it's Windows it's likely to be local time.
         dtobj_aware = thisTZ.localize(dtobj)
-        print(dtobj_aware.isoformat())
-        dtobj_utc = dtobj_aware.astimezone(pytz.UTC)
+        # dtobj_utc = dtobj_aware.astimezone(pytz.UTC)
 
         try:
             tempUnits = bigFlagMap['tempUnit'][allfields.pop(0)]
@@ -118,18 +119,24 @@ def boltwood_clarityii(msg,
             #   the display level, and I still might ditch this and do so
             if col == "rainFlag":
                 val = bigFlagMap['rain'][int(oval)]
+                fields.update({"rainFlagRaw": int(oval)})
             elif col == "moistureFlag":
                 val = bigFlagMap['moisture'][int(oval)]
+                fields.update({"moistureFlagRaw": int(oval)})
             elif col == "cloudFlag":
                 val = bigFlagMap['clouds'][int(oval)]
+                fields.update({"cloudFlagRaw": int(oval)})
             elif col == "windFlag":
                 val = bigFlagMap['wind'][int(oval)]
+                fields.update({"windFlagRaw": int(oval)})
             elif col == "lightFlag":
                 val = bigFlagMap['light'][int(oval)]
+                fields.update({"lightFlagRaw": int(oval)})
             elif col == "secondsSinceRead":
                 val = int(oval)
             elif col == "closureSuggestion":
                 val = bigFlagMap['closure'][int(oval)]
+                fields.update({"closureFlagRaw": int(oval)})
             else:
                 val = float(oval)
 
@@ -137,6 +144,10 @@ def boltwood_clarityii(msg,
             if col != "junk":
                 newfield = {col: val}
                 fields.update(newfield)
+
+            # Quick calculation to expose the raw sky temperature since skyT
+            #   is Sky-Ambient already and they give Ambient
+            fields.update({"skyTemp": fields[4] + fields[5]})
 
             root = {rootname: fields}
             if fields != {}:
