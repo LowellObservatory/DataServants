@@ -78,7 +78,7 @@ def boltwood_clarityii(msg,
     allfields = msg.split()
 
     if len(allfields) != 20:
-        print("Wrong number of lines for a ClarityII file!")
+        print("Wrong number of fields for a ClarityII file!")
         fields = {}
     else:
         datadate = allfields.pop(0)
@@ -150,8 +150,8 @@ def boltwood_clarityii(msg,
             realSkyTemp = float(allfields[0]) + float(allfields[1])
             fields.update({"skyTemp": realSkyTemp})
 
-            root = {rootname: fields}
-            if fields != {}:
-                npacket = xmld.unparse(root, pretty=True)
+    root = {rootname: fields}
+    if fields != {}:
+        npacket = xmld.unparse(root, pretty=True)
 
     return npacket
