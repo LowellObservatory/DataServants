@@ -193,3 +193,75 @@ def parseMeteobridge(msg,
         allXMLs = {}
 
     return allXMLs
+
+
+def parseVirtualWeatherStation(msg,
+                               rootname="MHTiMoWeather",
+                               timezone='US/Arizona'):
+    """
+    """
+    # Default return value
+    npacket = ''
+
+    # File date/time timezone object that we'll need for later
+    thisTZ = pytz.timezone(timezone)
+
+    # We don't need/want absolutely everything in here, this is just the
+    #   things that are most likely to be cared about/useful.  These are
+    #   zero indexed so I can just use them directly to store stuff
+    storageMap = {7: "WindSpeed", 8: "WindGust", 9: "WindDir",
+                  10: "InsideHumidity", 11: "OutsideHumidity",
+                  12: "InsideTemp", 13: "OutsideTemp",
+                  14: "Pressure",
+                  15: "TotalRain", 16: "DailyRain", 17: "HourlyRain",
+                  18: "ConditionFlag", 25: "Evapotranspiration",
+                  26: "UVIndex", 27: "SolarRadiation",
+                  28: "WindChill",
+                  29: "IndoorHeatIndex", 30: "OutdoorHeatIndex",
+                  31: "Dewpoint", 32: "RainRate",
+                  33: "OutdoorTempRate", 34: "IndoorTempRate",
+                  35: "PressureRate",
+                  36: "Channel1TempRate", 37: "Channel2TempRate",
+                  38: "Channel3TempRate"}
+
+    # Since this data file has fixed (terrible) units, convert them to metric
+    #   in groups of similar conversions.  Must match keys above!
+    # mph2ms = ["WindSpeed", "WindGust"]
+    # f2c = ["InsideTemp", "OutsideTemp", "IndoorHeatIndex", "OutdoorHeatIndex",
+    #        "Dewpoint", "OutdoorTempRate", "IndoorTempRate",
+    #        "Channel1TempRate", "Channel2TempRate", "Channel3TempRate"]
+    # in2mbar = ["Pressure", "PressureRate"]
+    # in2mm = ["TotalRain", "DailyRain", "HourlyRain", "RainRate"]
+
+    allfields = msg.split(",")
+
+    if len(allfields) != 41:
+        print("Wrong number of fields for a VirtualWeatherStation CSV!")
+        fields = {}
+    else:
+        # Grab the date and time first
+        datadate = "%s-%s-%s" % (allfields[1], allfields[2], allfields[3])
+        datatime = "%s:%s:%s" % (allfields[4], allfields[5], allfields[6])
+
+        dtstr = "%sT%s" % (datadate, datatime)
+        dtobj = dt.strptime(dtstr, "%Y-%m-%dT%H:%M:%S")
+
+        # You *need* to do this in this exact way; datetime.replate(tzinfo)
+        #   will give weird results like a timezone offset of -07:28 !
+        # thisTZ needs to be the timezone of the machine where the data file
+        #   was written, and since it's Windows it's likely to be local time.
+        dtobj_aware = thisTZ.localize(dtobj)
+        # dtobj_utc = dtobj_aware.astimezone(pytz.UTC)
+
+        # Start to assemble the output dictionary.
+        fields = {"timestampdt": dtobj_aware,
+                  "influx_ts_s": round(dtobj_aware.timestamp())}
+
+        for each in storageMap:
+            fields.update({storageMap[each]: float(allfields[each])})
+
+    root = {rootname: fields}
+    if fields != {}:
+        npacket = xmld.unparse(root, pretty=True)
+
+    return npacket
