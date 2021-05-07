@@ -26,9 +26,6 @@ def aagcloudwatcher(msg,
                     timezone='US/Arizona'):
     """
     """
-    # Default return value
-    npacket = ''
-
     # File date/time timezone object that we'll need for later
     thisTZ = pytz.timezone(timezone)
 
@@ -91,5 +88,7 @@ def aagcloudwatcher(msg,
     root = {rootname: fields}
     if fields != {}:
         npacket = xmld.unparse(root, pretty=True)
+    else:
+        npacket = None
 
     return npacket
