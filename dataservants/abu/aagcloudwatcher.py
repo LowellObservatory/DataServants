@@ -35,8 +35,13 @@ def aagcloudwatcher(msg,
     # Since we read it in as lines() split it into two lines so we can grab
     #   the header lines first
     twolines = msg.strip().split("\n")
-    headers = twolines[0].replace('"', '').replace(" ", "").split(",")
-    allfields = twolines[1].replace('"', '').replace(" ", "").split(",")
+    if len(twolines) == 0:
+        print("Empty file!")
+        fields = {}
+        allfields = []
+    else:
+        headers = twolines[0].replace('"', '').replace(" ", "").split(",")
+        allfields = twolines[1].replace('"', '').replace(" ", "").split(",")
 
     if len(allfields) != 20:
         print("Wrong number of fields for a AAGCloudWatcher file!")
