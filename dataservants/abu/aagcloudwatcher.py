@@ -35,8 +35,9 @@ def aagcloudwatcher(msg,
     # Since we read it in as lines() split it into two lines so we can grab
     #   the header lines first
     twolines = msg.strip().split("\n")
-    if len(twolines) == 0:
-        print("Empty file!")
+    if len(twolines) == 0 or len(twolines) == 1:
+        print("Bad file! Should have two lines, but doesn't!")
+        print(twolines)
         fields = {}
         allfields = []
     else:
