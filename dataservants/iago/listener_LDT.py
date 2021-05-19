@@ -79,7 +79,7 @@ class LDTConsumer(ConnectionListener):
                 print("="*42)
                 badMsg = True
 
-        # List of packets that we know have schemas and will work.
+        # List of topics that we know have schemas and will work.
         #   Still hardcoding things at the moment.
         vFlats = ['AOS.AOSPubDataSV.AOSDataPacket',
                   'WRS.WRSPubDataSV.WRSDataPacket',
@@ -87,16 +87,16 @@ class LDTConsumer(ConnectionListener):
                   'Ryans.DCTWeatherStream',
                   'lig.sitepower.isense']
 
-        # List of packets that we know have a float value and nothing else
+        # List of topics that we know have a float value and nothing else
         vFloats = ['AOS.AOSSubDataSV.RelativeFocusOffset',
                    'AOS.AOSSubDataSV.AbsoluteFocusOffset',
                    'MTS.MTSPubDataSV.MountTemperature',
                    'DCS.DCSPubDataSV.MountDomeAzimuthDifference']
 
-        # List of packets that are just words/strings
+        # List of topics that are just words/strings
         vStrings = ['DCS.DSSPubDataSV.PositionStatus']
 
-        # List of packets that are bools (strings saying true/false)
+        # List of topics that are bools (strings saying true/false)
         vBools = ['DCS.DCSPubDataSV.OccultationWarning']
 
         # Now send the packet to the right place for processing.

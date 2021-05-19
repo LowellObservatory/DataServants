@@ -79,7 +79,7 @@ class LOISConsumer(ConnectionListener):
                 print("="*42)
                 badMsg = True
 
-        # List of packets that we know have schemas and will work.
+        # List of topics that we know have schemas and will work.
         #   Still hardcoding things at the moment.
         vFlats = ['tcs.loisTelemetry',
                   'lmi.loisTelemetry',
@@ -87,13 +87,13 @@ class LOISConsumer(ConnectionListener):
                   'RC1.loisTelemetry',
                   'RC2.loisTelemetry']
 
-        # List of packets that we know have a float value and nothing else
+        # List of topics that we know have a float value and nothing else
         vFloats = []
 
-        # List of packets that are just words/strings
+        # List of topics that are just words/strings
         vStrings = []
 
-        # List of packets that are bools (strings saying true/false)
+        # List of topics that are bools (strings saying true/false)
         vBools = []
 
         # Now send the packet to the right place for processing.
