@@ -81,6 +81,10 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
     else:
         # print("Schema was not a dict, so no other versions to check.")
         # print(type(schema))
+        #
+        # We still need this because the version is now used as an extra
+        #   database metric postfix if it is there
+        best = None
         good = schema.is_valid(msg)
 
     # A DIRTY DIRTY HACK
