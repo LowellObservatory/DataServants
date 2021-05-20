@@ -163,10 +163,21 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
                 print("Just before makeInfluxPacket")
                 print(ts, timeprec)
                 # Note: passing ts=None lets python Influx do the timestamp
-                # print("Making packet")
+                # print("Making packet")a
+                if best is not None:
+                    # THis means we had a version of the packet and not
+                    #   just the base topic name, so add the version in
+                    #   as a tag.  For the LDT, this could be a TCS or
+                    #   other LabVIEW thing's release version.  For the Mesa,
+                    #   this could be a subtype of info stuffed into
+                    #   a single topic like *.loisTelemetry
+                    tags = {"version": best}
+                else:
+                    tags = None
+
                 packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                            ts=ts,
-                                                           tags=None,
+                                                           tags=tags,
                                                            fields=fields)
 
                 # print("Packet done")
