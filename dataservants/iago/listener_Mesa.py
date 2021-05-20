@@ -100,7 +100,7 @@ class MesaConsumer(ConnectionListener):
                     # TODO: Wrap this in a proper try...except
                     #   As of right now, it'll be caught in the "WTF!!!"
                     schema = self.schemaDict[tname]
-                    # print("Schema before call:")
+                    print("Schema before call:")
                     print(schema)
                     parserFlatPacket(headers, body,
                                      schema=schema, db=self.dbconn)
