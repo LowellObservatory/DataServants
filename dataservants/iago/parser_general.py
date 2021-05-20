@@ -179,7 +179,7 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
                     #   that once this issue
                     #   https://github.com/LowellObservatory/ligmos/issues/21
                     #   is closed and cleaned up.
-                    meas = "%s_%s" % (meas, best)
+                    meas = ["%s_%s" % (meas, best[1:])]
 
                 packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                            ts=ts,
