@@ -165,19 +165,25 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
                 # Note: passing ts=None lets python Influx do the timestamp
                 # print("Making packet")a
                 if best is not None:
-                    # THis means we had a version of the packet and not
+                    # This means we had a version of the packet and not
                     #   just the base topic name, so add the version in
-                    #   as a tag.  For the LDT, this could be a TCS or
+                    #   as a postfix for the measurement name.
+                    #
+                    # For the LDT, this could be a TCS or
                     #   other LabVIEW thing's release version.  For the Mesa,
                     #   this could be a subtype of info stuffed into
                     #   a single topic like *.loisTelemetry
-                    tags = {"version": best}
-                else:
-                    tags = None
+                    #
+                    # Also strip out the first letter of the 'best' version
+                    #   since it's just a "v" fudged in there.  Should change
+                    #   that once this issue
+                    #   https://github.com/LowellObservatory/ligmos/issues/21
+                    #   is closed and cleaned up.
+                    meas = "%s_%s" % (meas, best)
 
                 packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                            ts=ts,
-                                                           tags=tags,
+                                                           tags=None,
                                                            fields=fields)
 
                 # print("Packet done")
