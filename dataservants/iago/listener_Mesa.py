@@ -15,6 +15,7 @@ Further description.
 
 from __future__ import division, print_function, absolute_import
 
+import urllib
 import xmltodict as xmld
 from stomp.listener import ConnectionListener
 
@@ -57,16 +58,23 @@ class MesaConsumer(ConnectionListener):
 
         if badMsg is False:
             try:
-                xml = xmld.parse(body)
+                # Note that I don't care about the actual result, parsing
+                #   happens later.  I just want to see if parsing is even
+                #   possible at this early stage to help direct the message
+                # TECHNICALLY this is a double parse and a hit to CPU usage.
+                #   But computers are both fast and cheap so I can be sloppy.
+                _ = xmld.parse(body)
                 # If we want to have the XML as a string:
                 # res = {tname: [headers, dumpPacket(xml)]}
                 # If we want to have the XML as an object:
-                res = {tname: [headers, xml]}
+                # res = {tname: [headers, xml]}
+                isXML = True
             except xmld.expat.ExpatError:
                 # This means that XML wasn't found, so it's just a string
                 #   packet with little/no structure. Attach the sub name
                 #   as a tag so someone else can deal with the thing
-                res = {tname: [headers, body]}
+                # res = {tname: [headers, body]}
+                isXML = False
             except Exception as err:
                 # This means that there was some kind of transport error
                 #   or it couldn't figure out the encoding for some reason.
@@ -77,6 +85,7 @@ class MesaConsumer(ConnectionListener):
                 print(str(err))
                 print("="*42)
                 badMsg = True
+                isXML = False
 
         # List of topics that we know have schemas and will work.
         #   Still hardcoding things at the moment.
@@ -97,13 +106,14 @@ class MesaConsumer(ConnectionListener):
         if badMsg is False:
             try:
                 if tname in vFlats:
-                    # TODO: Wrap this in a proper try...except
-                    #   As of right now, it'll be caught in the "WTF!!!"
-                    schema = self.schemaDict[tname]
-                    print("Schema before call:")
-                    print(schema)
-                    parserFlatPacket(headers, body,
-                                     schema=schema, db=self.dbconn)
+                    if isXML is True:
+                        # TODO: Wrap this in a proper try...except
+                        #   As of right now, it'll be caught in the "WTF!!!"
+                        schema = self.schemaDict[tname]
+                        print("Schema before call:")
+                        print(schema)
+                        parserFlatPacket(headers, body,
+                                         schema=schema, db=self.dbconn)
                 elif tname in vFloats:
                     parserSimple(headers, body, db=self.dbconn,
                                  datatype='float')
@@ -120,7 +130,11 @@ class MesaConsumer(ConnectionListener):
                     print("Orphan topic: %s" % (tname))
                     print(headers)
                     print(body)
-                    print(res)
+            except urllib.error.URLError as err:
+                # This actually implies that the message wasn't a valid XML
+                #   message and couldn't actually be validated.  I think it's
+                #   really a quirk of the xmlschema library but I'm not sure
+                print(err)
             except Exception as err:
                 # Mostly this catches instances where the topic name doesn't
                 #   have a schema, but it catches all oopsies really
