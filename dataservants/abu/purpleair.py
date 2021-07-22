@@ -22,15 +22,15 @@ import requests
 import xmltodict as xmld
 
 
-def purpleQuery(retVal, timestamp, devType="PurpleAir_PA-II"):
+def purpleQuery(data, timestamp, devType="PurpleAir_PA-II"):
     """
     """
     # Note that the and is mostly useless, but lets me stub in some
     #   modifications if there is a different one in the future
     paxml = None
-    if retVal != '' and devType == "PurpleAir_PA-II":
+    if data != '' and devType.lower() == "purpleair_pa-ii":
         try:
-            rjson = retVal.json()
+            rjson = data.json()
             # Add in our query timestamp, since it's not 100% possible
             #   to rely on the timestamps in the PA JSON itself.  If the
             #   network gets disconnected, it'll revert to UNIX 0!
