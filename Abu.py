@@ -180,7 +180,10 @@ def main():
 
                     # The meteobridge parser returns a dict of XML packets
                     #   where the keys are to be postfixed to the base
-                    #   publication topic given in the configuration file
+                    #   publication topic given in the configuration file.
+                    # It makes sense if you read that again, but slower, I
+                    #   promise.  It usually takes me 2 or 3 reads to remember
+                    #   and I'm the one who wrote this thing.
                     if isinstance(bxml, dict) and bxml != {}:
                         for xp in bxml.keys():
                             particularTopic = "%s.%s" % (sObj.pubtopic, xp)
