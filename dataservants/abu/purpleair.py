@@ -35,6 +35,13 @@ def purpleQuery(data, timestamp, devType="PurpleAir_PA-II"):
             #   network gets disconnected, it'll revert to UNIX 0!
             rjson.update({"queryTS": timestamp})
 
+            # Check for weird values that can happen as the sensor
+            #   is booting up, and ditch them
+            for each in rjson:
+                if rjson[each] == 'nan':
+                    print("Warning: Removing 'nan' key %s!" % (each))
+                    rjson.pop(each)
+
             # Since it's nice and flat and not too bad JSON already, turn it
             #   into XML to send it to the broker
             paxml = xmld.unparse({"PurpleAir_PA-II": rjson}, pretty=True)
