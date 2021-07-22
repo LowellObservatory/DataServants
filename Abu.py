@@ -36,6 +36,7 @@ from dataservants.abu.http import webgetter
 from dataservants.abu.filewatch import checkFileHash
 
 from dataservants.abu.power import parseiSense
+from dataservants.abu.purpleair import purpleQuery
 from dataservants.abu.boltwood import boltwood_clarityii
 from dataservants.abu.aagcloudwatcher import aagcloudwatcher
 from dataservants.abu.weather import parseColumbia, parseMeteobridge, prepWU
@@ -153,6 +154,8 @@ def main():
                     bxml = boltwood_clarityii(wxml, timezone="US/Arizona")
                 elif sObj.devicetype.lower() == "aag_cloudwatcher":
                     bxml = aagcloudwatcher(wxml, timezone="US/Arizona")
+                elif sObj.devicetype.lower() == "purpleair_pa-ii":
+                    bxml = purpleQuery(wxml, now, devType=sObj.devicetype)
                 else:
                     print("WARNING: NO BROKER FUNCTION FOUND FOR %s" %
                           (sect))
