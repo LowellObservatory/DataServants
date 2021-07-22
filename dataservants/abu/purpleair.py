@@ -15,10 +15,9 @@ Further description.
 
 from __future__ import division, print_function, absolute_import
 
+import json
 import datetime as dt
 
-import pytz
-import requests
 import xmltodict as xmld
 
 
@@ -30,7 +29,7 @@ def purpleQuery(data, timestamp, devType="PurpleAir_PA-II"):
     paxml = None
     if data != '' and devType.lower() == "purpleair_pa-ii":
         try:
-            rjson = data.json()
+            rjson = json.loads(data)
             # Add in our query timestamp, since it's not 100% possible
             #   to rely on the timestamps in the PA JSON itself.  If the
             #   network gets disconnected, it'll revert to UNIX 0!
