@@ -36,7 +36,7 @@ from dataservants.abu.http import webgetter
 from dataservants.abu.filewatch import checkFileHash
 
 from dataservants.abu.power import parseiSense
-from dataservants.abu.purpleair import purpleQuery
+from dataservants.abu.purpleair import purplePreparer
 from dataservants.abu.boltwood import boltwood_clarityii
 from dataservants.abu.aagcloudwatcher import aagcloudwatcher
 from dataservants.abu.weather import parseColumbia, parseMeteobridge, prepWU
@@ -135,11 +135,10 @@ def main():
             if wxml != '':
                 bxml = None
                 if sObj.devicetype.lower() == "columbia_orion":
+                    # This one doesn't get a 'rootkey' argument because
+                    #   the rootkey for the XML is already the station name
                     bxml, val = parseColumbia(wxml, returnDict=True)
                 elif sObj.devicetype.lower() == "isense":
-                    # TODO: Clean up this hard coded rootKey thing.
-                    #   It should be "ldtiSense" because that's what Iago
-                    #   will be looking for later.
                     bxml = parseiSense(wxml, rootKey=sObj.name)
                 elif sObj.devicetype.lower() == "meteobridge_vantagepro2":
                     # NOTE: This will return a dict of XML packets
@@ -155,7 +154,7 @@ def main():
                 elif sObj.devicetype.lower() == "aag_cloudwatcher":
                     bxml = aagcloudwatcher(wxml, timezone="US/Arizona")
                 elif sObj.devicetype.lower() == "purpleair_pa-ii":
-                    bxml = purpleQuery(wxml, now, devType=sObj.devicetype)
+                    bxml = purplePreparer(wxml, now, devType=sObj.devicetype)
                 else:
                     print("WARNING: NO BROKER FUNCTION FOUND FOR %s" %
                           (sect))

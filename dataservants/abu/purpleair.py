@@ -18,10 +18,13 @@ from __future__ import division, print_function, absolute_import
 import json
 import datetime as dt
 
+import pytz
+
 import xmltodict as xmld
 
 
-def purpleQuery(data, timestamp, devType="PurpleAir_PA-II"):
+def purplePreparer(data, timestamp,
+                   serverTZ="US/Arizona", devType="PurpleAir_PA-II"):
     """
     """
     # Note that the and is mostly useless, but lets me stub in some
@@ -41,6 +44,44 @@ def purpleQuery(data, timestamp, devType="PurpleAir_PA-II"):
                 if rjson[each] == 'nan':
                     print("Warning: Removing 'nan' key %s!" % (each))
                     rjson.pop(each)
+
+            # If the sensor just booted, the timestamp will be in the
+            #   1970 (Unix 0) epoch so if that's the case, replace it
+            #   with the query timestamp and pass it along!  Put it in the
+            #   "usual" place that the Iago-style parsers can grab it,
+            #   e.g. influx_ts prefixed stamp
+            timestampStr = rjson.pop("DateTime")
+            timestampDT = dt.datetime.strptime(timestampStr,
+                                               "%Y/%m/%dT%H:%M:%Sz")
+
+            # Add in the timezone by hand to make sure it's clear it's UTC
+            #   coming out of the PurpleAir JSON DateTime timestamp.
+            # This is unlikely to change unless PurpleAir changes it in the
+            #   firmware but that's very unlikely and would be very dumb.
+            timestampDT = timestampDT.replace(tzinfo=pytz.UTC)
+
+            # Localize to our SERVER'S timezone - check your own setup!
+            #   It's likely to be either UTC, or your server's actual local
+            #   timezone.  It depends on who set it up, and who set up influx
+            serverTZ = pytz.timezone(serverTZ)
+            timestampDT = timestampDT.astimezone(serverTZ)
+
+            querytimeStr = rjson.pop("queryTS")
+            querytimeDT = dt.datetime.strptime(querytimeStr,
+                                               "%Y/%m/%dT%H:%M:%Sz")
+
+            # Now do a sanity check; is timestampDT in the default epoch?
+            #   If so, just use the system time instead because that implies
+            #   that the sensor rebooted, or it lost it's internet connection
+            #   so the NTP check didn't work
+            if timestampDT.year == 1970:
+                print("Warning: Replacing PurpleAir timestamp with my own!")
+                print("PA_TS:", timestampDT)
+                print("My_TS:", querytimeDT)
+                timestampDT = querytimeDT
+
+            rjson['influx_ts_ms'] = timestampDT
+            print("Data timestamp:", timestampDT)
 
             # Since it's nice and flat and not too bad JSON already, turn it
             #   into XML to send it to the broker
