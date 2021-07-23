@@ -23,7 +23,7 @@ import pytz
 import xmltodict as xmld
 
 
-def purplePreparer(data, timestamp,
+def purplePreparer(data, querytimeDT,
                    serverTZ="US/Arizona", devType="PurpleAir_PA-II"):
     """
     """
@@ -36,7 +36,7 @@ def purplePreparer(data, timestamp,
             # Add in our query timestamp, since it's not 100% possible
             #   to rely on the timestamps in the PA JSON itself.  If the
             #   network gets disconnected, it'll revert to UNIX 0!
-            rjson.update({"queryTS": timestamp})
+            rjson.update({"queryTS": querytimeDT})
 
             # Check for weird values that can happen as the sensor
             #   is booting up, and ditch them
@@ -66,10 +66,6 @@ def purplePreparer(data, timestamp,
             serverTZ = pytz.timezone(serverTZ)
             timestampDT = timestampDT.astimezone(serverTZ)
 
-            querytimeStr = rjson.pop("queryTS")
-            querytimeDT = dt.datetime.strptime(querytimeStr,
-                                               "%Y/%m/%dT%H:%M:%Sz")
-
             # Now do a sanity check; is timestampDT in the default epoch?
             #   If so, just use the system time instead because that implies
             #   that the sensor rebooted, or it lost it's internet connection
@@ -80,7 +76,10 @@ def purplePreparer(data, timestamp,
                 print("My_TS:", querytimeDT)
                 timestampDT = querytimeDT
 
-            rjson['influx_ts_ms'] = timestampDT
+            # We use _ms here because if we replace the timestamp ourselves
+            #   above, we will actually have ms resolution and it might be
+            #   nice to just keep that for the future.
+            rjson['influx_ts_ms'] = round(timestampDT.timestamp()*1e3)
             print("Data timestamp:", timestampDT)
 
             # Since it's nice and flat and not too bad JSON already, turn it
