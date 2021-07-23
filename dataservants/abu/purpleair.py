@@ -49,7 +49,7 @@ def purplePreparer(data, querytimeDT,
             #   1970 (Unix 0) epoch so if that's the case, replace it
             #   with the query timestamp and pass it along!  Put it in the
             #   "usual" place that the Iago-style parsers can grab it,
-            #   e.g. influx_ts prefixed stamp
+            #   e.g. influx_ts prefixed stamp.
             timestampStr = rjson.pop("DateTime")
             timestampDT = dt.datetime.strptime(timestampStr,
                                                "%Y/%m/%dT%H:%M:%Sz")
@@ -66,6 +66,9 @@ def purplePreparer(data, querytimeDT,
             serverTZ = pytz.timezone(serverTZ)
             timestampDT = timestampDT.astimezone(serverTZ)
 
+            # Re-store the original timestamp, now with it's TZinfo too
+            rjson['odataTS'] = timestampDT
+
             # Now do a sanity check; is timestampDT in the default epoch?
             #   If so, just use the system time instead because that implies
             #   that the sensor rebooted, or it lost it's internet connection
@@ -79,6 +82,7 @@ def purplePreparer(data, querytimeDT,
             # We use _ms here because if we replace the timestamp ourselves
             #   above, we will actually have ms resolution and it might be
             #   nice to just keep that for the future.
+
             rjson['influx_ts_ms'] = round(timestampDT.timestamp()*1e3)
             print("Data timestamp:", timestampDT)
 
