@@ -46,49 +46,8 @@ class MesaConsumer(ConnectionListener):
         """
         badMsg = False
         tname = headers['destination'].split('/')[-1].strip()
-        # Manually turn the bytestring into a string
-        try:
-            body = body.decode("utf-8")
-            badMsg = False
-        except UnicodeDecodeError as err:
-            print(str(err))
-            print("Badness 10000")
-            print(body)
-            badMsg = True
-
-        if badMsg is False:
-            try:
-                # Note that I don't care about the actual result, parsing
-                #   happens later.  I just want to see if parsing is even
-                #   possible at this early stage to help direct the message
-                # TECHNICALLY this is a double parse and a hit to CPU usage.
-                #   But computers are both fast and cheap so I can be sloppy.
-                _ = xmld.parse(body)
-                # If we want to have the XML as a string:
-                # res = {tname: [headers, dumpPacket(xml)]}
-                # If we want to have the XML as an object:
-                # res = {tname: [headers, xml]}
-                isXML = True
-            except xmld.expat.ExpatError:
-                # This means that XML wasn't found, so it's just a string
-                #   packet with little/no structure. Attach the sub name
-                #   as a tag so someone else can deal with the thing
-                # res = {tname: [headers, body]}
-                isXML = False
-            except Exception as err:
-                # This means that there was some kind of transport error
-                #   or it couldn't figure out the encoding for some reason.
-                #   Scream into the log but keep moving
-                print("="*42)
-                print(headers)
-                print(body)
-                print(str(err))
-                print("="*42)
-                badMsg = True
-                isXML = False
 
         # List of topics that we know have schemas and will work.
-        #   Still hardcoding things at the moment.
         vFlats = ['lig.mesa.NPOIWeatherStation',
                   'LOUI.nasa42.loisTelemetry']
 
@@ -101,19 +60,25 @@ class MesaConsumer(ConnectionListener):
         # List of topics that are bools (strings saying true/false)
         vBools = []
 
+        # Manually turn the bytestring into a string
+        try:
+            body = body.decode("utf-8")
+            badMsg = False
+        except UnicodeDecodeError as err:
+            print(str(err))
+            print("Badness 10000")
+            print(body)
+            badMsg = True
+
         # Now send the packet to the right place for processing.
-        #   These need special parsing because they're formatted strings
         if badMsg is False:
             try:
                 if tname in vFlats:
-                    if isXML is True:
-                        # TODO: Wrap this in a proper try...except
-                        #   As of right now, it'll be caught in the "WTF!!!"
-                        schema = self.schemaDict[tname]
-                        print("Schema before call:")
-                        print(schema)
-                        parserFlatPacket(headers, body,
-                                         schema=schema, db=self.dbconn)
+                    schema = self.schemaDict[tname]
+                    print("Schema before call:")
+                    print(schema)
+                    parserFlatPacket(headers, body,
+                                     schema=schema, db=self.dbconn)
                 elif tname in vFloats:
                     parserSimple(headers, body, db=self.dbconn,
                                  datatype='float')
