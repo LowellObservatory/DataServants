@@ -17,6 +17,7 @@ from __future__ import division, print_function, absolute_import
 
 import json
 import datetime as dt
+import statistics as stats
 
 import pytz
 
@@ -27,9 +28,10 @@ def purplePreparer(data, querytimeDT,
                    serverTZ="US/Arizona", devType="PurpleAir_PA-II"):
     """
     """
-    # Note that the and is mostly useless, but lets me stub in some
-    #   modifications if there is a different one in the future
     paxml = None
+
+    # Note that the 'and' here is mostly useless, but lets me prepare
+    #   if there is a significantly different model in the future
     if data != '' and devType.lower() == "purpleair_pa-ii":
         try:
             rjson = json.loads(data)
@@ -90,6 +92,20 @@ def purplePreparer(data, querytimeDT,
 
             rjson['influx_ts_ms'] = round(timestampDT.timestamp()*1e3)
             print("Data timestamp:", timestampDT)
+
+            # These are the values used to calculate the local "confidence"
+            #   of each channel - the one PA shows on the map is done
+            #   server side, so I don't know exactly what they do.  I suspect
+            #   they look at 1,12,24h averages.  Volumetric numbers are too
+            #   noisy otherwise, so I just look at the short term trends of
+            #   PM2.5 only as a proxy.
+            pDV = ['pm2_5_atm', 'pm2_5_atm_b']
+            std = stats.stdev([rjson[pDV[0]], rjson[pDV[1]]])
+            var = stats.variance([rjson[pDV[0]], rjson[pDV[1]]])
+            # print(pDV)
+            # print(rjson[pDV[0]], rjson[pDV[1]], "%.2f %.2f" % (std, var))
+            rjson['pm2.5_atm_stddev'] = "%.2f" % (std)
+            rjson['pm2.5_atm_variance'] = "%.2f" % (var)
 
             # Since it's nice and flat and not too bad JSON already, turn it
             #   into XML to send it to the broker
