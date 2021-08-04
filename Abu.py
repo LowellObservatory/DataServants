@@ -55,7 +55,7 @@ def main():
     conftype = classes.sneakyTarget
 
     # Interval between successive runs of the polling loop (seconds)
-    bigsleep = 120
+    bigsleep = 60
 
     # Time for tiny sleeps (in sec) to allow for abort checks/other processes
     microsleep = 0.1
