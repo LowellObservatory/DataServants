@@ -44,7 +44,7 @@ def flatten(d, parent_key='', sep='_'):
 
 
 def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
-                     timestampKey=None):
+                     timestampKey='influx_ts', returnParsed=False):
     """
     """
     debug = True
@@ -164,8 +164,6 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
                     ts = None
                     timeprec = 's'
 
-                print("Just before makeInfluxPacket")
-                print(ts, timeprec)
                 # Note: passing ts=None lets python Influx do the timestamp
                 # print("Making packet")a
                 if best is not None:
@@ -174,35 +172,43 @@ def parserFlatPacket(hed, msg, schema=None, db=None, debug=False,
                     #   as a postfix for the measurement name.
                     #
                     # For the LDT, this could be a TCS or
-                    #   other LabVIEW thing's release version.  For the Mesa,
-                    #   this could be a subtype of info stuffed into
+                    #   other LabVIEW thing's release version.  For the
+                    #   Mesa, this could be a subtype of info stuffed into
                     #   a single topic like *.loisTelemetry
                     #
                     # Also strip out the first letter of the 'best' version
-                    #   since it's just a "v" fudged in there.  Should change
-                    #   that once this issue
+                    #   since it's just a "v" fudged in there.  See
                     #   https://github.com/LowellObservatory/ligmos/issues/21
-                    #   is closed and cleaned up.
+                    #   for some details on that front.
                     #
                     # Remember; meas is a list and must remain a list!
                     meas = "%s_%s" % (meas[0], best[1:])
                     meas = [meas]
 
-                packet = utils.packetizer.makeInfluxPacket(meas=meas,
-                                                           ts=ts,
-                                                           tags=None,
-                                                           fields=fields)
+                # Allow a quick exit here after parsing and sorting in case
+                #   we need to further organize the results in another function
+                #   before sending it off to the databse.  In most cases this
+                #   will be False, but it's handy sometimes (like PurpleAir).
+                if returnParsed is True:
+                    return meas, ts, timeprec, fields
+                else:
+                    print("Just before makeInfluxPacket")
+                    print(ts, timeprec)
+                    packet = utils.packetizer.makeInfluxPacket(meas=meas,
+                                                               ts=ts,
+                                                               tags=None,
+                                                               fields=fields)
 
-                # print("Packet done")
-                print(packet)
+                    # print("Packet done")
+                    print(packet)
 
-                # Actually commit the packet. singleCommit opens it,
-                #   writes the packet, and then optionally closes it.
-                if db is not None:
-                    print("Sending packet")
-                    db.singleCommit(packet, table=db.tablename,
-                                    close=True, timeprec=timeprec)
-                    # print("Sent!")
+                    # Actually commit the packet. singleCommit opens it,
+                    #   writes the packet, and then optionally closes it.
+                    if db is not None:
+                        print("Sending packet")
+                        db.singleCommit(packet, table=db.tablename,
+                                        close=True, timeprec=timeprec)
+                        # print("Sent!")
         except xmls.XMLSchemaDecodeError as err:
             print(err.message.strip())
             print(err.reason.strip())
