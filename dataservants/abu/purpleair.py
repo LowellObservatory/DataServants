@@ -33,6 +33,11 @@ def purplePreparer(data, querytimeDT,
     if data != '' and devType.lower() == "purpleair_pa-ii":
         try:
             rjson = json.loads(data)
+
+            # Stuff in the device type just so it's easier later.  No great
+            #   way to tell otherwise and it makes sense to do at this stage
+            rjson.update({"deviceType": devType.lower()})
+
             # Add in our query timestamp, since it's not 100% possible
             #   to rely on the timestamps in the PA JSON itself.  If the
             #   network gets disconnected, it'll revert to UNIX 0!
@@ -88,7 +93,7 @@ def purplePreparer(data, querytimeDT,
 
             # Since it's nice and flat and not too bad JSON already, turn it
             #   into XML to send it to the broker
-            paxml = xmld.unparse({"PurpleAir_PA-II": rjson}, pretty=True)
+            paxml = xmld.unparse({"PurpleAirSensor": rjson}, pretty=True)
         except Exception as err:
             print("Well shit")
             print(str(err))
