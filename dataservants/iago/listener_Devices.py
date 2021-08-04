@@ -107,7 +107,7 @@ class DevicesConsumer(ConnectionListener):
                         # To make sure nothing gets posted early, I'm
                         #   specifically _not_ handing over the db connection.
                         rP = parserFlatPacket(headers, body,
-                                              schema=schema, db=self.dbconn,
+                                              schema=schema, db=None,
                                               returnParsed=True)
 
                         # rP == [meas, ts, timeprec, fields]

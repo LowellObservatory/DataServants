@@ -124,7 +124,7 @@ def parserPurpleAir(meas, ts, timeprec, rjson, db=None):
             print(str(err))
 
         if allSets != {}:
-            purpleDBprep(ts, allSets, db)
+            purpleDBprep(ts, allSets, db=db)
 
     return allSets
 
