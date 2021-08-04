@@ -50,7 +50,10 @@ class DevicesConsumer(ConnectionListener):
 
         # List of topics that we know have schemas and will work.
         #   Still hardcoding things at the moment.
-        vFlats = ['lig.aqi.purpleair.marshill']
+        vFlats = ['lig.aqi.purpleair.marshill',
+                  'lig.aqi.purpleair.ldt.outside',
+                  'lig.aqi.purpleair.ldt.dsscabinet',
+                  'lig.aqi.purpleair.mesa.outside']
 
         # List of topics that we know have a float value and nothing else
         vFloats = []
