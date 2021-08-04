@@ -12,6 +12,7 @@ from __future__ import division, print_function, absolute_import
 
 import os
 import sys
+import copy
 import time
 
 from ligmos.workers import connSetup, workerSetup
@@ -74,7 +75,10 @@ def main():
             print("databaseReference: %s" % (conSect.database))
 
             try:
-                dbref = idbs[conSect.database]
+                # Deal with mutability here! Must do a deepcopy to change the
+                #   tablename between config sections, otherwise it'll get all
+                #   sorts of screwed up.
+                dbref = copy.deepcopy(idbs[conSect.database])
                 dbref.tablename = conSect.tablename
             except KeyError:
                 print("Database %s not in config :(" % (conSect.database))
