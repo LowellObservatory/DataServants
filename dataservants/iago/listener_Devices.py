@@ -89,6 +89,7 @@ class DevicesConsumer(ConnectionListener):
 
                         # Some last minute checks
                         if schema == []:
+                            print("WARNING - No schema found!")
                             schema = None
                         else:
                             # If there are multiple results, warn about it
