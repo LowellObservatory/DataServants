@@ -34,7 +34,7 @@ def main():
     conftype = classes.snoopTarget
 
     # Interval between successive runs of the polling loop (seconds)
-    bigsleep = 120
+    bigsleep = 60
 
     # config: dictionary of parsed config file
     # comm: common block from config file
