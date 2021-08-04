@@ -124,12 +124,12 @@ def parserPurpleAir(meas, ts, timeprec, rjson, db=None):
             print(str(err))
 
         if allSets != {}:
-            purpleDBprep(ts, allSets, db=db)
+            purpleDBprep(ts, timeprec, allSets, db=db)
 
     return allSets
 
 
-def purpleDBprep(ts, allSets, db=None):
+def purpleDBprep(ts, timeprec, allSets, db=None):
     postfix = "_b"
     for metric in allSets.keys():
         tags = allSets[metric][0]
@@ -148,4 +148,5 @@ def purpleDBprep(ts, allSets, db=None):
         # Actually commit the packet. singleCommit opens it,
         #   writes the packet, and then optionally closes it.
         if db is not None:
-            db.singleCommit(pkt, table=db.tablename, close=True)
+            db.singleCommit(pkt, timeprec=timeprec,
+                            table=db.tablename, close=True)
