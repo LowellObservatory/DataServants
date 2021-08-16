@@ -29,6 +29,7 @@ from requests.exceptions import ConnectionError as RCE
 import pytz
 
 from ligmos.utils import amq, classes, common
+from ligmos.utils import amq_listeners as amql
 from ligmos.workers import connSetup, workerSetup
 
 from dataservants.abu import parseargs
@@ -84,7 +85,7 @@ def main():
     # Check to see if there are any connections/objects to establish
     # idbs = connSetup.connIDB(comm)
 
-    amqlistener = amq.silentSubscriber()
+    amqlistener = amql.silentSubscriber()
     amqtopics = amq.getAllTopics(config, comm)
     amqs = connSetup.connAMQ(comm, amqtopics, amqlistener=amqlistener)
 
