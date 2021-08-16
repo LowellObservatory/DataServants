@@ -17,6 +17,7 @@ import time
 
 from ligmos.workers import connSetup, workerSetup
 from ligmos.utils import amq, classes, common
+from ligmos.utils import amq_listeners as amql
 
 from dataservants import iago
 
@@ -101,7 +102,7 @@ def main():
                 print("WARNING: Unknown or no listenertype specified!")
                 print("Using no databases and switching to Parrot listener!")
                 prdb = None
-                prlistener = amq.ParrotSubscriber()
+                prlistener = amql.ParrotSubscriber()
 
             topicTypes.update({eachSection: [conSect, prlistener]})
 
