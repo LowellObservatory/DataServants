@@ -79,25 +79,25 @@ def main():
                 # Deal with mutability here! Must do a deepcopy to change the
                 #   tablename between config sections, otherwise it'll get all
                 #   sorts of screwed up.
-                dbref = copy.deepcopy(idbs[conSect.database])
-                dbref.tablename = conSect.tablename
+                dbr = copy.deepcopy(idbs[conSect.database])
+                dbr.tablename = conSect.tablename
             except KeyError:
                 print("Database %s not in config :(" % (conSect.database))
-                dbref = None
+                dbr = None
 
             # I admit in retrospect that this sucks
             if conSect.listenertype.lower() == "ldt":
-                prlistener = iago.listener_LDT.LDTConsumer(dbconn=dbref)
+                prlistener = iago.listener_LDT.LDTConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "omspdu":
-                prlistener = iago.listener_OMSPDU.OMSPDUConsumer(dbconn=dbref)
+                prlistener = iago.listener_OMSPDU.OMSPDUConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "lois":
-                prlistener = iago.listener_LOIS.LOISConsumer(dbconn=dbref)
+                prlistener = iago.listener_LOIS.LOISConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "mesa":
-                prlistener = iago.listener_Mesa.MesaConsumer(dbconn=dbref)
+                prlistener = iago.listener_Mesa.MesaConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "marshill":
-                prlistener = iago.listener_MarsHill.MHConsumer(dbconn=dbref)
+                prlistener = iago.listener_MarsHill.MHConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "devices":
-                prlistener = iago.listener_Devices.DevicesConsumer(dbconn=dbref)
+                prlistener = iago.listener_Devices.DevicesConsumer(dbconn=dbr)
             else:
                 print("WARNING: Unknown or no listenertype specified!")
                 print("Using no databases and switching to Parrot listener!")
