@@ -15,7 +15,6 @@ Further description.
 
 from __future__ import division, print_function, absolute_import
 
-import xmltodict as xmld
 from stomp.listener import ConnectionListener
 
 from ligmos import utils
