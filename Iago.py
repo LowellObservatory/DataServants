@@ -17,7 +17,7 @@ import time
 
 from ligmos.workers import connSetup, workerSetup
 from ligmos.utils import amq, classes, common
-from ligmos.utils import amq_listeners as amql
+from ligmos.utils import amqListeners as amql
 
 from dataservants import iago
 

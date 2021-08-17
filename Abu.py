@@ -29,7 +29,7 @@ from requests.exceptions import ConnectionError as RCE
 import pytz
 
 from ligmos.utils import amq, classes, common
-from ligmos.utils import amq_listeners as amql
+from ligmos.utils import amqListeners as amql
 from ligmos.workers import connSetup, workerSetup
 
 from dataservants.abu import parseargs
