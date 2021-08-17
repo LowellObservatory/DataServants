@@ -10,5 +10,4 @@ from . import parseargs
 from . import parser_LDT
 from . import parser_LOIS
 from . import parser_OMSPDU
-from . import parser_general
 from . import parser_purpleair
