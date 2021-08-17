@@ -17,10 +17,10 @@ from __future__ import division, print_function, absolute_import
 
 from stomp.listener import ConnectionListener
 
-from ligmos import utils
+from ligmos.utils import xmlschemas as myxml
+from ligmos.utils.messageParsers import parserFlatPacket, parserSimple
 
 from .parser_LDT import parserLPI
-from .parser_general import parserFlatPacket, parserSimple
 
 
 class LDTConsumer(ConnectionListener):
@@ -36,7 +36,7 @@ class LDTConsumer(ConnectionListener):
         self.dbconn = dbconn
 
         # Grab all the schemas that are in the ligmos library
-        self.schemaDict = utils.amq.schemaDicter()
+        self.schemaDict = myxml.schemaDicter()
         print(self.schemaDict)
 
     def on_message(self, headers, body):

@@ -18,10 +18,10 @@ from __future__ import division, print_function, absolute_import
 import urllib
 from stomp.listener import ConnectionListener
 
-from ligmos import utils
+from ligmos.utils import xmlschemas as myxml
+from ligmos.utils.messageParsers import parserFlatPacket, parserSimple
 
 from .parser_purpleair import parserPurpleAir
-from .parser_general import parserFlatPacket, parserSimple
 
 
 class DevicesConsumer(ConnectionListener):
@@ -37,7 +37,7 @@ class DevicesConsumer(ConnectionListener):
         self.dbconn = dbconn
 
         # Grab all the schemas that are in the ligmos library
-        self.schemaDict = utils.amq.schemaDicter()
+        self.schemaDict = myxml.schemaDicter()
         self.schemaList = list(self.schemaDict.keys())
         print(self.schemaDict)
 
