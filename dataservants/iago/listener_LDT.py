@@ -18,6 +18,7 @@ from __future__ import division, print_function, absolute_import
 from ligmos.utils import amqListeners as amqL
 
 from .parser_LDT import parserLPI
+from .parser_purpleair import parserPurpleAir
 
 
 def LDTConsumer(dbconn=None):
@@ -29,6 +30,14 @@ def LDTConsumer(dbconn=None):
             'TCS.TCSSharedVariables.TCSHighLevelStatusSV.TCSTcsStatusSV',
             'Ryans.DCTWeatherStream',
             'lig.sitepower.isense']
+
+    # Topics that can be parsed directly via XML schema, but require more work
+    # A *dict* of special topics and their custom parser/consumer.
+    #   NOTE: the special functions must all take the following arguments:
+    #       headers, body, db=None, schema=None
+    #   This is to ensure compatibility with the consumer provided inputs!
+    tkXMLSpecial = {'lig.aqi.purpleair.ldt.outside': parserPurpleAir,
+                    'lig.aqi.purpleair.ldt.dsscabinet': parserPurpleAir}
 
     # Topics that are just bare floats
     tFloat = ['AOS.AOSSubDataSV.RelativeFocusOffset',
@@ -49,7 +58,9 @@ def LDTConsumer(dbconn=None):
     tSpecial = {"lightPathInformation": parserLPI}
 
     # Create our subclassed consumer with the above routes
-    consumer = amqL.LIGBaseConsumer(dbconn=dbconn, tSpecial=tSpecial,
+    consumer = amqL.LIGBaseConsumer(dbconn=dbconn,
+                                    tSpecial=tSpecial,
+                                    tkXMLSpecial=tkXMLSpecial,
                                     tXML=tXML, tFloat=tFloat,
                                     tStr=tStr, tBool=tBool)
 

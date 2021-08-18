@@ -17,6 +17,8 @@ from __future__ import division, print_function, absolute_import
 
 from ligmos.utils import amqListeners as amqL
 
+from .parser_purpleair import parserPurpleAir
+
 
 def MHConsumer(dbconn=None):
     """
@@ -28,6 +30,13 @@ def MHConsumer(dbconn=None):
             'lig.weather.clark.windgauge',
             'lig.weather.timo.boltwoodii',
             'lig.weather.timo.aagcloudwatcher']
+
+    # Topics that can be parsed directly via XML schema, but require more work
+    # A *dict* of special topics and their custom parser/consumer.
+    #   NOTE: the special functions must all take the following arguments:
+    #       headers, body, db=None, schema=None
+    #   This is to ensure compatibility with the consumer provided inputs!
+    tkXMLSpecial = {'lig.aqi.purpleair.marshill': parserPurpleAir}
 
     # Topics that are just bare floats
     tFloat = None
@@ -45,7 +54,9 @@ def MHConsumer(dbconn=None):
     tSpecial = None
 
     # Create our subclassed consumer with the above routes
-    consumer = amqL.LIGBaseConsumer(dbconn=dbconn, tSpecial=tSpecial,
+    consumer = amqL.LIGBaseConsumer(dbconn=dbconn,
+                                    tSpecial=tSpecial,
+                                    tkXMLSpecial=tkXMLSpecial,
                                     tXML=tXML, tFloat=tFloat,
                                     tStr=tStr, tBool=tBool)
 
