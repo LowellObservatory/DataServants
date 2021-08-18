@@ -96,8 +96,6 @@ def main():
                 prlistener = iago.listener_Mesa.MesaConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "marshill":
                 prlistener = iago.listener_MarsHill.MHConsumer(dbconn=dbr)
-            # elif conSect.listenertype.lower() == "devices":
-            #     prlistener = iago.listener_Devices.DeviceConsumer(dbconn=dbr)
             else:
                 print("WARNING: Unknown or no listenertype specified!")
                 print("Using no databases and switching to Parrot listener!")
