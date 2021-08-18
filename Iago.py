@@ -91,8 +91,6 @@ def main():
             elif conSect.listenertype.lower() == "omspdu":
                 prlistener = iago.listener_OMSPDU.OMSPDUConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "lois":
-                # Original listener
-                # prlistener = iago.listener_LOIS.LOISConsumer(dbconn=dbr)
                 prlistener = iago.listener_LOIS.LOISConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "mesa":
                 prlistener = iago.listener_Mesa.MesaConsumer(dbconn=dbr)
