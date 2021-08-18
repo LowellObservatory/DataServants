@@ -89,10 +89,11 @@ def main():
             if conSect.listenertype.lower() == "ldt":
                 # Original/specific listener
                 # prlistener = iago.listener_LDT.LDTConsumer(dbconn=dbr)
-                # Testing the unified listener concept!
                 prlistener = iago.listener_LDT.createLDTConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "omspdu":
-                prlistener = iago.listener_OMSPDU.OMSPDUConsumer(dbconn=dbr)
+                # Original/specific listener
+                # prlistener = iago.listener_OMSPDU.OMSPDUConsumer(dbconn=dbr)
+                prlistener = iago.listener_OMSPDU.createOMSPDUConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "lois":
                 prlistener = iago.listener_LOIS.LOISConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "mesa":

@@ -18,7 +18,7 @@ from __future__ import division, print_function, absolute_import
 from ligmos import utils
 
 
-def parserStageResult(hed, msg, db=None):
+def parserStageResult(hed, msg, db=None, schema=None):
     """
     Since the OMS query/status command is sent at
        AA; RP; RQC; RI;
@@ -33,6 +33,9 @@ def parserStageResult(hed, msg, db=None):
     7e
 
     Results are *tagged* per axis to keep resulting queries simpler.
+
+    NOTE: schema=None is just to keep compatibility when using this as
+          a bound method elsewhere and generally called. It's not used here.
     """
     # ts = hed['timestamp']
 
@@ -240,10 +243,13 @@ def parserStageResult(hed, msg, db=None):
             db.singleCommit(packets, table=db.tablename, close=True)
 
 
-def parserPDU(_, msg, db=None):
+def parserPDU(_, msg, db=None, schema=None):
     """
     'gwavespdu2.lowell.edu:23 IPC ONLINE!'
     'gwavespdu2.lowell.edu:23 OUTLET 2 ON ( UNIT#0 J2 )NIH-TEMP'
+
+    NOTE: schema=None is just to keep compatibility when using this as
+          a bound method elsewhere and generally called. It's not used here.
     """
     # ts = hed['timestamp']
 

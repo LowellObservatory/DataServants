@@ -18,9 +18,40 @@ from __future__ import division, print_function, absolute_import
 from stomp.listener import ConnectionListener
 
 from ligmos.utils import xmlschemas as myxml
+from ligmos.utils import amqListeners as amqL
 from ligmos.utils.messageParsers import parserFlatPacket, parserSimple
 
 from .parser_OMSPDU import parserPDU, parserStageResult
+
+
+def createOMSPDUConsumer(dbconn=None):
+    """
+    """
+    # Topics that can be parsed directly via XML schema
+    tXML = ['joeStage']
+
+    # Topics that are just bare floats
+    tFloat = None
+
+    # Topics that are just words/strings
+    tStr = None
+
+    # Topics that are just bools
+    tBool = None
+
+    # A *dict* of special topics and their custom parser/consumer.
+    #   NOTE: the special functions must all take the following arguments:
+    #       headers, body, db=None, schema=None
+    #   This is to ensure compatibility with the consumer provided inputs!
+    tSpecial = {"joePduResult": parserPDU,
+                "joeStageResult": parserStageResult}
+
+    # Create our subclassed consumer with the above routes
+    consumer = amqL.LIGBaseConsumer(dbconn=dbconn, tSpecial=tSpecial,
+                                    tXML=tXML, tFloat=tFloat,
+                                    tStr=tStr, tBool=tBool)
+
+    return consumer
 
 
 class OMSPDUConsumer(ConnectionListener):
