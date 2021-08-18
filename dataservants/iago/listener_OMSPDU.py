@@ -15,11 +15,7 @@ Further description.
 
 from __future__ import division, print_function, absolute_import
 
-from stomp.listener import ConnectionListener
-
-from ligmos.utils import xmlschemas as myxml
 from ligmos.utils import amqListeners as amqL
-from ligmos.utils.messageParsers import parserFlatPacket, parserSimple
 
 from .parser_OMSPDU import parserPDU, parserStageResult
 
