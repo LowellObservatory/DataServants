@@ -87,15 +87,13 @@ def main():
 
             # I admit in retrospect that this sucks
             if conSect.listenertype.lower() == "ldt":
-                # Original/specific listener
-                # prlistener = iago.listener_LDT.LDTConsumer(dbconn=dbr)
                 prlistener = iago.listener_LDT.createLDTConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "omspdu":
-                # Original/specific listener
-                # prlistener = iago.listener_OMSPDU.OMSPDUConsumer(dbconn=dbr)
                 prlistener = iago.listener_OMSPDU.createOMSPDUConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "lois":
-                prlistener = iago.listener_LOIS.LOISConsumer(dbconn=dbr)
+                # Original listener
+                # prlistener = iago.listener_LOIS.LOISConsumer(dbconn=dbr)
+                prlistener = iago.listener_LOIS.createLOISConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "mesa":
                 prlistener = iago.listener_Mesa.MesaConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "marshill":

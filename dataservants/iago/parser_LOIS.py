@@ -21,10 +21,12 @@ import datetime as dt
 from ligmos import utils
 
 
-def parserLOlogs(hed, msg, db=None, badFWHM=100.):
+def parserLOlogs(hed, msg, db=None, badFWHM=100., schema=None):
     """
     '22:26:55 Level_4:CCD Temp:-110.06 18.54 Setpoints:-109.95 0.00 '
     '22:26:55 Level_4:Telescope threads have been reactivated'
+
+    NOTE: schema=None is just required for compatibility and ignored
     """
     # ts = hed['timestamp']
     topic = os.path.basename(hed['destination'])
