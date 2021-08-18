@@ -15,10 +15,6 @@ Further description.
 
 from __future__ import division, print_function, absolute_import
 
-from datetime import datetime as dt
-
-import pytz
-
 from ligmos.utils.packetizer import makeInfluxPacket
 
 
@@ -73,7 +69,12 @@ def keymap(devType="PurpleAir_PA-II"):
     return pks
 
 
-def parserPurpleAir(meas, ts, timeprec, rjson, db=None):
+def parserPurpleAir(rP, db=None):
+    # rP == [meas, ts, timeprec, fields]
+    meas = rP[0]
+    ts = rP[1]
+    timeprec = rP[2]
+    rjson = rP[3]
     # Defaults for aborted return values
     allSets = {}
     postfix = "_b"
