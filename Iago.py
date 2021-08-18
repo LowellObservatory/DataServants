@@ -105,7 +105,6 @@ def main():
             else:
                 print("WARNING: Unknown or no listenertype specified!")
                 print("Using no databases and switching to Parrot listener!")
-                prdb = None
                 prlistener = amql.ParrotSubscriber()
 
             topicTypes.update({eachSection: [conSect, prlistener]})
@@ -126,7 +125,7 @@ def main():
             brokerConns.update({eachBroker: newRef})
 
         # There really isn't anything to actually *do* in here;
-        #   all the real work happens in the listener, so we really
+        #   all the real work happens in the listeners, so we really
         #   just spin our wheels here.
 
         # Consider taking a big nap
