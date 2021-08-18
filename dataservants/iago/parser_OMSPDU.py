@@ -233,7 +233,7 @@ def parserStageResult(hed, msg, db=None, schema=None):
 
                     packets += packet
 
-        print(msg.strip())
+        # print(msg.strip())
         print(packets)
 
     if packets != []:
