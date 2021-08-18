@@ -20,7 +20,7 @@ from ligmos.utils import amqListeners as amqL
 from .parser_OMSPDU import parserPDU, parserStageResult
 
 
-def createOMSPDUConsumer(dbconn=None):
+def OMSPDUConsumer(dbconn=None):
     """
     """
     # Topics that can be parsed directly via XML schema

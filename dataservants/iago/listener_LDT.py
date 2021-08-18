@@ -20,7 +20,7 @@ from ligmos.utils import amqListeners as amqL
 from .parser_LDT import parserLPI
 
 
-def createLDTConsumer(dbconn=None):
+def LDTConsumer(dbconn=None):
     """
     """
     # Topics that can be parsed directly via XML schema
