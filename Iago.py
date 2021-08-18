@@ -41,13 +41,13 @@ def main():
     # comm: common block from config file
     # args: parsed options
     # runner: class that contains logic to quit nicely
-    config, comm, args, runner = workerSetup.toServeMan(conf,
-                                                        passes,
-                                                        logfile,
-                                                        desc=desc,
-                                                        extraargs=eargs,
-                                                        conftype=conftype,
-                                                        logfile=True)
+    config, comm, _, runner = workerSetup.toServeMan(conf,
+                                                     passes,
+                                                     logfile,
+                                                     desc=desc,
+                                                     extraargs=eargs,
+                                                     conftype=conftype,
+                                                     logfile=True)
 
     # Get this PID for diagnostics
     pid = os.getpid()
@@ -87,7 +87,10 @@ def main():
 
             # I admit in retrospect that this sucks
             if conSect.listenertype.lower() == "ldt":
-                prlistener = iago.listener_LDT.LDTConsumer(dbconn=dbr)
+                # Original/specific listener
+                # prlistener = iago.listener_LDT.LDTConsumer(dbconn=dbr)
+                # Testing the unified listener concept!
+                prlistener = iago.listener_LDT.createLDTConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "omspdu":
                 prlistener = iago.listener_OMSPDU.OMSPDUConsumer(dbconn=dbr)
             elif conSect.listenertype.lower() == "lois":
