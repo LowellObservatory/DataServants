@@ -118,10 +118,10 @@ def main():
                     sObj.prevFileHash = None
 
                 fhash, changed = checkFileHash(sObj.resourcelocation,
-                                               oldhash=sObj.prevFileHash)
+                                               oldhash=sObj.prevFileHash,
+                                               debug=True)
 
                 if changed is True:
-                    print("File has changed:", sObj.prevFileHash, fhash)
                     try:
                         with open(sObj.resourcelocation, 'r') as f:
                             wxml = f.read()
@@ -130,7 +130,6 @@ def main():
                         print(str(err))
                         wxml = ''
                 else:
-                    print("File has not changed:", sObj.prevFileHash, fhash)
                     wxml = ''
 
             if wxml != '':

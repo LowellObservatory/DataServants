@@ -68,9 +68,10 @@ def checkFile(fname, last, startpos):
     return fstats, endpos
 
 
-def checkFileHash(fname, oldhash=None):
+def checkFileHash(fname, oldhash=None, debug=True):
     """
     """
+    shortName = os.path.basename(fname)
     fdigest = None
     try:
         fhash = hashes.hashfunc(fname, debug=True)
@@ -87,6 +88,15 @@ def checkFileHash(fname, oldhash=None):
                 different = True
         else:
             different = True
+
+    if debug is True:
+        if different is not None:
+            if different is True:
+                print("File (%s) has changed: %s -> %s" %
+                      (shortName, oldhash, fdigest))
+            else:
+                print("File (%s) has NOT changed: %s -> %s" %
+                      (shortName, oldhash, fdigest))
 
     return fdigest, different
 
