@@ -201,7 +201,7 @@ def parseVirtualWeatherStation(msg,
     """
     """
     # Default return value
-    npacket = ''
+    npacket = None
 
     # File date/time timezone object that we'll need for later
     thisTZ = pytz.timezone(timezone)
@@ -223,15 +223,6 @@ def parseVirtualWeatherStation(msg,
                   35: "PressureRate",
                   36: "Channel1TempRate", 37: "Channel2TempRate",
                   38: "Channel3TempRate"}
-
-    # Since this data file has fixed (terrible) units, convert them to metric
-    #   in groups of similar conversions.  Must match keys above!
-    # mph2ms = ["WindSpeed", "WindGust"]
-    # f2c = ["InsideTemp", "OutsideTemp", "IndoorHeatIndex", "OutdoorHeatIndex",
-    #        "Dewpoint", "OutdoorTempRate", "IndoorTempRate",
-    #        "Channel1TempRate", "Channel2TempRate", "Channel3TempRate"]
-    # in2mbar = ["Pressure", "PressureRate"]
-    # in2mm = ["TotalRain", "DailyRain", "HourlyRain", "RainRate"]
 
     allfields = msg.split(",")
 

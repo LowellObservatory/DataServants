@@ -40,7 +40,8 @@ from dataservants.abu.power import parseiSense
 from dataservants.abu.purpleair import purplePreparer
 from dataservants.abu.boltwood import boltwood_clarityii
 from dataservants.abu.aagcloudwatcher import aagcloudwatcher
-from dataservants.abu.weather import parseColumbia, parseMeteobridge, prepWU
+from dataservants.abu.weather import parseColumbia, parseMeteobridge
+from dataservants.abu.weather import parseVirtualWeatherStation, prepWU
 
 
 def main():
@@ -153,6 +154,10 @@ def main():
                     bxml = boltwood_clarityii(wxml, timezone="US/Arizona")
                 elif sObj.devicetype.lower() == "aag_cloudwatcher":
                     bxml = aagcloudwatcher(wxml, timezone="US/Arizona")
+                elif sObj.devicetype.lower() == "virtualweatherstation":
+                    bxml = parseVirtualWeatherStation(wxml,
+                                                      rootname=sObj.name,
+                                                      timezone='US/Arizona')
                 elif sObj.devicetype.lower() == "purpleair_pa-ii":
                     bxml = purplePreparer(wxml, now, devType=sObj.devicetype)
                 else:
