@@ -156,7 +156,6 @@ def main():
                     bxml = aagcloudwatcher(wxml, timezone="US/Arizona")
                 elif sObj.devicetype.lower() == "virtualweatherstation":
                     bxml = parseVirtualWeatherStation(wxml,
-                                                      rootname=sObj.name,
                                                       timezone='US/Arizona')
                 elif sObj.devicetype.lower() == "purpleair_pa-ii":
                     bxml = purplePreparer(wxml, now, devType=sObj.devicetype)

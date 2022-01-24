@@ -196,7 +196,7 @@ def parseMeteobridge(msg,
 
 
 def parseVirtualWeatherStation(msg,
-                               rootname="MHTiMoWeather",
+                               rootname="VirtualWeatherStation",
                                timezone='US/Arizona'):
     """
     """
