@@ -29,7 +29,8 @@ def MHConsumer(dbconn=None):
             'lig.weather.clark.raingauge',
             'lig.weather.clark.windgauge',
             'lig.weather.timo.boltwoodii',
-            'lig.weather.timo.aagcloudwatcher']
+            'lig.weather.timo.aagcloudwatcher',
+            'lig.weather.timo.virtualweatherstation']
 
     # Topics that can be parsed directly via XML schema, but require more work
     # A *dict* of special topics and their custom parser/consumer.
