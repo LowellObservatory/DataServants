@@ -18,18 +18,28 @@ from __future__ import division, print_function, absolute_import
 
 from requests import get, post
 from requests.exceptions import ConnectionError as RCE
+from requests.exceptions import Timeout as TO
 from requests.auth import HTTPDigestAuth, HTTPBasicAuth
 
 
-def webgetter(resourceloc, params=None, data=None, user=None, pw=None):
+def webgetter(resourceloc, params=None, data=None, user=None, pw=None,
+              timeout=6.25):
     """
+    It’s a good practice to set connect timeouts to slightly larger than
+    a multiple of 3, which is the default TCP packet retransmission window.
     """
     if user or pw is not None:
         auth = HTTPBasicAuth(user, pw)
     else:
         auth = None
 
-    resp = get(resourceloc, params=params, data=data, auth=auth)
+    try:
+        resp = get(resourceloc, params=params, data=data, auth=auth,
+                   timeout=timeout)
+    except TO:
+        # This should be caught in the calling loop and handled appropriately
+        print("HTTP GET timed out!  Is this thing on?")
+        raise RCE
     # Check the HTTP response;
     #   200 - 400 == True
     #   400 - 600 == False
