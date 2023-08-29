@@ -29,7 +29,8 @@ def LDTConsumer(dbconn=None):
             'WRS.WRSPubDataSV.WRSDataPacket',
             'TCS.TCSSharedVariables.TCSHighLevelStatusSV.TCSTcsStatusSV',
             'Ryans.DCTWeatherStream',
-            'lig.sitepower.isense']
+            'lig.sitepower.isense',
+            'lig.joe.spy']
 
     # Topics that can be parsed directly via XML schema, but require more work
     # A *dict* of special topics and their custom parser/consumer.
