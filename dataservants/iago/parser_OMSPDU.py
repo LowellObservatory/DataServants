@@ -122,7 +122,8 @@ def parserStageResult(hed, msg, db=None, schema=None):
             axis = "AA"
             flagMsg = "CommandError"
 
-        tags = {"cardIP": cardIP, "type": "motionupdate", "axis": axis}
+        tags = {"cardIP": cardIP, "port": cardPort,
+                "type": "motionupdate", "axis": axis}
         fields = {"flagType": flagMsg}
 
         packet = utils.packetizer.makeInfluxPacket(meas=meas,
