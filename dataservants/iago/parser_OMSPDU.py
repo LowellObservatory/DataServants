@@ -122,7 +122,8 @@ def parserStageResult(hed, msg, db=None, schema=None):
             axis = "AA"
             flagMsg = "CommandError"
 
-        tags = {"cardIP": cardIP, "port": cardPort,
+        tags = {"cardIP": cardIP,
+                "port": cardPort,
                 "type": "motionupdate", "axis": axis}
         fields = {"flagType": flagMsg}
 
@@ -140,7 +141,9 @@ def parserStageResult(hed, msg, db=None, schema=None):
 
             # The BX command reads all the user I/O for the car and
             #   returns the bits, so it's for all axes
-            tags = {"cardIP": cardIP, "type": "detent", "axis": "AA"}
+            tags = {"cardIP": cardIP,
+                    "port": cardPort,
+                    "type": "detent", "axis": "AA"}
 
             packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                        ts=None,
@@ -211,7 +214,9 @@ def parserStageResult(hed, msg, db=None, schema=None):
                               "AxisOvertravel": overtravel,
                               "HomeSwitchState": homestate}
 
-                    tags = {"cardIP": cardIP, "type": metric, "axis": axis}
+                    tags = {"cardIP": cardIP,
+                            "port": cardPort,
+                            "type": metric, "axis": axis}
                     packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                                ts=None,
                                                                tags=tags,
@@ -226,7 +231,9 @@ def parserStageResult(hed, msg, db=None, schema=None):
 
                     fields = {"value": val}
                     tags = {"cardIP": cardIP,
-                            "type": metric, "axis": axisLabels[i]}
+                            "port": cardPort,
+                            "type": metric,
+                            "axis": axisLabels[i]}
                     packet = utils.packetizer.makeInfluxPacket(meas=meas,
                                                                ts=None,
                                                                tags=tags,
