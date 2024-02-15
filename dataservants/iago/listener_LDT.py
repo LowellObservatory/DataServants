@@ -50,7 +50,11 @@ def LDTConsumer(dbconn=None):
     tStr = ['DCS.DSSPubDataSV.PositionStatus']
 
     # Topics that are just bools
-    tBool = ['DCS.DCSPubDataSV.OccultationWarning']
+    tBool = ['DCS.DCSPubDataSV.OccultationWarning',
+             'lig.nihts.pdu.outlets.0', 'lig.nihts.pdu.outlets.1',
+             'lig.nihts.pdu.outlets.2', 'lig.nihts.pdu.outlets.3',
+             'lig.nihts.pdu.outlets.4', 'lig.nihts.pdu.outlets.5',
+             'lig.nihts.pdu.outlets.6', 'lig.nihts.pdu.outlets.7']
 
     # A *dict* of special topics and their custom parser/consumer.
     #   NOTE: the special functions must all take the following arguments:
