@@ -8,4 +8,4 @@ from . import broker
 from . import weather
 from . import boltwood
 from . import aagcloudwatcher
-# from . import purpleair
+from . import purpleair
