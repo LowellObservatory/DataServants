@@ -79,7 +79,10 @@ def main():
                 # Deal with mutability here! Must do a deepcopy to change the
                 #   tablename between config sections, otherwise it'll get all
                 #   sorts of screwed up.
-                dbr = copy.deepcopy(idbs[conSect.database])
+                # dbr = copy.deepcopy(idbs[conSect.database])
+
+                # Check to see if there are any connections/objects to establish
+                dbr = connSetup.connIDB_simple(comm[conSect.database])
                 dbr.tablename = conSect.tablename
             except KeyError:
                 print("Database %s not in config :(" % (conSect.database))
