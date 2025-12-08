@@ -38,7 +38,8 @@ def LDTConsumer(dbconn=None):
     #       headers, body, db=None, schema=None
     #   This is to ensure compatibility with the consumer provided inputs!
     tkXMLSpecial = {'lig.aqi.purpleair.ldt.outside': parserPurpleAir,
-                    'lig.aqi.purpleair.ldt.dsscabinet': parserPurpleAir}
+                    'lig.aqi.purpleair.ldt.dsscabinet': parserPurpleAir,
+                    'lig.aqi.purpleair.ldt.controlroom': parserPurpleAir}
 
     # Topics that are just bare floats
     tFloat = ['AOS.AOSSubDataSV.RelativeFocusOffset',
@@ -62,11 +63,31 @@ def LDTConsumer(dbconn=None):
     #   This is to ensure compatibility with the consumer provided inputs!
     tSpecial = {"lightPathInformation": parserLPI}
 
+    # A dict organized by topic name and containing extra tags to apply
+    tJSON = {'casspwr1-shelly-08f9e0e5be80.status.em1:0':
+             {"name": "casspwr1", "MAC": "08f9e0e5be80",
+              "devicetype": "shellyProEM50",
+              "channel": "IA"},
+             'casspwr1-shelly-08f9e0e5be80.status.em1:1':
+             {"name": "casspwr1", "MAC": "08f9e0e5be80",
+              "devicetype": "shellyProEM50",
+              "channel": "IB"},
+             'casspwr2-shelly-08f9e0e5a4e4.status.em1:0':
+             {"name": "casspwr2", "MAC": "08f9e0e5a4e4",
+              "devicetype": "shellyProEM50",
+              "channel": "IA"},
+             'casspwr2-shelly-08f9e0e5a4e4.status.em1:1':
+             {"name": "casspwr2", "MAC": "08f9e0e5a4e4",
+              "devicetype": "shellyProEM50",
+              "channel": "IB"}
+              }
+
     # Create our subclassed consumer with the above routes
     consumer = amqL.LIGBaseConsumer(dbconn=dbconn,
                                     tSpecial=tSpecial,
                                     tkXMLSpecial=tkXMLSpecial,
                                     tXML=tXML, tFloat=tFloat,
-                                    tStr=tStr, tBool=tBool)
+                                    tStr=tStr, tBool=tBool,
+                                    tJSON=tJSON)
 
     return consumer

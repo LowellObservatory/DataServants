@@ -24,8 +24,7 @@ def MesaConsumer(dbconn=None):
     """
     """
     # Topics that can be parsed directly via XML schema
-    tXML = ['lig.mesa.NPOIWeatherStation',
-            'LOUI.nasa42.loisTelemetry']
+    tXML = ['LOUI.nasa42.loisTelemetry']
 
     # Topics that can be parsed directly via XML schema, but require more work
     # A *dict* of special topics and their custom parser/consumer.
@@ -33,6 +32,9 @@ def MesaConsumer(dbconn=None):
     #       headers, body, db=None, schema=None
     #   This is to ensure compatibility with the consumer provided inputs!
     tkXMLSpecial = {'lig.aqi.purpleair.mesa.outside': parserPurpleAir}
+
+    # Topics that are just JSON
+    tJSON = ['/topic/lorax/pj1m/domecontroller/status']
 
     # Topics that are just bare floats
     tFloat = None
@@ -53,7 +55,7 @@ def MesaConsumer(dbconn=None):
     consumer = amqL.LIGBaseConsumer(dbconn=dbconn,
                                     tSpecial=tSpecial,
                                     tkXMLSpecial=tkXMLSpecial,
-                                    tXML=tXML, tFloat=tFloat,
-                                    tStr=tStr, tBool=tBool)
+                                    tXML=tXML, tJSON=tJSON,
+                                    tFloat=tFloat, tStr=tStr, tBool=tBool)
 
     return consumer
