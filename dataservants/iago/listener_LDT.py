@@ -45,7 +45,12 @@ def LDTConsumer(dbconn=None):
     tFloat = ['AOS.AOSSubDataSV.RelativeFocusOffset',
               'AOS.AOSSubDataSV.AbsoluteFocusOffset',
               'MTS.MTSPubDataSV.MountTemperature',
-              'DCS.DCSPubDataSV.MountDomeAzimuthDifference']
+              'DCS.DCSPubDataSV.MountDomeAzimuthDifference',
+              'DCS.DASPubDataSV.DomePosition',
+              'DCS.CLSDPubDataSV.LowBankState',
+              'DCS.CLSDPubDataSV.LowBankVoltageOutput',
+              'DCS.CLSTPubDataSV.LowBankState',
+              'DCS.CLSTPubDataSV.LowBankVoltageOutput']
 
     # Topics that are just words/strings
     tStr = ['DCS.DSSPubDataSV.PositionStatus']
